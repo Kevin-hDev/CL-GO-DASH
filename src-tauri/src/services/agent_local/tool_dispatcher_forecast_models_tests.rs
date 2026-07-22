@@ -1,16 +1,20 @@
-use crate::services::agent_local::tool_dispatcher_forecast_candidates::select;
+use crate::services::forecast::auto_selection::select;
 use crate::services::forecast::data_quality::DataProfile;
 use crate::services::forecast::hardware_profile::HardwareProfile;
+use crate::services::forecast::evaluation::types::{
+    BacktestIndexResult, BacktestIndexSummary, BacktestKind, BacktestMetrics,
+};
 use std::collections::BTreeMap;
 
 fn model(id: &str, runnable: bool) -> serde_json::Value {
-    serde_json::json!({"id": id, "runnable": runnable})
+    serde_json::json!({"id": id, "runnable": runnable, "runtime_ready": runnable})
 }
 
 fn profile(series_count: usize, covariates: bool, future_rows: usize) -> DataProfile {
     DataProfile {
         id: "550e8400-e29b-41d4-a716-446655440000".into(),
         created_at: "2026-01-01T00:00:00Z".into(),
+        fingerprint: "fingerprint".into(),
         valid: true,
         target_column: "value".into(),
         date_column: "date".into(),
@@ -57,7 +61,12 @@ fn auto_candidates_are_bounded_to_five() {
     ]
     .map(|id| model(id, true));
 
-    assert_eq!(select(&models, &profile(1, false, 0), false, hardware()).len(), 5);
+    assert_eq!(
+        select(&models, &profile(1, false, 0), false, hardware(), &[])
+            .candidates
+            .len(),
+        5
+    );
 }
 
 #[test]
@@ -67,10 +76,23 @@ fn auto_excludes_cloud_and_non_runnable_models() {
         model("timegpt-2-mini", true),
         model("chronos-bolt-mini", false),
     ];
-    let candidates = select(&models, &profile(1, false, 0), false, hardware());
+    let candidates = select(&models, &profile(1, false, 0), false, hardware(), &[]).candidates;
 
     assert_eq!(candidates.len(), 1);
-    assert_eq!(candidates[0]["model_id"], "chronos-bolt-tiny");
+    assert_eq!(candidates[0].model_id, "chronos-bolt-tiny");
+}
+
+#[test]
+fn auto_excludes_a_local_runtime_that_is_not_ready() {
+    let models = [serde_json::json!({
+        "id": "chronos-bolt-tiny",
+        "runnable": true,
+        "runtime_ready": false
+    })];
+
+    let selection = select(&models, &profile(1, false, 0), false, hardware(), &[]);
+
+    assert!(selection.candidates.is_empty());
 }
 
 #[test]
@@ -80,8 +102,87 @@ fn auto_filters_against_task_capabilities() {
         model("moirai-2.0-r-small", true),
         model("chronos-2", true),
     ];
-    let candidates = select(&models, &profile(2, true, 12), false, hardware());
+    let candidates = select(&models, &profile(2, true, 12), false, hardware(), &[]).candidates;
 
     assert_eq!(candidates.len(), 1);
-    assert_eq!(candidates[0]["model_id"], "chronos-2");
+    assert_eq!(candidates[0].model_id, "chronos-2");
+}
+
+#[test]
+fn comparable_backtests_drive_the_auto_ranking() {
+    let models = [
+        model("chronos-bolt-tiny", true),
+        model("chronos-bolt-base", true),
+    ];
+    let evidence = BacktestIndexSummary {
+        created_at: "2026-01-02T00:00:00Z".into(),
+        horizon: 12,
+        windows: 3,
+        results: vec![
+            backtest("seasonal_naive", BacktestKind::Baseline, 0.7, None),
+            backtest("chronos-bolt-tiny", BacktestKind::Model, 0.5, Some(true)),
+            backtest("chronos-bolt-base", BacktestKind::Model, 0.8, Some(false)),
+        ],
+    };
+
+    let selection = select(
+        &models,
+        &profile(1, false, 0),
+        false,
+        hardware(),
+        &[evidence],
+    );
+
+    assert_eq!(selection.basis, "rolling_backtest");
+    assert_eq!(selection.candidates[0].model_id, "chronos-bolt-tiny");
+    assert_eq!(
+        selection.candidates[0]
+            .backtest
+            .as_ref()
+            .and_then(|result| result.beats_best_baseline),
+        Some(true)
+    );
+}
+
+#[test]
+fn unknown_hardware_only_keeps_lightweight_safe_models() {
+    let models = [
+        model("chronos-bolt-tiny", true),
+        model("chronos-2", true),
+    ];
+    let unknown = HardwareProfile {
+        vram_total_mb: None,
+        vram_available_mb: None,
+        ram_available_mb: None,
+    };
+
+    let selection = select(&models, &profile(1, false, 0), false, unknown, &[]);
+
+    assert!(selection
+        .candidates
+        .iter()
+        .all(|candidate| candidate.model_id != "chronos-2"));
+}
+
+fn backtest(
+    model_id: &str,
+    kind: BacktestKind,
+    mase: f64,
+    beats_best_baseline: Option<bool>,
+) -> BacktestIndexResult {
+    BacktestIndexResult {
+        model_id: model_id.into(),
+        kind,
+        metrics: Some(BacktestMetrics {
+            mase,
+            smape: mase,
+            mae: mase,
+            rmse: mase,
+            bias: 0.0,
+            stability: 0.0,
+        }),
+        calibration: None,
+        duration_ms: 10,
+        beats_best_baseline,
+    }
 }

@@ -15,6 +15,9 @@ fn request(data: serde_json::Value, horizon: u32, frequency: &str) -> ForecastRe
         frequency: frequency.into(),
         model: None,
         confidence_level: 0.9,
+        selection_id: None,
+        selection_source: None,
+        selection_reason_codes: Vec::new(),
     }
 }
 

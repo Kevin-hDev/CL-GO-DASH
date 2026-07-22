@@ -87,6 +87,7 @@ pub(super) fn build_profile(
     DataProfile {
         id: profile_id(request),
         created_at: Utc::now().to_rfc3339(),
+        fingerprint: crate::services::forecast::data_fingerprint::for_request(request),
         valid,
         target_column: request.target_column.clone(),
         date_column: request.date_column.clone(),

@@ -56,8 +56,8 @@ async fn current_session_can_open_a_historical_analysis() {
     )
     .await
     .expect("create session");
-    let analysis = historical_analysis();
-    super::super::storage::save(&analysis)
+    let mut analysis = historical_analysis();
+    super::super::storage::save(&mut analysis)
         .await
         .expect("save analysis");
 
@@ -74,6 +74,8 @@ async fn current_session_can_open_a_historical_analysis() {
 
 fn historical_analysis() -> ForecastResult {
     ForecastResult {
+        schema_version: crate::services::forecast::types::CURRENT_SCHEMA_VERSION,
+        revision: crate::services::forecast::types::default_revision(),
         id: uuid::Uuid::new_v4().to_string(),
         name: "Analyse historique".into(),
         target_column: "value".into(),
@@ -102,5 +104,6 @@ fn historical_analysis() -> ForecastResult {
         evaluation: None,
         annotations: vec![],
         scenarios: vec![],
+        provenance: Default::default(),
     }
 }

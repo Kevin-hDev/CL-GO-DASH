@@ -29,5 +29,8 @@ pub(super) fn build(
         frequency: analysis.frequency.clone(),
         model: Some(model_id.to_string()),
         confidence_level: analysis.confidence_level,
+        selection_id: None,
+        selection_source: None,
+        selection_reason_codes: Vec::new(),
     })
 }

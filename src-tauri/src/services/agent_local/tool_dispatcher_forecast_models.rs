@@ -1,8 +1,11 @@
 use crate::services::agent_local::types_tools::ToolResult;
-use crate::services::forecast::{data_profiles, hardware_profile, limits, model_listing, selection_policy};
+use crate::services::forecast::{
+    data_profiles, hardware_profile, limits, model_listing, selection_policy, selection_tickets,
+    storage,
+};
 use serde_json::Value;
 
-pub async fn handle(args: &Value) -> ToolResult {
+pub async fn handle(args: &Value, session_id: &str) -> ToolResult {
     let listing = model_listing::list_models();
     let Some(models) = listing["models"].as_array() else {
         return ToolResult::err("Catalogue Forecast indisponible");
@@ -56,12 +59,31 @@ pub async fn handle(args: &Value) -> ToolResult {
                 Err(error) => return ToolResult::err(error),
             };
             let hardware = hardware_profile::detect();
-            let candidates = super::tool_dispatcher_forecast_candidates::select(
-                &compact,
+            let evidence = match storage::comparable_backtests(&profile).await {
+                Ok(evidence) => evidence,
+                Err(error) => return ToolResult::err(error),
+            };
+            let selection = crate::services::forecast::auto_selection::select(
+                models,
                 &profile,
                 policy.allow_cloud_in_auto,
                 hardware,
+                &evidence,
             );
+            let selection_id = match selection_tickets::issue(
+                session_id,
+                profile_id,
+                &profile.fingerprint,
+                &selection,
+            ) {
+                Ok(id) => id,
+                Err(error) => return ToolResult::err(error),
+            };
+            let usage = if selection.basis == "rolling_backtest" {
+                "Choose only one returned candidate. Prefer the lowest MASE that beats the best baseline, unless the user's explicit speed, local, cloud, or cost need justifies another safe candidate. Pass selection_id, selection_source, and short selection_reason_codes to forecast."
+            } else {
+                "Choose only one returned candidate. This ranking uses capabilities and current resources, so do not call it the best model. Pass selection_id, selection_source, and short selection_reason_codes to forecast."
+            };
             serde_json::json!({
                 "selection_policy": {
                     "mode": "auto",
@@ -76,10 +98,14 @@ pub async fn handle(args: &Value) -> ToolResult {
                     "future_covariates": profile.future_rows > 0 && !profile.covariate_columns.is_empty(),
                     "probabilistic_required": true
                 },
-                "hardware_profile": hardware,
-                "candidates": candidates,
-                "selection_basis": "capabilities_and_resources",
-                "usage": "You must choose one candidate id for forecast. This initial ranking has no comparable backtest yet, so do not call it the best model."
+                "hardware_profile": {
+                    "scope": "forecast_only",
+                    "details": "candidate_resource_fit"
+                },
+                "selection_id": selection_id,
+                "candidates": selection.candidates,
+                "selection_basis": selection.basis,
+                "usage": usage
             })
         }
     };

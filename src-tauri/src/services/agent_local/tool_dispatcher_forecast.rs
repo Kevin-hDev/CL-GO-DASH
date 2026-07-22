@@ -13,7 +13,9 @@ pub async fn dispatch_forecast(
         "forecast" => Some(
             super::tool_dispatcher_forecast_run::handle(args, working_dir, session_id).await,
         ),
-        "forecast_models" => Some(super::tool_dispatcher_forecast_models::handle(args).await),
+        "forecast_models" => Some(
+            super::tool_dispatcher_forecast_models::handle(args, session_id).await,
+        ),
         "forecast_analyze" => Some(super::tool_dispatcher_forecast_analyze::handle(args).await),
         "forecast_data_audit" => Some(
             super::tool_dispatcher_forecast_data_audit::handle(args, working_dir).await,

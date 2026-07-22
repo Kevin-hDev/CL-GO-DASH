@@ -14,6 +14,9 @@ fn make_request(data: &str) -> ForecastRequest {
         frequency: "D".into(),
         model: Some("chronos-bolt-small".into()),
         confidence_level: 0.9,
+        selection_id: None,
+        selection_source: None,
+        selection_reason_codes: Vec::new(),
     }
 }
 

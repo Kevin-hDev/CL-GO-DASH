@@ -15,12 +15,17 @@ fn request() -> ForecastRequest {
         frequency: "D".into(),
         model: Some("chronos-bolt-small".into()),
         confidence_level: 0.9,
+        selection_id: None,
+        selection_source: None,
+        selection_reason_codes: Vec::new(),
     }
 }
 
 fn result(request: &ForecastRequest) -> ForecastResult {
     let input = parse_request_input(request).unwrap();
     ForecastResult {
+        schema_version: crate::services::forecast::types::CURRENT_SCHEMA_VERSION,
+        revision: crate::services::forecast::types::default_revision(),
         id: "550e8400-e29b-41d4-a716-446655440000".into(),
         name: "test".into(),
         target_column: "value".into(),
@@ -56,6 +61,7 @@ fn result(request: &ForecastRequest) -> ForecastResult {
         evaluation: None,
         annotations: Vec::new(),
         scenarios: Vec::new(),
+        provenance: Default::default(),
     }
 }
 

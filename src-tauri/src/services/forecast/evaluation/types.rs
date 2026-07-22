@@ -68,3 +68,44 @@ pub struct BacktestFoldMetric {
     pub test_points: usize,
     pub mae: f64,
 }
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct BacktestIndexSummary {
+    pub created_at: String,
+    pub horizon: usize,
+    pub windows: usize,
+    #[serde(default)]
+    pub results: Vec<BacktestIndexResult>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BacktestIndexResult {
+    pub model_id: String,
+    pub kind: BacktestKind,
+    pub metrics: Option<BacktestMetrics>,
+    pub calibration: Option<IntervalCalibration>,
+    pub duration_ms: u64,
+    pub beats_best_baseline: Option<bool>,
+}
+
+impl ForecastEvaluation {
+    pub fn to_index_summary(&self) -> BacktestIndexSummary {
+        BacktestIndexSummary {
+            created_at: self.created_at.clone(),
+            horizon: self.horizon,
+            windows: self.windows,
+            results: self
+                .results
+                .iter()
+                .map(|result| BacktestIndexResult {
+                    model_id: result.model_id.clone(),
+                    kind: result.kind,
+                    metrics: result.metrics.clone(),
+                    calibration: result.calibration.clone(),
+                    duration_ms: result.duration_ms,
+                    beats_best_baseline: result.beats_best_baseline,
+                })
+                .collect(),
+        }
+    }
+}

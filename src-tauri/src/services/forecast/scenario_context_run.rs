@@ -73,6 +73,9 @@ fn build_forecast_request(
         frequency: analysis.frequency.clone(),
         model: Some(analysis.model.clone()),
         confidence_level: analysis.confidence_level,
+        selection_id: None,
+        selection_source: None,
+        selection_reason_codes: Vec::new(),
     })
 }
 

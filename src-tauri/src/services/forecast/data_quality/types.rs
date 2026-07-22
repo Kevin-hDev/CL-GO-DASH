@@ -28,6 +28,8 @@ pub struct DataQualityIssue {
 pub struct DataProfile {
     pub id: String,
     pub created_at: String,
+    #[serde(default)]
+    pub fingerprint: String,
     pub valid: bool,
     pub target_column: String,
     pub date_column: String,

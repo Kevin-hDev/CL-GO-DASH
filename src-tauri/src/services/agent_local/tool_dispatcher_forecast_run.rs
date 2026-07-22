@@ -5,14 +5,14 @@ use self::forecast_error::model_error;
 use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::forecast::types::ForecastRequest;
 use crate::services::forecast::{
-    client_chronos, client_nixtla, data_profiles, model_manager, registry, selected_model, sidecar,
-    selection_policy, storage, validation,
+    data_profiles, registry, selected_model, selection_policy, storage, validation,
 };
 use serde_json::Value;
 use std::path::Path;
-use tauri::{Emitter, Manager};
+use std::time::Instant;
 
 pub async fn handle(args: &Value, working_dir: &Path, session_id: &str) -> ToolResult {
+    let started_at = Instant::now();
     let mut request: ForecastRequest = match serde_json::from_value(args.clone()) {
         Ok(request) => request,
         Err(_) => return ToolResult::err("Paramètres Forecast invalides"),
@@ -25,7 +25,7 @@ pub async fn handle(args: &Value, working_dir: &Path, session_id: &str) -> ToolR
     };
     let selection_mode = policy.mode;
     let policy_model = policy.manual_model_id.clone().unwrap_or_default();
-    let selected = match selected_model::apply_policy(&mut request, policy) {
+    let selected = match selected_model::apply_policy(&mut request, policy.clone()) {
         Ok(model) => model,
         Err(error) => {
             return model_error(
@@ -83,6 +83,24 @@ pub async fn handle(args: &Value, working_dir: &Path, session_id: &str) -> ToolR
                 )
             }
         };
+    let selection_proof = match super::tool_dispatcher_forecast_selection::verify(
+        &request,
+        &data_profile,
+        policy,
+        session_id,
+    )
+    .await
+    {
+        Ok(proof) => proof,
+        Err(error) => {
+            return model_error(
+                Some(selection_mode),
+                &selected,
+                requested_model.as_deref(),
+                &error,
+            )
+        }
+    };
     let model_id = match validation::model_id(&request) {
         Ok(id) => id,
         Err(error) => {
@@ -118,11 +136,17 @@ pub async fn handle(args: &Value, working_dir: &Path, session_id: &str) -> ToolR
     }
 
     let result = if registry::is_cloud(runtime) {
-        run_cloud(&request, session_id).await
+        super::tool_dispatcher_forecast_execute::run_cloud(&request, session_id).await
     } else {
-        run_local(&request, model_id, runtime, session_id).await
+        super::tool_dispatcher_forecast_execute::run_local(
+            &request,
+            model_id,
+            runtime,
+            session_id,
+        )
+        .await
     };
-    let forecast = match result {
+    let mut forecast = match result {
         Ok(forecast) => forecast,
         Err(error) => {
             return model_error(
@@ -133,6 +157,21 @@ pub async fn handle(args: &Value, working_dir: &Path, session_id: &str) -> ToolR
             )
         }
     };
+    let duration_ms = u64::try_from(started_at.elapsed().as_millis()).unwrap_or(u64::MAX);
+    if let Err(error) = super::tool_dispatcher_forecast_selection::complete_provenance(
+        &mut forecast,
+        &request,
+        &data_profile,
+        selection_proof.as_ref(),
+        duration_ms,
+    ) {
+        return model_error(
+            Some(selection_mode),
+            &selected,
+            requested_model.as_deref(),
+            &error,
+        );
+    }
     if let Some(profile) = &forecast.data_profile {
         if data_profiles::save(profile, &request).await.is_err() {
             return model_error(
@@ -143,7 +182,7 @@ pub async fn handle(args: &Value, working_dir: &Path, session_id: &str) -> ToolR
             );
         }
     }
-    if storage::save(&forecast).await.is_err() {
+    if storage::save(&mut forecast).await.is_err() {
         return model_error(
             Some(selection_mode),
             &selected,
@@ -151,49 +190,9 @@ pub async fn handle(args: &Value, working_dir: &Path, session_id: &str) -> ToolR
             "Sauvegarde de la prévision échouée",
         );
     }
-    emit_created(&forecast.id, session_id);
+    super::tool_dispatcher_forecast_execute::emit_created(&forecast.id, session_id);
     match super::tool_dispatcher_forecast_output::created_payload(&forecast) {
         Ok(json) => ToolResult::ok(json),
         Err(error) => ToolResult::err(error),
-    }
-}
-
-async fn run_cloud(request: &ForecastRequest, session_id: &str) -> Result<crate::services::forecast::types::ForecastResult, String> {
-    let key = crate::services::api_keys::get_key("nixtla")
-        .map_err(|_| "Clé API Nixtla non configurée".to_string())?;
-    client_nixtla::predict(&key, request, Some(session_id)).await
-}
-
-async fn run_local(
-    request: &ForecastRequest,
-    model_id: &str,
-    runtime: &registry::ForecastRuntimeSpec,
-    session_id: &str,
-) -> Result<crate::services::forecast::types::ForecastResult, String> {
-    if !model_manager::is_installed(model_id) {
-        return Err("Modèle non installé".into());
-    }
-    let app = super::app_handle_global::get().ok_or("Service de prédiction indisponible")?;
-    let chronos = app.state::<sidecar::ChronosSidecar>();
-    let endpoint = sidecar::start(chronos.inner(), model_id, runtime.family_id)
-        .await
-        .map_err(|_| "Impossible de démarrer le service de prédiction".to_string())?;
-    let result = client_chronos::predict(
-        &endpoint.base_url,
-        endpoint.auth_token.as_str(),
-        request,
-        Some(session_id),
-    )
-    .await;
-    sidecar::schedule_idle_stop(chronos.inner());
-    result
-}
-
-fn emit_created(analysis_id: &str, session_id: &str) {
-    if let Some(app) = super::app_handle_global::get() {
-        let _ = app.emit(
-            "forecast-analysis-created",
-            serde_json::json!({ "analysis_id": analysis_id, "session_id": session_id }),
-        );
     }
 }

@@ -75,7 +75,7 @@ pub async fn create(request: ForecastNoteCreateRequest) -> Result<ForecastNote, 
     };
     write_note(&note).await?;
     upsert_annotation(&mut analysis, &note)?;
-    storage::save(&analysis).await?;
+    storage::save(&mut analysis).await?;
     load_note(&note.analysis_id, &note.id).await
 }
 
@@ -90,7 +90,7 @@ pub async fn update(request: ForecastNoteUpdateRequest) -> Result<ForecastNote, 
     write_note(&current).await?;
     let mut analysis = storage::load(&request.analysis_id).await?;
     upsert_annotation(&mut analysis, &current)?;
-    storage::save(&analysis).await?;
+    storage::save(&mut analysis).await?;
     load_note(&request.analysis_id, &request.note_id).await
 }
 
@@ -106,7 +106,7 @@ pub async fn delete(analysis_id: &str, note_id: &str) -> Result<(), String> {
     analysis
         .annotations
         .retain(|annotation| annotation.id != note_id);
-    storage::save(&analysis).await
+    storage::save(&mut analysis).await
 }
 
 pub fn open(analysis_id: &str, note_id: &str) -> Result<(), String> {

@@ -10,18 +10,26 @@ use super::storage_paths::{
 };
 
 static INDEX_LOCK: Mutex<()> = Mutex::const_new(());
+static SAVE_LOCK: Mutex<()> = Mutex::const_new(());
 
-pub async fn save(result: &ForecastResult) -> Result<(), String> {
+pub async fn save(result: &mut ForecastResult) -> Result<(), String> {
     validate_analysis_id(&result.id)?;
+    let _save_guard = SAVE_LOCK.lock().await;
+    let target = analysis_path_for_write(&result.id).await?;
+    let already_exists = tokio::fs::try_exists(&target)
+        .await
+        .map_err(|_| "Erreur de sauvegarde".to_string())?;
+    let stored_revision = if already_exists {
+        Some(load(&result.id).await?.revision)
+    } else {
+        None
+    };
+    result.revision = super::storage_revision::next(stored_revision, result.revision)?;
     let json =
         serde_json::to_vec_pretty(result).map_err(|_| "Erreur de sérialisation".to_string())?;
     if json.len() > MAX_STORED_ANALYSIS_BYTES {
         return Err("Analyse Forecast trop volumineuse".into());
     }
-    let target = analysis_path_for_write(&result.id).await?;
-    let already_exists = tokio::fs::try_exists(&target)
-        .await
-        .map_err(|_| "Erreur de sauvegarde".to_string())?;
     crate::services::private_store::atomic_write_async(target.clone(), json)
         .await
         .map_err(|_| "Erreur de sauvegarde".to_string())?;
@@ -48,6 +56,7 @@ pub async fn load(id: &str) -> Result<ForecastResult, String> {
 
 pub async fn delete(id: &str) -> Result<(), String> {
     validate_analysis_id(id)?;
+    let _save_guard = SAVE_LOCK.lock().await;
     match analysis_path_for_read(id).await {
         Ok(path) => tokio::fs::remove_file(&path)
             .await
@@ -63,13 +72,19 @@ pub async fn rename(id: &str, name: &str) -> Result<ForecastAnalysisMeta, String
     let next_name = validate_analysis_name(name)?;
     let mut analysis = load(id).await?;
     analysis.name = next_name;
-    save(&analysis).await?;
+    save(&mut analysis).await?;
     Ok(analysis.to_meta())
 }
 
 pub async fn list() -> Result<Vec<ForecastAnalysisMeta>, String> {
     let entries = read_index().await?;
     hydrate_index(entries).await
+}
+
+pub async fn comparable_backtests(
+    profile: &super::data_quality::DataProfile,
+) -> Result<Vec<super::evaluation::types::BacktestIndexSummary>, String> {
+    super::storage_backtests::comparable(read_index().await?, profile)
 }
 
 async fn read_index() -> Result<Vec<ForecastAnalysisMeta>, String> {
@@ -82,9 +97,12 @@ async fn read_index() -> Result<Vec<ForecastAnalysisMeta>, String> {
     let entries: Vec<ForecastAnalysisMeta> =
         serde_json::from_slice(&data).map_err(|_| "Index forecast corrompu".to_string())?;
     if entries.len() > MAX_STORED_ANALYSES
-        || entries
-            .iter()
-            .any(|entry| validate_analysis_id(&entry.id).is_err())
+        || entries.iter().any(|entry| {
+            validate_analysis_id(&entry.id).is_err()
+                || entry.backtest.as_ref().is_some_and(|backtest| {
+                    backtest.results.len() > crate::services::forecast::limits::MAX_BACKTEST_RESULTS
+                })
+        })
     {
         return Err("Index forecast corrompu".into());
     }

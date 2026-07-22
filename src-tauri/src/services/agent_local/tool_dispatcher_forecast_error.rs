@@ -24,7 +24,7 @@ pub(super) fn model_error_payload(
             "auto",
             false,
             None,
-            "Corriger la requête puis relancer forecast en conservant le mode Auto.",
+            "Corriger la requête. Si la sélection a expiré ou les ressources ont changé, relancer forecast_models avant forecast.",
         ),
         Some(ForecastSelectionMode::Manual) => (
             "manual",

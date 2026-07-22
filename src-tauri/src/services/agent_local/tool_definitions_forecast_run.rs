@@ -19,7 +19,7 @@ fn definition_for(policy: selection_policy::ForecastSelectionPolicy) -> Value {
             (text, false)
         }
         ForecastSelectionMode::Auto => (
-            "Auto is active. After forecast_data_audit, you must call forecast_models with the returned data_profile_id before the first forecast or after the task changes, choose only one returned candidate, and pass its id in model. You must not call it the best model without comparable backtests or modify the user's policy.".to_string(),
+            "Auto is active. After forecast_data_audit, you must call forecast_models with the returned data_profile_id before the first forecast or after the task changes. Choose only one returned candidate and pass its model id plus the returned selection_id. Prefer comparable rolling backtests when present. Set selection_source to auto, or explicit_user_override only when the user explicitly requested that safe candidate. Add only short allowlisted selection_reason_codes. If the backend reports an expired selection or changed resources, call forecast_models again. You must not call a capability-only choice the best model or modify the user's policy.".to_string(),
             true,
         ),
     };
@@ -32,10 +32,44 @@ fn definition_for(policy: selection_policy::ForecastSelectionPolicy) -> Value {
                 "description": "Model id selected from the bounded forecast_models candidates list."
             }),
         );
+        properties.insert(
+            "selection_id".into(),
+            serde_json::json!({
+                "type": "string",
+                "maxLength": 64,
+                "description": "Short-lived selection id returned by forecast_models for this dataset and session."
+            }),
+        );
+        properties.insert(
+            "selection_source".into(),
+            serde_json::json!({
+                "type": "string",
+                "enum": ["auto", "explicit_user_override"],
+                "description": "Use explicit_user_override only for an explicit user model request that remained a safe candidate."
+            }),
+        );
+        properties.insert(
+            "selection_reason_codes".into(),
+            serde_json::json!({
+                "type": "array",
+                "maxItems": crate::services::forecast::limits::MAX_SELECTION_REASON_CODES,
+                "items": {
+                    "type": "string",
+                    "enum": [
+                        "top_backtest", "beats_baseline", "precision_requested",
+                        "speed_requested", "local_required", "cloud_allowed",
+                        "user_requested", "resource_fit"
+                    ]
+                },
+                "description": "Short structured reasons for the final safe choice."
+            }),
+        );
     }
     let mut required = vec!["target_column", "date_column", "horizon", "frequency"];
     if auto {
         required.push("model");
+        required.push("selection_id");
+        required.push("selection_source");
     }
     let description = format!(
         "Run a validated time series forecast. For every new dataset, you must call forecast_data_audit first and then pass its reusable data_profile_id instead of resending raw data. Direct data or file_path remains available for application compatibility. The tool returns a saved analysis_id; you call forecast_read with it for paginated predictions and quantiles. {policy_text} You use series_column for multi-series data and covariate_columns only when the selected model supports them."

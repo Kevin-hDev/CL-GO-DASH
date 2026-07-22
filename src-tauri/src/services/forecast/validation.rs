@@ -39,6 +39,7 @@ pub fn validate_runnable_model_id(id: &str) -> Result<(), String> {
 
 pub fn validate_request(request: &ForecastRequest) -> Result<(), String> {
     validate_data_request(request)?;
+    super::validation_selection::validate_selection_metadata(request)?;
     let model_id = model_id(request)?;
     validate_runnable_model_id(model_id)?;
     let spec = catalog::find_model(model_id).ok_or("Modèle inconnu")?;

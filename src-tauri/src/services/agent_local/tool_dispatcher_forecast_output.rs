@@ -11,8 +11,11 @@ pub fn created_payload(forecast: &ForecastResult) -> Result<String, String> {
         "name": forecast.name,
         "model": forecast.model,
         "model_selection": {
-            "mode": "selector_forced",
-            "effective_model": forecast.model
+            "source": forecast.provenance.selection_source,
+            "effective_model": forecast.model,
+            "basis": forecast.provenance.selection_basis,
+            "reason_codes": forecast.provenance.selection_reason_codes,
+            "hardware_class": forecast.provenance.hardware_class
         },
         "provider": forecast.provider,
         "target_column": forecast.target_column,
@@ -24,6 +27,8 @@ pub fn created_payload(forecast: &ForecastResult) -> Result<String, String> {
         "confidence_level": forecast.confidence_level,
         "data_profile_id": forecast.data_profile.as_ref().map(|profile| profile.id.as_str()),
         "data_quality_issues": forecast.data_profile.as_ref().map(|profile| &profile.issues),
+        "schema_version": forecast.schema_version,
+        "revision": forecast.revision,
         "input_points": forecast.input_summary.points,
         "predictions_count": forecast.predictions.len(),
         "covariates_used": forecast.covariates_used,
@@ -68,6 +73,9 @@ pub fn analysis_payload(
         "input_columns": analysis.input_data.columns,
         "history_points": analysis.input_data.history.len(),
         "data_profile": analysis.data_profile,
+        "schema_version": analysis.schema_version,
+        "revision": analysis.revision,
+        "provenance": analysis.provenance,
         "predictions": &analysis.predictions[start..end],
         "quantiles": {
             "q10": slice_values(&analysis.quantiles.q10, start, end),
@@ -123,7 +131,8 @@ fn slice_values(values: &[f64], start: usize, end: usize) -> &[f64] {
 }
 
 fn to_pretty(value: Value) -> Result<String, String> {
-    serde_json::to_string_pretty(&value).map_err(|e| format!("Sérialisation: {e}"))
+    serde_json::to_string_pretty(&value)
+        .map_err(|_| "Résultat Forecast indisponible".to_string())
 }
 
 #[cfg(test)]

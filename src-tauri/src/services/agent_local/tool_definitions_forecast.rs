@@ -148,7 +148,7 @@ fn forecast_models_definition_for(auto: bool) -> Value {
     };
     super::tool_definitions::tool_def(
         "forecast_models",
-        "Inspect the Forecast selection policy. In Manual, use only forced_model. In Auto, pass the validated data_profile_id and choose only one compatible candidate. Hardware data is exposed only in this Forecast response. Never call the initial choice the best model without comparable backtests.",
+        "Inspect the Forecast selection policy. In Manual, use only forced_model. In Auto, pass the validated data_profile_id and choose only one compatible candidate. Prefer rolling backtests when selection_basis is rolling_backtest. Hardware data is exposed only in this Forecast response. Pass the returned selection_id to forecast and never call a capability-only choice the best model.",
         serde_json::json!({
             "type": "object",
             "properties": properties,

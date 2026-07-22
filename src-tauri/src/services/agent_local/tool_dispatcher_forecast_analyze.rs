@@ -61,7 +61,7 @@ async fn annotate(
             text,
             source: crate::services::forecast::types::AnnotationSource::Llm,
         });
-    match storage::save(&analysis).await {
+    match storage::save(&mut analysis).await {
         Ok(_) => ToolResult::ok("Annotation ajoutée"),
         Err(e) => ToolResult::err(format!("Sauvegarde annotation: {e}")),
     }

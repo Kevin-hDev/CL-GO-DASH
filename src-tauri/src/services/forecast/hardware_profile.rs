@@ -12,6 +12,18 @@ pub enum ResourceFit {
     Cloud,
 }
 
+impl ResourceFit {
+    pub fn code(self) -> &'static str {
+        match self {
+            Self::Comfortable => "comfortable",
+            Self::Constrained => "constrained",
+            Self::Insufficient => "insufficient",
+            Self::Unknown => "unknown",
+            Self::Cloud => "cloud",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, Serialize)]
 pub struct HardwareProfile {
     pub vram_total_mb: Option<u64>,

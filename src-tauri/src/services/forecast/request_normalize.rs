@@ -9,10 +9,16 @@ pub fn normalize_request(request: &mut ForecastRequest) {
     request.data_profile_id = normalize_optional_string(request.data_profile_id.take());
     request.series_column = normalize_optional_string(request.series_column.take());
     request.model = normalize_optional_string(request.model.take());
+    request.selection_id = normalize_optional_string(request.selection_id.take());
     request.covariate_columns = request
         .covariate_columns
         .drain(..)
         .filter_map(|column| normalize_optional_string(Some(column)))
+        .collect();
+    request.selection_reason_codes = request
+        .selection_reason_codes
+        .drain(..)
+        .filter_map(|reason| normalize_optional_string(Some(reason)))
         .collect();
 }
 

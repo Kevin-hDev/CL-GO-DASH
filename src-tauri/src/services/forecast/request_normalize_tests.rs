@@ -15,6 +15,9 @@ fn request() -> ForecastRequest {
         frequency: " D ".into(),
         model: Some(" kairos-10m ".into()),
         confidence_level: 0.8,
+        selection_id: None,
+        selection_source: None,
+        selection_reason_codes: Vec::new(),
     }
 }
 

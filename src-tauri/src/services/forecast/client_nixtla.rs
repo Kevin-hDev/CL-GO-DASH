@@ -108,6 +108,8 @@ fn parse_response(
     let model_name = request.model.as_deref().unwrap_or("timegpt-2-standard");
 
     let result = ForecastResult {
+        schema_version: crate::services::forecast::types::CURRENT_SCHEMA_VERSION,
+        revision: crate::services::forecast::types::default_revision(),
         id: Uuid::new_v4().to_string(),
         name: format!("Forecast {}", request.target_column),
         target_column: request.target_column.clone(),
@@ -128,6 +130,7 @@ fn parse_response(
         evaluation: None,
         annotations: Vec::new(),
         scenarios: Vec::new(),
+        provenance: Default::default(),
     };
     crate::services::forecast::result_validation::validate(&result, request, input)?;
     Ok(result)

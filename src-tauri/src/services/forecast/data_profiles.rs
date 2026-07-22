@@ -84,12 +84,13 @@ async fn load(id: &str) -> Result<StoredDataProfile, String> {
     if data.len() > max_bytes {
         return Err("Profil de données invalide".into());
     }
-    let stored: StoredDataProfile =
+    let mut stored: StoredDataProfile =
         serde_json::from_slice(&data).map_err(|_| "Profil de données invalide".to_string())?;
     if stored.profile.id != id || !stored.profile.valid || stored.data.len() > MAX_INLINE_DATA_BYTES
     {
         return Err("Profil de données invalide".into());
     }
+    super::data_profile_migration::ensure_fingerprint(&mut stored.profile, &stored.data);
     Ok(stored)
 }
 
