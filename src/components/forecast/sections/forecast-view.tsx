@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { invoke } from "@tauri-apps/api/core";
 import type { ForecastLayerState } from "../forecast-layer-matrix";
 import { formatForecastValue, inferMetricMeta } from "../forecast-view-format";
 import { ForecastChart } from "../charts/forecast-chart";
 import { useForecastChartResize } from "../use-forecast-chart-resize";
 import { KpiRow, PeriodCell, ValueCell } from "../forecast-view-widgets";
 import { buildForecastVariableLines } from "../forecast-variable-lines";
+import { useForecastResult } from "../use-forecast-result";
 import "../forecast-view.css";
 import "../forecast-view-table.css";
 
@@ -44,16 +44,9 @@ interface ForecastViewProps {
 
 export function ForecastView({ analysisId, layers }: ForecastViewProps) {
   const { t, i18n } = useTranslation();
-  const [data, setData] = useState<ForecastResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { data, error } = useForecastResult<ForecastResult>(analysisId, t("forecast.noAnalysis"));
   const [selectedSeries, setSelectedSeries] = useState("");
   const chart = useForecastChartResize();
-
-  useEffect(() => {
-    invoke<ForecastResult>("get_forecast_analysis", { id: analysisId })
-      .then(setData)
-      .catch(() => setError(t("forecast.noAnalysis")));
-  }, [analysisId, t]);
 
   if (error) return <div className="fc-error">{error}</div>;
   if (!data) return <div className="fc-loading"><div className="fc-skeleton" /></div>;

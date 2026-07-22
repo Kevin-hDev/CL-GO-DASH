@@ -1,12 +1,23 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
+const LEGACY_FORECAST_TOOLS: &[&str] = &[
+    "forecast_data_audit",
+    "forecast",
+    "forecast_models",
+    "forecast_analyze",
+    "forecast_read",
+];
+const TOOL_CATALOG_SCHEMA: u32 = 2;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentSettings {
     #[serde(default = "default_permission_mode")]
     pub permission_mode: String,
     #[serde(default = "super::tool_catalog::default_enabled_optional_tools")]
     pub enabled_optional_tools: Vec<String>,
+    #[serde(default)]
+    pub tool_catalog_schema: u32,
 }
 
 impl Default for AgentSettings {
@@ -14,6 +25,7 @@ impl Default for AgentSettings {
         Self {
             permission_mode: default_permission_mode(),
             enabled_optional_tools: super::tool_catalog::default_enabled_optional_tools(),
+            tool_catalog_schema: TOOL_CATALOG_SCHEMA,
         }
     }
 }
@@ -23,8 +35,20 @@ impl AgentSettings {
         if !is_valid_permission_mode(&self.permission_mode) {
             self.permission_mode = default_permission_mode();
         }
+        let migrate_forecast = self.tool_catalog_schema < TOOL_CATALOG_SCHEMA
+            && LEGACY_FORECAST_TOOLS.iter().all(|tool| {
+                self.enabled_optional_tools
+                    .iter()
+                    .any(|enabled| enabled == tool)
+            });
+        if migrate_forecast {
+            self.enabled_optional_tools.push("forecast_backtest".into());
+            self.enabled_optional_tools
+                .push("forecast_compare_models".into());
+        }
         self.enabled_optional_tools =
             super::tool_catalog::normalize_enabled_optional_tools(&self.enabled_optional_tools);
+        self.tool_catalog_schema = TOOL_CATALOG_SCHEMA;
         self
     }
 }

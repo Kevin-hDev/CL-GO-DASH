@@ -8,6 +8,7 @@ import type {
   ForecastWorkbenchSnapshot,
 } from "./forecast-workbench-types";
 import { useForecastWorkbenchContext } from "./use-forecast-workbench-context";
+import { ForecastWorkbenchSectionContent } from "./forecast-workbench-section";
 import "./forecast-workbench.css";
 
 export function ForecastWorkbenchWindow() {
@@ -60,10 +61,7 @@ function ForecastWorkbenchContent({ snapshot }: { snapshot: ForecastWorkbenchSna
             <h2 id="fcw-section-title">{t(`forecast.workbench.sections.${section}`)}</h2>
             <p>{t(`forecast.workbench.sectionDescriptions.${section}`)}</p>
           </div>
-          <div className="fcw-foundation">
-            <span>{t("forecast.workbench.foundationTitle")}</span>
-            <p>{t("forecast.workbench.foundationDescription")}</p>
-          </div>
+          <ForecastWorkbenchSectionContent section={section} snapshot={snapshot} />
         </section>
       </div>
     </main>

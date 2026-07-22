@@ -61,6 +61,8 @@ const OPTIONAL_GROUPS: &[ToolGroupEntry] = &[
             "forecast_models",
             "forecast_analyze",
             "forecast_read",
+            "forecast_backtest",
+            "forecast_compare_models",
         ],
     ),
     group(
@@ -138,6 +140,8 @@ mod tests {
         let tools = optional_group_tool_ids("forecast").unwrap();
 
         assert!(tools.contains(&"forecast_data_audit"));
+        assert!(tools.contains(&"forecast_backtest"));
+        assert!(tools.contains(&"forecast_compare_models"));
     }
 
     #[test]

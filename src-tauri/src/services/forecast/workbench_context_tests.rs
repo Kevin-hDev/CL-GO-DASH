@@ -99,6 +99,7 @@ fn historical_analysis() -> ForecastResult {
         },
         covariates_used: vec![],
         metrics: None,
+        evaluation: None,
         annotations: vec![],
         scenarios: vec![],
     }

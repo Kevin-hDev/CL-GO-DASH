@@ -61,6 +61,7 @@ pub fn parse_response(
         quantiles: Quantiles { q10, q50, q90 },
         covariates_used: request.covariate_columns.clone(),
         metrics: None,
+        evaluation: None,
         annotations: Vec::new(),
         scenarios: Vec::new(),
     };

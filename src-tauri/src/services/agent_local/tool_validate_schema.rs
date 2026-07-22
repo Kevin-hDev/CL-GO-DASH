@@ -96,6 +96,12 @@ static FORECAST_READ: Schema = &[
     ("limit", Ty::Int, false),
 ];
 static FORECAST_MODELS: Schema = &[];
+static FORECAST_BACKTEST: Schema = &[
+    ("analysis_id", Ty::Str, true),
+    ("model_ids", Ty::Arr, false),
+    ("max_windows", Ty::Int, false),
+];
+static FORECAST_COMPARE_MODELS: Schema = &[("analysis_id", Ty::Str, true)];
 
 pub(super) fn schema(tool: &str) -> Option<Schema> {
     Some(match tool {
@@ -135,6 +141,8 @@ pub(super) fn schema(tool: &str) -> Option<Schema> {
         "forecast_analyze" => FORECAST_ANALYZE,
         "forecast_read" => FORECAST_READ,
         "forecast_models" => FORECAST_MODELS,
+        "forecast_backtest" => FORECAST_BACKTEST,
+        "forecast_compare_models" => FORECAST_COMPARE_MODELS,
         _ => return None,
     })
 }

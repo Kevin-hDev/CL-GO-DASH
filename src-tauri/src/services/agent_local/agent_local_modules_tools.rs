@@ -34,6 +34,7 @@ pub mod tool_dispatcher_forecast_run;
 pub mod tool_dispatcher_forecast_analyze;
 pub mod tool_dispatcher_forecast_candidates;
 pub mod tool_dispatcher_forecast_data_audit;
+pub mod tool_dispatcher_forecast_evaluation;
 pub mod tool_dispatcher_forecast_models;
 pub mod tool_dispatcher_forecast_output;
 pub mod tool_dispatcher_forecast_scenario_params;

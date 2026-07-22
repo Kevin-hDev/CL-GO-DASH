@@ -34,3 +34,16 @@ fn runtime_capabilities_match_key_adapters() {
     assert!(!timesfm.capabilities.past_covariates);
     assert!(!timesfm.capabilities.multivariate);
 }
+
+#[test]
+fn every_prediction_adapter_supports_rolling_backtests() {
+    for runtime in registry::FORECAST_RUNTIMES {
+        if registry::has_predict_adapter(runtime) {
+            assert!(
+                runtime.capabilities.backtesting_ready,
+                "{}",
+                runtime.model_id
+            );
+        }
+    }
+}

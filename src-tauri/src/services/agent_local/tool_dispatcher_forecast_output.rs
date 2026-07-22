@@ -31,7 +31,7 @@ pub fn created_payload(forecast: &ForecastResult) -> Result<String, String> {
             "first_prediction": forecast.predictions.first(),
             "last_prediction": forecast.predictions.last()
         },
-        "next_step": "Use forecast_read with this analysis_id to read the saved analysis."
+        "next_step": "Call forecast_backtest with this analysis_id to compare the model with baselines, then use forecast_compare_models for the compact ranking or forecast_read for predictions."
     }))
 }
 
@@ -83,6 +83,20 @@ pub fn analysis_payload(
         },
         "covariates_used": analysis.covariates_used,
         "metrics": analysis.metrics,
+        "evaluation_available": analysis.evaluation.is_some(),
+        "evaluation_summary": analysis.evaluation.as_ref().map(|evaluation| json!({
+            "horizon": evaluation.horizon,
+            "windows": evaluation.windows,
+            "warning": evaluation.warning,
+            "results": evaluation.results.iter().map(|result| json!({
+                "model_id": result.model_id,
+                "kind": result.kind,
+                "rank": result.rank,
+                "mase": result.metrics.as_ref().map(|metrics| metrics.mase),
+                "beats_best_baseline": result.beats_best_baseline,
+                "warning": result.warning,
+            })).collect::<Vec<_>>()
+        })),
         "annotations": analysis.annotations.iter().take(MAX_TOOL_ANNOTATIONS).collect::<Vec<_>>(),
         "annotations_truncated": analysis.annotations.len() > MAX_TOOL_ANNOTATIONS,
         "scenarios": scenarios

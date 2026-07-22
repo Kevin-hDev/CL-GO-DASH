@@ -19,6 +19,12 @@ pub async fn dispatch_forecast(
             super::tool_dispatcher_forecast_data_audit::handle(args, working_dir).await,
         ),
         "forecast_read" => Some(handle_read(args).await),
+        "forecast_backtest" => {
+            Some(super::tool_dispatcher_forecast_evaluation::backtest(args).await)
+        }
+        "forecast_compare_models" => {
+            Some(super::tool_dispatcher_forecast_evaluation::compare(args).await)
+        }
         _ => None,
     }
 }

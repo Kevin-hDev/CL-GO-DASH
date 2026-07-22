@@ -1,23 +1,23 @@
 use super::ForecastCapabilities;
 
 pub const fn chronos_bolt_caps() -> ForecastCapabilities {
-    caps(false, false, false, true, false, false, false)
+    caps(false, false, false, true, true, false, false)
 }
 
 pub const fn chronos_2_caps() -> ForecastCapabilities {
-    caps(true, true, true, true, false, false, false)
+    caps(true, true, true, true, true, false, false)
 }
 
 pub const fn univariate_prob_caps() -> ForecastCapabilities {
-    caps(false, false, false, true, false, false, false)
+    caps(false, false, false, true, true, false, false)
 }
 
 pub const fn multiseries_prob_caps() -> ForecastCapabilities {
-    caps(false, false, true, true, false, false, false)
+    caps(false, false, true, true, true, false, false)
 }
 
 pub const fn toto_caps() -> ForecastCapabilities {
-    caps(true, true, true, true, false, false, false)
+    caps(true, true, true, true, true, false, false)
 }
 
 pub const fn cloud_caps() -> ForecastCapabilities {

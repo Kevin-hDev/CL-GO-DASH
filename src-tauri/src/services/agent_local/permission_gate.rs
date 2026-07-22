@@ -28,6 +28,7 @@ const GATED_TOOLS: &[&str] = &[
     "apply_subagent_changes",
     "forecast_data_audit",
     "forecast",
+    "forecast_backtest",
 ];
 
 static SAFE_BASH_PATTERNS: LazyLock<Vec<Regex>> = LazyLock::new(|| {

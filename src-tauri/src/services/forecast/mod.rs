@@ -9,6 +9,7 @@ mod client_nixtla_retry;
 mod client_quantiles;
 pub mod data_profiles;
 pub mod data_quality;
+pub mod evaluation;
 pub mod export;
 pub mod file_input;
 pub mod hardware_profile;

@@ -1259,6 +1259,45 @@
         "comparison": "Comparer la qualité, la vitesse et les contraintes des modèles.",
         "scenarios": "Créer et modifier des hypothèses sans perdre la prévision de référence.",
         "report": "Rassembler la provenance, les notes et les exports avancés."
+      },
+      "evaluation": {
+        "loading": "Chargement des évaluations…",
+        "loadFailed": "Impossible de charger les évaluations Forecast.",
+        "runFailed": "Impossible de terminer le backtest Forecast.",
+        "run": "Lancer le backtest",
+        "running": "Backtest en cours…",
+        "rollingBacktest": "Validation temporelle glissante",
+        "summary": "{{windows}} fenêtres · horizon {{horizon}}",
+        "notRun": "Aucun backtest lancé",
+        "model": "Modèle",
+        "coverage": "Couverture",
+        "duration": "Durée",
+        "status": "Résultat",
+        "baseline": "Baseline",
+        "modelKind": "Modèle Forecast",
+        "current": "actuel",
+        "reference": "Référence",
+        "beatsBaseline": "Meilleur que la baseline",
+        "missesBaseline": "Ne bat pas la baseline",
+        "noAnalysis": "Aucune analyse à évaluer",
+        "noAnalysisDescription": "Lancez d'abord une prévision depuis la conversation.",
+        "emptyTitle": "Les résultats comparables apparaîtront ici",
+        "emptyEvaluation": "Le backtest compare le modèle actuel à quatre baselines sans utiliser le futur pendant l'entraînement.",
+        "emptyComparison": "Lancez un backtest dans l'espace Évaluation pour obtenir un classement fiable.",
+        "baselines": {"naive": "Naive", "seasonal_naive": "Naive saisonnier", "drift": "Drift", "ets": "ETS"},
+        "warnings": {
+          "history": "Historique insuffisant",
+          "cloud": "Service cloud non configuré",
+          "notInstalled": "Modèle non installé",
+          "resources": "Ressources insuffisantes",
+          "execution": "Évaluation incomplète",
+          "unavailable": "Résultat indisponible"
+        },
+        "planWarnings": {
+          "short_history": "Moins de trois fenêtres sont disponibles : interprétez le classement avec prudence.",
+          "reduced_horizon": "L'horizon d'évaluation a été réduit pour conserver des fenêtres temporelles valides.",
+          "unavailable": "La fiabilité de cette évaluation est limitée."
+        }
       }
     },
     "docs": {

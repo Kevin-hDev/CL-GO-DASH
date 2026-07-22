@@ -79,3 +79,6 @@ pub fn validate(tool: &str, args: &Value) -> Result<Value, String> {
 #[cfg(test)]
 #[path = "tool_validate_tests.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "tool_validate_forecast_tests.rs"]
+mod forecast_tests;

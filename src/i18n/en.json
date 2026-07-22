@@ -1211,6 +1211,45 @@
         "comparison": "Compare model quality, speed, and constraints.",
         "scenarios": "Create and edit assumptions without losing the reference forecast.",
         "report": "Collect provenance, notes, and advanced exports."
+      },
+      "evaluation": {
+        "loading": "Loading evaluations…",
+        "loadFailed": "Unable to load Forecast evaluations.",
+        "runFailed": "Unable to complete the Forecast backtest.",
+        "run": "Run backtest",
+        "running": "Backtest running…",
+        "rollingBacktest": "Rolling temporal validation",
+        "summary": "{{windows}} windows · horizon {{horizon}}",
+        "notRun": "No backtest has been run",
+        "model": "Model",
+        "coverage": "Coverage",
+        "duration": "Duration",
+        "status": "Result",
+        "baseline": "Baseline",
+        "modelKind": "Forecast model",
+        "current": "current",
+        "reference": "Reference",
+        "beatsBaseline": "Beats the baseline",
+        "missesBaseline": "Does not beat the baseline",
+        "noAnalysis": "No analysis to evaluate",
+        "noAnalysisDescription": "Run a forecast from the conversation first.",
+        "emptyTitle": "Comparable results will appear here",
+        "emptyEvaluation": "The backtest compares the current model with four baselines without training on future data.",
+        "emptyComparison": "Run a backtest in Evaluation to obtain a reliable ranking.",
+        "baselines": {"naive": "Naive", "seasonal_naive": "Seasonal Naive", "drift": "Drift", "ets": "ETS"},
+        "warnings": {
+          "history": "Insufficient history",
+          "cloud": "Cloud service not configured",
+          "notInstalled": "Model not installed",
+          "resources": "Insufficient resources",
+          "execution": "Incomplete evaluation",
+          "unavailable": "Result unavailable"
+        },
+        "planWarnings": {
+          "short_history": "Fewer than three windows are available; interpret the ranking cautiously.",
+          "reduced_horizon": "The evaluation horizon was reduced to keep valid temporal windows.",
+          "unavailable": "This evaluation has limited reliability."
+        }
       }
     },
     "docs": {

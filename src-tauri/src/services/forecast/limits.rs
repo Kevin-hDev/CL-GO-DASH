@@ -24,6 +24,10 @@ pub const MAX_AUTO_CANDIDATES: usize = 5;
 pub const MAX_AUTO_REASONS: usize = 8;
 pub const MAX_TOOL_MODELS: usize = 64;
 pub const MAX_PATH_CHARS: usize = 4_096;
+pub const MAX_BACKTEST_MODELS: usize = 5;
+pub const MAX_BACKTEST_WINDOWS: usize = 5;
+pub const MAX_BACKTEST_HORIZON: usize = 256;
+pub const MAX_BACKTEST_RESULTS: usize = 9;
 
 pub struct ToolSchemaLimits {
     pub inline_data_chars: usize,

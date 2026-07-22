@@ -6,12 +6,16 @@ mod forecast_run;
 mod forecast_audit;
 #[path = "tool_definitions_forecast_data.rs"]
 mod forecast_data;
+#[path = "tool_definitions_forecast_evaluation.rs"]
+mod forecast_evaluation;
 
 pub fn forecast_tool_definitions() -> Vec<Value> {
     vec![
         forecast_run_definition(),
         forecast_audit::definition(),
         forecast_models_definition(),
+        forecast_evaluation::backtest(),
+        forecast_evaluation::compare(),
         super::tool_definitions::tool_def(
             "forecast_analyze",
             "Operate on an existing saved forecast analysis. \

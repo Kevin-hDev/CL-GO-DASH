@@ -1,3 +1,4 @@
+use super::evaluation::types::ForecastEvaluation;
 use super::input_data::InputSnapshot;
 use serde::{Deserialize, Serialize};
 
@@ -50,6 +51,8 @@ pub struct ForecastResult {
     #[serde(default)]
     pub covariates_used: Vec<String>,
     pub metrics: Option<ForecastMetrics>,
+    #[serde(default)]
+    pub evaluation: Option<ForecastEvaluation>,
     #[serde(default)]
     pub annotations: Vec<Annotation>,
     #[serde(default)]
