@@ -5,6 +5,7 @@ export interface BacktestMetrics {
   rmse: number;
   bias: number;
   stability: number;
+  quantile_loss?: number | null;
 }
 
 export interface IntervalCalibration {
@@ -21,6 +22,7 @@ export interface ModelBacktestResult {
   metrics: BacktestMetrics | null;
   calibration: IntervalCalibration | null;
   duration_ms: number;
+  max_memory_mb?: number | null;
   rank: number | null;
   beats_best_baseline: boolean | null;
   warning: string | null;

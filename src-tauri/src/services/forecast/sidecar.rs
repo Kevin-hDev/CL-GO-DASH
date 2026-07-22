@@ -26,6 +26,7 @@ pub struct ChronosSidecar {
 pub struct SidecarEndpoint {
     pub base_url: String,
     pub auth_token: Zeroizing<String>,
+    pub pid: u32,
 }
 
 impl ChronosSidecar {
@@ -81,7 +82,8 @@ pub async fn start(
         &launch,
     )?;
 
-    sidecar_process::save_pid(child.id());
+    let pid = child.id();
+    sidecar_process::save_pid(pid);
     sidecar_http::set_port(port);
     *sidecar.process.lock().await = Some(SidecarHandle {
         child,
@@ -92,7 +94,7 @@ pub async fn start(
         generation: 1,
     });
 
-    match sidecar_spawn::wait_until_ready(port, model_name, family_id, auth_token).await {
+    match sidecar_spawn::wait_until_ready(port, model_name, family_id, pid, auth_token).await {
         Ok(endpoint) => Ok(endpoint),
         Err(err) => {
             stop(sidecar).await;
@@ -120,6 +122,7 @@ async fn reuse_running(
     Some(SidecarEndpoint {
         base_url: base_url(),
         auth_token: handle.auth_token.clone(),
+        pid: handle.child.id(),
     })
 }
 

@@ -54,6 +54,10 @@ fn validate_quantiles(result: &ForecastResult) -> Result<(), String> {
     Ok(())
 }
 
+pub(crate) fn validate_stored_quantiles(result: &ForecastResult) -> Result<(), String> {
+    validate_quantiles(result)
+}
+
 fn validate_series(
     result: &ForecastResult,
     request: &ForecastRequest,

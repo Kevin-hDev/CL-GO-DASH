@@ -30,6 +30,8 @@ pub struct ModelBacktestResult {
     #[serde(default)]
     pub folds: Vec<BacktestFoldMetric>,
     pub duration_ms: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_memory_mb: Option<u64>,
     pub rank: Option<usize>,
     pub beats_best_baseline: Option<bool>,
     pub warning: Option<String>,
@@ -88,6 +90,8 @@ pub struct BacktestMetrics {
     pub rmse: f64,
     pub bias: f64,
     pub stability: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub quantile_loss: Option<f64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -123,6 +127,8 @@ pub struct BacktestIndexResult {
     pub metrics: Option<BacktestMetrics>,
     pub calibration: Option<IntervalCalibration>,
     pub duration_ms: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_memory_mb: Option<u64>,
     pub beats_best_baseline: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub failure: Option<BacktestFailure>,
@@ -143,6 +149,7 @@ impl ForecastEvaluation {
                     metrics: result.metrics.clone(),
                     calibration: result.calibration.clone(),
                     duration_ms: result.duration_ms,
+                    max_memory_mb: result.max_memory_mb,
                     beats_best_baseline: result.beats_best_baseline,
                     failure: result.failure.clone(),
                 })

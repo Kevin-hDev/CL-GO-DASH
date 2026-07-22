@@ -32,6 +32,8 @@ pub struct CandidateBacktest {
     pub windows: usize,
     pub metrics: BacktestMetrics,
     pub duration_ms: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_memory_mb: Option<u64>,
     pub beats_best_baseline: Option<bool>,
     pub calibration: Option<super::evaluation::types::IntervalCalibration>,
 }

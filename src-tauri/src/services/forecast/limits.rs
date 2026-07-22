@@ -31,6 +31,8 @@ pub const MAX_BACKTEST_MODELS: usize = 5;
 pub const MAX_BACKTEST_WINDOWS: usize = 5;
 pub const MAX_BACKTEST_HORIZON: usize = 256;
 pub const MAX_BACKTEST_RESULTS: usize = 9;
+pub const MAX_CONCURRENT_BACKTESTS: usize = 1;
+pub const MAX_UNKNOWN_RESOURCE_RAM_MB: u32 = 2_048;
 
 pub struct ToolSchemaLimits {
     pub inline_data_chars: usize,

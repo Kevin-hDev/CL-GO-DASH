@@ -19,16 +19,28 @@ pub(super) async fn evaluate(
     chronos: &ChronosSidecar,
 ) -> ModelBacktestResult {
     let started = Instant::now();
-    let outcome = evaluate_inner(analysis, model_id, plan, chronos).await;
+    let outcome = evaluate_inner(analysis, model_id, plan, chronos)
+        .await
+        .and_then(|(observations, folds, max_memory_mb)| {
+            let metrics = metrics::summarize(&observations, analysis.confidence_level)
+                .ok_or_else(|| "invalid_backtest_data".to_string())?;
+            Ok((
+                metrics,
+                metrics::calibration(&observations, analysis.confidence_level),
+                folds,
+                max_memory_mb,
+            ))
+        });
     let duration_ms = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
     match outcome {
-        Ok((observations, folds)) => ModelBacktestResult {
+        Ok((metrics, calibration, folds, max_memory_mb)) => ModelBacktestResult {
             model_id: model_id.to_string(),
             kind: BacktestKind::Model,
-            metrics: metrics::summarize(&observations),
-            calibration: metrics::calibration(&observations, analysis.confidence_level),
+            metrics: Some(metrics),
+            calibration,
             folds,
             duration_ms,
+            max_memory_mb,
             rank: None,
             beats_best_baseline: None,
             warning: None,
@@ -43,6 +55,7 @@ pub(super) async fn evaluate(
                 calibration: None,
                 folds: Vec::new(),
                 duration_ms,
+                max_memory_mb: None,
                 rank: None,
                 beats_best_baseline: None,
                 warning: Some(failure.code.clone()),
@@ -57,7 +70,7 @@ async fn evaluate_inner(
     model_id: &str,
     plan: &BacktestPlan,
     chronos: &ChronosSidecar,
-) -> Result<(Vec<Observation>, Vec<BacktestFoldMetric>), String> {
+) -> Result<(Vec<Observation>, Vec<BacktestFoldMetric>, Option<u64>), String> {
     let runtime = crate::services::forecast::registry::find_runtime(model_id)
         .filter(|runtime| crate::services::forecast::registry::has_predict_adapter(runtime))
         .ok_or("model_unavailable")?;
@@ -101,11 +114,16 @@ async fn evaluate_inner(
                 .map_err(|_| "model_start_failed")?,
         )
     };
+    let sampler = match &executor {
+        Executor::Local(endpoint) => super::memory_sampler::MemorySampler::start(endpoint.pid),
+        Executor::Cloud(_) => None,
+    };
     let outcome = evaluate_windows(analysis, model_id, plan, &executor).await;
+    let max_memory_mb = sampler.and_then(super::memory_sampler::MemorySampler::finish);
     if matches!(executor, Executor::Local(_)) {
         crate::services::forecast::sidecar::schedule_idle_stop(chronos);
     }
-    outcome
+    outcome.map(|(observations, folds)| (observations, folds, max_memory_mb))
 }
 
 async fn evaluate_windows(

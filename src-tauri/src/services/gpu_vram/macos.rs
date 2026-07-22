@@ -1,6 +1,9 @@
 use std::process::Command;
 
 pub(super) fn detect_total() -> Option<u64> {
+    if !cfg!(target_arch = "aarch64") {
+        return None;
+    }
     let output = Command::new("sysctl")
         .args(["-n", "hw.memsize"])
         .output()
@@ -11,6 +14,9 @@ pub(super) fn detect_total() -> Option<u64> {
 }
 
 pub(super) fn detect_used() -> Option<u64> {
+    if !cfg!(target_arch = "aarch64") {
+        return None;
+    }
     let output = Command::new("vm_stat").output().ok()?;
     let text = String::from_utf8_lossy(&output.stdout);
     let page_size = parse_vm_stat_page_size(&text)?;

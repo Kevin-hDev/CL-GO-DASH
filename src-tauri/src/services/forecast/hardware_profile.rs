@@ -12,6 +12,14 @@ pub enum ResourceFit {
     Cloud,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GpuMemoryKind {
+    Dedicated,
+    Unified,
+    Unknown,
+}
+
 impl ResourceFit {
     pub fn code(self) -> &'static str {
         match self {
@@ -26,23 +34,37 @@ impl ResourceFit {
 
 #[derive(Debug, Clone, Copy, Serialize)]
 pub struct HardwareProfile {
+    pub gpu_memory_kind: GpuMemoryKind,
     pub vram_total_mb: Option<u64>,
     pub vram_available_mb: Option<u64>,
     pub ram_available_mb: Option<u64>,
 }
 
 pub fn detect() -> HardwareProfile {
-    let vram_total_mb = crate::services::gpu_vram::detect_vram_mb();
-    let vram_available_mb = vram_total_mb
-        .zip(crate::services::gpu_vram::detect_vram_used_mb())
-        .map(|(total, used)| total.saturating_sub(used));
     let mut system = sysinfo::System::new();
     system.refresh_memory();
     let available = system.available_memory() / 1_048_576;
+    let ram_available_mb = (available > 0).then_some(available);
+    let vram_total_mb = crate::services::gpu_vram::detect_vram_mb();
+    let gpu_memory_kind = if is_apple_silicon() && vram_total_mb.is_some() {
+        GpuMemoryKind::Unified
+    } else if vram_total_mb.is_some() {
+        GpuMemoryKind::Dedicated
+    } else {
+        GpuMemoryKind::Unknown
+    };
+    let vram_available_mb = if gpu_memory_kind == GpuMemoryKind::Unified {
+        ram_available_mb
+    } else {
+        vram_total_mb
+            .zip(crate::services::gpu_vram::detect_vram_used_mb())
+            .map(|(total, used)| total.saturating_sub(used))
+    };
     HardwareProfile {
+        gpu_memory_kind,
         vram_total_mb,
         vram_available_mb,
-        ram_available_mb: (available > 0).then_some(available),
+        ram_available_mb,
     }
 }
 
@@ -71,10 +93,24 @@ pub fn resource_fit(
 }
 
 pub fn validate_model_resources(model: &super::catalog::ForecastModelSpec) -> Result<(), String> {
-    if resource_fit(model, detect()) == ResourceFit::Insufficient {
-        return Err("Ressources insuffisantes pour ce modèle".into());
+    validate_model_resources_with_profile(model, detect())
+}
+
+pub(crate) fn validate_model_resources_with_profile(
+    model: &super::catalog::ForecastModelSpec,
+    profile: HardwareProfile,
+) -> Result<(), String> {
+    match resource_fit(model, profile) {
+        ResourceFit::Insufficient => Err("Ressources insuffisantes pour ce modèle".into()),
+        ResourceFit::Unknown if model.ram_mb > super::limits::MAX_UNKNOWN_RESOURCE_RAM_MB => {
+            Err("Ressources indisponibles pour ce modèle".into())
+        }
+        _ => Ok(()),
     }
-    Ok(())
+}
+
+const fn is_apple_silicon() -> bool {
+    cfg!(all(target_os = "macos", target_arch = "aarch64"))
 }
 
 fn fit(required_mb: u64, available_mb: u64) -> ResourceFit {
@@ -122,11 +158,38 @@ mod tests {
     fn unknown_cpu_memory_does_not_reject_a_cpu_capable_model() {
         let model = super::super::catalog::find_model("chronos-bolt-tiny").unwrap();
         let profile = HardwareProfile {
+            gpu_memory_kind: GpuMemoryKind::Unknown,
             vram_total_mb: None,
             vram_available_mb: None,
             ram_available_mb: None,
         };
 
         assert_eq!(resource_fit(model, profile), ResourceFit::Unknown);
+    }
+
+    #[test]
+    fn unknown_resources_reject_large_models_at_execution_time() {
+        let model = super::super::catalog::find_model("chronos-2").unwrap();
+        let profile = HardwareProfile {
+            gpu_memory_kind: GpuMemoryKind::Unknown,
+            vram_total_mb: None,
+            vram_available_mb: None,
+            ram_available_mb: None,
+        };
+
+        assert!(validate_model_resources_with_profile(model, profile).is_err());
+    }
+
+    #[test]
+    fn unknown_resources_keep_lightweight_models_available() {
+        let model = super::super::catalog::find_model("chronos-bolt-tiny").unwrap();
+        let profile = HardwareProfile {
+            gpu_memory_kind: GpuMemoryKind::Unknown,
+            vram_total_mb: None,
+            vram_available_mb: None,
+            ram_available_mb: None,
+        };
+
+        assert!(validate_model_resources_with_profile(model, profile).is_ok());
     }
 }

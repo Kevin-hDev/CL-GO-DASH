@@ -43,6 +43,7 @@ fn profile(series_count: usize, covariates: bool, future_rows: usize) -> DataPro
 
 fn hardware() -> HardwareProfile {
     HardwareProfile {
+        gpu_memory_kind: crate::services::forecast::hardware_profile::GpuMemoryKind::Dedicated,
         vram_total_mb: Some(64_000),
         vram_available_mb: Some(64_000),
         ram_available_mb: Some(64_000),
@@ -152,6 +153,7 @@ fn unknown_hardware_only_keeps_lightweight_safe_models() {
         model("chronos-2", true),
     ];
     let unknown = HardwareProfile {
+        gpu_memory_kind: crate::services::forecast::hardware_profile::GpuMemoryKind::Unknown,
         vram_total_mb: None,
         vram_available_mb: None,
         ram_available_mb: None,
@@ -181,9 +183,11 @@ fn backtest(
             rmse: mase,
             bias: 0.0,
             stability: 0.0,
+            quantile_loss: Some(mase),
         }),
         calibration: None,
         duration_ms: 10,
+        max_memory_mb: None,
         beats_best_baseline,
         failure: None,
     }

@@ -6,8 +6,6 @@ use crate::services::forecast::evaluation::types::{BacktestIndexResult, Backtest
 use crate::services::forecast::hardware_profile::{HardwareProfile, ResourceFit};
 use crate::services::forecast::{catalog, limits, registry, validation};
 
-const MAX_UNKNOWN_RESOURCE_RAM_MB: u32 = 2_048;
-
 pub(super) fn evaluate(
     model: &Value,
     profile: &DataProfile,
@@ -44,7 +42,7 @@ pub(super) fn evaluate(
     if resource_fit == ResourceFit::Insufficient {
         return Err("resources_insufficient");
     }
-    if resource_fit == ResourceFit::Unknown && spec.ram_mb > MAX_UNKNOWN_RESOURCE_RAM_MB {
+    if resource_fit == ResourceFit::Unknown && spec.ram_mb > limits::MAX_UNKNOWN_RESOURCE_RAM_MB {
         return Err("resources_unknown");
     }
     let full_evidence = evidence_for(id, evidence);
@@ -116,6 +114,7 @@ fn compact_backtest(model_id: &str, summary: &BacktestIndexSummary) -> Option<Ca
         windows: summary.windows,
         metrics: result.metrics.clone()?,
         duration_ms: result.duration_ms,
+        max_memory_mb: result.max_memory_mb,
         beats_best_baseline: result.beats_best_baseline,
         calibration: result.calibration.clone(),
     })

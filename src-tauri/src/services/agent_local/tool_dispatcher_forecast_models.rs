@@ -99,7 +99,7 @@ pub async fn handle(args: &Value, session_id: &str) -> ToolResult {
             } else if selection.requested_model.is_some() {
                 "The explicitly requested model was excluded. Explain requested_model.exclusion_reason and do not silently replace it. Use another candidate only after the user accepts."
             } else if selection.basis == "rolling_backtest" {
-                "Choose only one returned candidate. Every candidate supports the profile's exact confidence_level; pass it unchanged. Prefer the lowest MASE that beats the best baseline, unless the user's explicit speed, local, cloud, or cost need justifies another safe candidate. Pass selection_id, selection_source, and short selection_reason_codes to forecast."
+                "Choose only one returned candidate. Every candidate supports the profile's exact confidence_level; pass it unchanged. Follow the returned multi-metric ranking and require it to beat the best baseline, unless the user's explicit speed, local, cloud, or cost need justifies another safe candidate. Pass selection_id, selection_source, and short selection_reason_codes to forecast."
             } else {
                 "Choose only one returned candidate. Every candidate supports the profile's exact confidence_level; pass it unchanged. This ranking uses capabilities and current resources, so do not call it the best model. Pass selection_id, selection_source, and short selection_reason_codes to forecast."
             };
@@ -120,7 +120,10 @@ pub async fn handle(args: &Value, session_id: &str) -> ToolResult {
                 },
                 "hardware_profile": {
                     "scope": "forecast_only",
-                    "details": "candidate_resource_fit"
+                    "gpu_memory_kind": hardware.gpu_memory_kind,
+                    "gpu_memory_total_mb": hardware.vram_total_mb,
+                    "gpu_memory_available_mb": hardware.vram_available_mb,
+                    "ram_available_mb": hardware.ram_available_mb
                 },
                 "selection_id": selection_id,
                 "candidates": selection.candidates,

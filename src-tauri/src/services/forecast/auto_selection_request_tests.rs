@@ -77,6 +77,7 @@ fn requested_incompatible_confidence_has_a_precise_exclusion_reason() {
 
 fn hardware() -> HardwareProfile {
     HardwareProfile {
+        gpu_memory_kind: super::hardware_profile::GpuMemoryKind::Dedicated,
         vram_total_mb: Some(64_000),
         vram_available_mb: Some(64_000),
         ram_available_mb: Some(64_000),
@@ -152,6 +153,7 @@ fn explicitly_requested_model_is_kept_in_the_shortlist() {
 fn explicitly_requested_model_still_obeys_resource_safety() {
     let models = [model("chronos-2", true, true)];
     let insufficient = HardwareProfile {
+        gpu_memory_kind: super::hardware_profile::GpuMemoryKind::Dedicated,
         vram_total_mb: Some(1),
         vram_available_mb: Some(1),
         ram_available_mb: Some(1),

@@ -60,6 +60,7 @@ mod sidecar_spawn;
 pub mod spreadsheet_mapping;
 pub mod storage;
 mod storage_backtests;
+mod storage_index;
 mod storage_io;
 mod storage_paths;
 mod storage_revision;

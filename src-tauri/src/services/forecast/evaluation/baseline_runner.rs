@@ -11,14 +11,26 @@ pub(super) fn evaluate(
     confidence: f64,
 ) -> ModelBacktestResult {
     let started = Instant::now();
-    match collect_observations(baseline, plan, period, confidence) {
-        Ok((observations, folds)) => ModelBacktestResult {
+    let outcome = collect_observations(baseline, plan, period, confidence).and_then(
+        |(observations, folds)| {
+            let metrics = metrics::summarize(&observations, confidence)
+                .ok_or_else(|| "invalid_backtest_data".to_string())?;
+            Ok((
+                metrics,
+                metrics::calibration(&observations, confidence),
+                folds,
+            ))
+        },
+    );
+    match outcome {
+        Ok((metrics, calibration, folds)) => ModelBacktestResult {
             model_id: baseline.id().to_string(),
             kind: BacktestKind::Baseline,
-            metrics: metrics::summarize(&observations),
-            calibration: metrics::calibration(&observations, confidence),
+            metrics: Some(metrics),
+            calibration,
             folds,
             duration_ms: elapsed_ms(started),
+            max_memory_mb: None,
             rank: None,
             beats_best_baseline: None,
             warning: None,
@@ -33,6 +45,7 @@ pub(super) fn evaluate(
                 calibration: None,
                 folds: Vec::new(),
                 duration_ms: elapsed_ms(started),
+                max_memory_mb: None,
                 rank: None,
                 beats_best_baseline: None,
                 warning: Some(failure.code.clone()),

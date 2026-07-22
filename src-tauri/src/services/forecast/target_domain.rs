@@ -1,5 +1,5 @@
 use super::input_data::ParsedInput;
-use super::types::{ForecastRequest, Prediction};
+use super::types::{ForecastRequest, ForecastResult, Prediction};
 
 pub fn apply_non_negative_floor(
     request: &ForecastRequest,
@@ -24,14 +24,48 @@ pub fn requires_non_negative_output(request: &ForecastRequest, input: &ParsedInp
     enabled_by_config(request) && is_non_negative_target(request, input)
 }
 
+pub(crate) fn apply_saved_non_negative_floor(result: &mut ForecastResult) {
+    if !saved_result_requires_non_negative_output(result) {
+        return;
+    }
+    for prediction in &mut result.predictions {
+        prediction.value = prediction.value.max(0.0);
+    }
+    clamp_values(&mut result.quantiles.q10);
+    clamp_values(&mut result.quantiles.q50);
+    clamp_values(&mut result.quantiles.q90);
+}
+
+fn saved_result_requires_non_negative_output(result: &ForecastResult) -> bool {
+    let enabled = result
+        .provenance
+        .effective_config
+        .model_parameters
+        .get("non_negative_output")
+        .and_then(serde_json::Value::as_bool)
+        .or_else(|| model_non_negative_enabled(&result.model))
+        .unwrap_or(false);
+    enabled
+        && !result.input_data.history.is_empty()
+        && result
+            .input_data
+            .history
+            .iter()
+            .all(|point| point.value.is_finite() && point.value >= 0.0)
+        && target_name_is_non_negative(&result.target_column)
+}
+
 fn enabled_by_config(request: &ForecastRequest) -> bool {
     let Some(model_id) = request.model.as_deref() else {
         return false;
     };
+    model_non_negative_enabled(model_id).unwrap_or(false)
+}
+
+fn model_non_negative_enabled(model_id: &str) -> Option<bool> {
     super::model_config::effective_values(model_id)
         .ok()
         .and_then(|values| values.get("non_negative_output").and_then(|v| v.as_bool()))
-        .unwrap_or(false)
 }
 
 fn is_non_negative_target(request: &ForecastRequest, input: &ParsedInput) -> bool {

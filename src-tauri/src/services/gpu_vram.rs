@@ -62,8 +62,11 @@ mod tests {
     #[test]
     fn detect_vram_returns_something() {
         let vram = detect_vram_mb();
-        if cfg!(target_os = "macos") {
-            assert!(vram.is_some(), "macOS devrait retourner la RAM système");
+        if cfg!(all(target_os = "macos", target_arch = "aarch64")) {
+            assert!(
+                vram.is_some(),
+                "Apple Silicon devrait retourner la mémoire unifiée"
+            );
         }
     }
 

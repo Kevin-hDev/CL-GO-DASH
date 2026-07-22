@@ -89,6 +89,7 @@ fn comparison_payload(analysis: &crate::services::forecast::types::ForecastResul
             "calibration": result.calibration,
             "beats_best_baseline": result.beats_best_baseline,
             "duration_ms": result.duration_ms,
+            "max_memory_mb": result.max_memory_mb,
             "failure": result.failure,
         })).collect::<Vec<_>>(),
         "model_failures": model_failures,
@@ -96,7 +97,7 @@ fn comparison_payload(analysis: &crate::services::forecast::types::ForecastResul
         "usage": if has_failures {
             "This backtest is partial. Report failed entries and their structured failure codes; compare only successful results and do not claim that every requested model or baseline was validated."
         } else {
-            "Prefer the lowest MASE among successful results and require an advanced model to beat the best baseline."
+            "Follow rank among successful results. Ranking prioritizes MASE, then quantile loss, interval coverage, other accuracy metrics, stability, observed memory and duration. Require an advanced model to beat the best baseline."
         }
     });
     match serde_json::to_string(&payload) {

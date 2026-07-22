@@ -10,7 +10,7 @@ pub(super) struct Observation {
     pub fold: usize,
 }
 
-pub(super) fn summarize(observations: &[Observation]) -> Option<BacktestMetrics> {
+pub(super) fn summarize(observations: &[Observation], confidence: f64) -> Option<BacktestMetrics> {
     if observations.is_empty() || observations.iter().any(invalid) {
         return None;
     }
@@ -39,6 +39,7 @@ pub(super) fn summarize(observations: &[Observation]) -> Option<BacktestMetrics>
         / count;
     let fold_maes = fold_maes(observations);
     let stability = standard_deviation(&fold_maes);
+    let quantile_loss = mean_quantile_loss(observations, confidence)?;
     Some(BacktestMetrics {
         mase,
         smape,
@@ -46,7 +47,35 @@ pub(super) fn summarize(observations: &[Observation]) -> Option<BacktestMetrics>
         rmse,
         bias,
         stability,
+        quantile_loss: Some(quantile_loss),
     })
+}
+
+fn mean_quantile_loss(observations: &[Observation], confidence: f64) -> Option<f64> {
+    if !crate::services::forecast::interval_capability::valid_input_level(confidence) {
+        return None;
+    }
+    let lower_level = crate::services::forecast::intervals::lower_level(confidence);
+    let upper_level = crate::services::forecast::intervals::upper_level(confidence);
+    let total = observations
+        .iter()
+        .map(|item| {
+            pinball(item.actual, item.lower, lower_level)
+                + pinball(item.actual, item.predicted, 0.5)
+                + pinball(item.actual, item.upper, upper_level)
+        })
+        .sum::<f64>();
+    let value = total / (observations.len() * 3) as f64;
+    value.is_finite().then_some(value)
+}
+
+fn pinball(actual: f64, predicted_quantile: f64, level: f64) -> f64 {
+    let error = actual - predicted_quantile;
+    if error >= 0.0 {
+        level * error
+    } else {
+        (1.0 - level) * -error
+    }
 }
 
 pub(super) fn calibration(

@@ -20,14 +20,18 @@ pub(super) fn compare(left: &AutoCandidate, right: &AutoCandidate, rolling: bool
 fn compare_backtests(left: &CandidateBacktest, right: &CandidateBacktest) -> Ordering {
     baseline_rank(right.beats_best_baseline)
         .cmp(&baseline_rank(left.beats_best_baseline))
-        .then_with(|| left.metrics.mase.total_cmp(&right.metrics.mase))
-        .then_with(|| left.metrics.smape.total_cmp(&right.metrics.smape))
-        .then_with(|| left.metrics.mae.total_cmp(&right.metrics.mae))
-        .then_with(|| left.metrics.rmse.total_cmp(&right.metrics.rmse))
-        .then_with(|| left.metrics.bias.abs().total_cmp(&right.metrics.bias.abs()))
-        .then_with(|| coverage_gap(left).total_cmp(&coverage_gap(right)))
-        .then_with(|| left.metrics.stability.total_cmp(&right.metrics.stability))
-        .then_with(|| left.duration_ms.cmp(&right.duration_ms))
+        .then_with(|| {
+            crate::services::forecast::evaluation::ranking::compare_quality(
+                &left.metrics,
+                left.calibration.as_ref(),
+                left.duration_ms,
+                left.max_memory_mb,
+                &right.metrics,
+                right.calibration.as_ref(),
+                right.duration_ms,
+                right.max_memory_mb,
+            )
+        })
 }
 
 fn baseline_rank(value: Option<bool>) -> u8 {
@@ -36,15 +40,6 @@ fn baseline_rank(value: Option<bool>) -> u8 {
         None => 1,
         Some(false) => 0,
     }
-}
-
-fn coverage_gap(backtest: &CandidateBacktest) -> f64 {
-    backtest
-        .calibration
-        .as_ref()
-        .map_or(f64::INFINITY, |value| {
-            (value.measured_coverage - value.theoretical_coverage).abs()
-        })
 }
 
 fn resource_rank(fit: ResourceFit) -> u8 {

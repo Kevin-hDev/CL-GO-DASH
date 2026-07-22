@@ -34,7 +34,7 @@ pub(super) fn backtest() -> Value {
 pub(super) fn compare() -> Value {
     super::super::tool_definitions::tool_def(
         "forecast_compare_models",
-        "Read the comparable rolling-backtest ranking saved on one Forecast analysis. It returns bounded metrics, baseline status and measured interval coverage without returning raw folds or data. Inspect status, model_failures and baseline_failures; never present a partial comparison as complete.",
+        "Read the comparable rolling-backtest ranking saved on one Forecast analysis. It returns bounded accuracy and quantile metrics, baseline status, measured interval coverage, duration and observed memory without returning raw folds or data. Inspect status, model_failures and baseline_failures; never present a partial comparison as complete.",
         serde_json::json!({
             "type": "object",
             "properties": {
@@ -77,5 +77,9 @@ mod tests {
             .as_str()
             .unwrap()
             .contains("partial"));
+        assert!(compare["function"]["description"]
+            .as_str()
+            .unwrap()
+            .contains("observed memory"));
     }
 }

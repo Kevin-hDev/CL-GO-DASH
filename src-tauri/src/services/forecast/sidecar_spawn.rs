@@ -56,6 +56,7 @@ pub async fn wait_until_ready(
     port: u16,
     model_name: &str,
     family_id: &str,
+    pid: u32,
     auth_token: Zeroizing<String>,
 ) -> Result<SidecarEndpoint, String> {
     for _ in 0..60 {
@@ -67,6 +68,7 @@ pub async fn wait_until_ready(
                 return Ok(SidecarEndpoint {
                     base_url: format!("http://127.0.0.1:{ready_port}"),
                     auth_token,
+                    pid,
                 });
             }
         }
