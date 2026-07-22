@@ -17,6 +17,11 @@
 
 .mdb-label {
   font-size: var(--text-xs);
+  color: var(--ink);
+}
+
+.mdb-phase {
+  font-size: var(--text-xs);
   color: var(--ink-muted);
 }
 

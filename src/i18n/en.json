@@ -515,6 +515,7 @@
       "starting": "Starting",
       "downloading": "Downloading",
       "installing": "Installing",
+      "preparing-runtime": "Preparing engine",
       "completed": "Completed"
     },
     "errors": {
@@ -1686,7 +1687,12 @@
       "modelCapabilities": "Model capabilities",
       "engine": "Engine used",
       "install": "Install",
+      "prepare": "Prepare",
       "installed": "Installed",
+      "preparationRequired": "Preparation required",
+      "uninstall": "Uninstall",
+      "confirmUninstall": "Confirm uninstall",
+      "uninstalling": "Uninstalling…",
       "cancel": "Cancel",
       "parameters": "Parameters",
       "diskSize": "Disk size",

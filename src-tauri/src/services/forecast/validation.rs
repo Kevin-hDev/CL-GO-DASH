@@ -14,6 +14,14 @@ pub fn model_id(request: &ForecastRequest) -> Result<&str, String> {
 }
 
 pub fn validate_model_id(id: &str) -> Result<(), String> {
+    validate_model_id_format(id)?;
+    if catalog::find_model(id).is_none() {
+        return Err("Modèle inconnu".into());
+    }
+    Ok(())
+}
+
+pub fn validate_model_id_format(id: &str) -> Result<(), String> {
     if id.is_empty() || id.chars().count() > limits::MAX_MODEL_ID_CHARS {
         return Err("Modèle invalide".into());
     }
@@ -22,9 +30,6 @@ pub fn validate_model_id(id: &str) -> Result<(), String> {
         .all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.'))
     {
         return Err("Modèle invalide".into());
-    }
-    if catalog::find_model(id).is_none() {
-        return Err("Modèle inconnu".into());
     }
     Ok(())
 }

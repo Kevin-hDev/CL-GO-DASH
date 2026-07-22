@@ -510,6 +510,7 @@
       "starting": "Start",
       "downloading": "Wird heruntergeladen",
       "installing": "Installation",
+      "preparing-runtime": "Engine wird vorbereitet",
       "completed": "Abgeschlossen"
     },
     "errors": {
@@ -1659,7 +1660,12 @@
       "modelCapabilities": "Modellfähigkeiten",
       "engine": "Verwendete Engine",
       "install": "Installieren",
+      "prepare": "Vorbereiten",
       "installed": "Installiert",
+      "preparationRequired": "Vorbereitung erforderlich",
+      "uninstall": "Deinstallieren",
+      "confirmUninstall": "Deinstallation bestätigen",
+      "uninstalling": "Wird deinstalliert…",
       "cancel": "Abbrechen",
       "parameters": "Parameter",
       "diskSize": "Speichergröße",

@@ -1,5 +1,5 @@
 use super::types::ForecastRequest;
-use super::validation::validate_request;
+use super::validation::{validate_model_id, validate_model_id_format, validate_request};
 
 fn make_request(model: &str) -> ForecastRequest {
     ForecastRequest {
@@ -63,4 +63,11 @@ fn rejects_frequency_outside_the_model_catalog_range() {
         validate_request(&request),
         Err("Fréquence non supportée par ce moteur".into())
     );
+}
+
+#[test]
+fn model_id_format_can_be_checked_before_catalog_resolution() {
+    assert!(validate_model_id_format("future-model-1").is_ok());
+    assert!(validate_model_id("future-model-1").is_err());
+    assert!(validate_model_id_format("../../future-model").is_err());
 }

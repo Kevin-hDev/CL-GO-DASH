@@ -42,6 +42,7 @@ fn enrich_model_object(
     let runtime = registry::find_runtime(model.id);
     let installed_model = model_manager::is_installed(model.id);
     let provider_configured = configured.iter().any(|id| id == model.provider_id);
+    let runtime_ready = runtime_ready_state(runtime, installed_model, provider_configured);
     if let Some(runtime) = runtime {
         object.insert(
             "engine_kind".into(),
@@ -76,16 +77,10 @@ fn enrich_model_object(
             runtime,
             installed_model,
             provider_configured,
+            runtime_ready,
         )),
     );
-    object.insert(
-        "runtime_ready".into(),
-        Value::Bool(runtime_ready_state(
-            runtime,
-            installed_model,
-            provider_configured,
-        )),
-    );
+    object.insert("runtime_ready".into(), Value::Bool(runtime_ready));
     object.insert(
         "size_on_disk".into(),
         Value::Number(model_manager::get_model_size(model.id).into()),
@@ -117,12 +112,15 @@ fn runnable_state(
     runtime: Option<&registry::ForecastRuntimeSpec>,
     installed: bool,
     provider_configured: bool,
+    runtime_ready: bool,
 ) -> bool {
     match runtime {
         Some(spec) if registry::is_cloud(spec) => {
             registry::has_predict_adapter(spec) && provider_configured
         }
-        Some(spec) => registry::has_predict_adapter(spec) && !model.is_cloud && installed,
+        Some(spec) => {
+            registry::has_predict_adapter(spec) && !model.is_cloud && installed && runtime_ready
+        }
         None => false,
     }
 }
@@ -145,3 +143,7 @@ fn runtime_ready_state(
             spec.family_id,
         )
 }
+
+#[cfg(test)]
+#[path = "model_listing_tests.rs"]
+mod tests;

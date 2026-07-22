@@ -20,6 +20,7 @@ const MODEL: ForecastModelEntry = {
   frequencies: "D,W,M",
   is_cloud: false,
   installed: true,
+  runtime_ready: true,
   runnable: true,
 };
 

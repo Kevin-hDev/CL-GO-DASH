@@ -1,8 +1,8 @@
 use crate::services::forecast::{
-    catalog, model_config, model_listing, model_manager, selection_policy, validation,
+    catalog, model_config, model_listing, model_manager, selection_policy, sidecar, validation,
 };
 use serde_json::{Map, Value};
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 
 #[tauri::command]
 pub fn list_forecast_models() -> Value {
@@ -58,6 +58,9 @@ pub fn set_forecast_auto_cloud_allowed(
 #[tauri::command]
 pub async fn uninstall_forecast_model(app: AppHandle, name: String) -> Result<(), String> {
     validation::validate_model_id(&name)?;
+    let chronos = app.state::<sidecar::ChronosSidecar>();
+    let _prediction_guard = chronos.lock_prediction().await;
+    sidecar::stop_model(chronos.inner(), &name).await;
     model_manager::uninstall(&name).await?;
     let _ = app.emit("forecast-models-changed", ());
     Ok(())

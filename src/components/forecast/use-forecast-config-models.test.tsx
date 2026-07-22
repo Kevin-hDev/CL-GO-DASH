@@ -23,6 +23,7 @@ const RESPONSE: ForecastModelsResponse = {
     frequencies: "D,W,M",
     is_cloud: false,
     installed: true,
+    runtime_ready: true,
     runnable: true,
   }],
 };
@@ -37,6 +38,18 @@ describe("useForecastConfigModels", () => {
 
     await waitFor(() => expect(result.current.models).toHaveLength(1));
 
+    expect(result.current.model).toBe("");
+  });
+
+  it("masque un modele local tant que son moteur n'est pas pret", async () => {
+    vi.mocked(invoke).mockResolvedValue({
+      ...RESPONSE,
+      models: [{ ...RESPONSE.models[0], runtime_ready: false }],
+    });
+
+    const { result } = renderHook(() => useForecastConfigModels("", false));
+
+    await waitFor(() => expect(result.current.models).toHaveLength(0));
     expect(result.current.model).toBe("");
   });
 });

@@ -7,6 +7,7 @@ import type {
   ForecastModelGroup,
   ForecastProviderEntry,
 } from "@/components/forecast/forecast-model-meta";
+import { forecastModels } from "../test-utils/settings-tab-test-data";
 
 vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn(() => Promise.resolve(null)) }));
 
@@ -29,24 +30,9 @@ vi.mock("@/components/forecast/model-browser/model-install-btn", () => ({
 
 function model(overrides: Partial<ForecastModelEntry> = {}): ForecastModelEntry {
   return {
-    id: "chronos-bolt-small",
-    provider_id: "local",
-    family_id: "chronos-bolt",
-    display_name: "Chronos Bolt Small",
-    params: "small",
-    size_mb: 120,
-    ram_mb: 512,
-    vram_mb: null,
-    cpu_supported: true,
-    gpu_supported: false,
-    multivariate: false,
-    covariates: false,
-    horizon_max: 64,
-    frequencies: "D,H",
-    is_cloud: false,
-    installed: true,
-    runnable: true,
+    ...forecastModels().models[0],
     ...overrides,
+    runtime_ready: overrides.runtime_ready ?? true,
   };
 }
 

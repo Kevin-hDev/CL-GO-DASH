@@ -43,6 +43,7 @@ function model(overrides: Partial<ForecastModelEntry> = {}): ForecastModelEntry 
     installed: true,
     runnable: true,
     ...overrides,
+    runtime_ready: overrides.runtime_ready ?? true,
   };
 }
 

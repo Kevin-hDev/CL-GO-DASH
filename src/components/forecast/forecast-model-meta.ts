@@ -21,6 +21,7 @@ export interface ForecastModelEntry {
   frequencies: string;
   is_cloud: boolean;
   installed: boolean;
+  runtime_ready: boolean;
   installable?: boolean;
   runnable?: boolean;
   size_on_disk?: number;
@@ -120,7 +121,9 @@ export function listForecastFamilies(models: ForecastModelEntry[]): ForecastMode
 
 export function isForecastModelSelectable(model: ForecastModelEntry): boolean {
   if (!model.runnable) return false;
-  return model.is_cloud ? Boolean(model.provider_configured) : model.installed;
+  return model.is_cloud
+    ? Boolean(model.provider_configured)
+    : model.installed && model.runtime_ready === true;
 }
 
 export function getForecastModelSummaryKey(modelId: string): string {

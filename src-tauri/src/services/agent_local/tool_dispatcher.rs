@@ -168,46 +168,13 @@ pub(super) async fn dispatch_inner(
             super::tool_dispatcher_delegate::dispatch_delegate(args, session_id, cancel.clone())
                 .await
         }
-        _ => {
-            if let Some(result) = super::tool_subagent_changes::dispatch(
-                tool_name,
-                args,
-                working_dir,
-                session_id,
-            )
-            .await
-            {
-                return result;
-            }
-            if let Some(result) =
-                super::tool_subagent_control::dispatch(tool_name, args, session_id, cancel).await
-            {
-                return result;
-            }
-            if let Some(result) = super::tool_dispatcher_forecast::dispatch_forecast(
-                tool_name,
-                args,
-                working_dir,
-                session_id,
-            )
-            .await
-            {
-                return result;
-            }
-            if let Some(result) = super::tool_dispatcher_mcp::dispatch_mcp(tool_name, args).await {
-                return result;
-            }
-            match super::tool_dispatcher_office::dispatch_office(
-                tool_name,
-                args,
-                working_dir,
-                session_id,
-            )
-            .await
-            {
-                Some(result) => result,
-                None => ToolResult::err(format!("Outil inconnu: {tool_name}")),
-            }
-        }
+        _ => super::tool_dispatcher_fallback::dispatch(
+            tool_name,
+            args,
+            working_dir,
+            session_id,
+            cancel,
+        )
+        .await,
     }
 }

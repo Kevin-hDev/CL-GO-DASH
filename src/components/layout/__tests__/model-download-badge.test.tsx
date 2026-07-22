@@ -44,6 +44,7 @@ describe("ModelDownloadBadge", () => {
     render(<ModelDownloadBadge />);
 
     expect(screen.getByText("modelDownloads.kinds.forecast")).toBeTruthy();
+    expect(screen.getByText("modelDownloads.phases.downloading")).toBeTruthy();
     expect(screen.getByText("64%")).toBeTruthy();
   });
 });

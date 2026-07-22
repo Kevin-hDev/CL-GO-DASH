@@ -35,6 +35,7 @@ pub async fn rerun(
         return Err("Modèle non installé".into());
     }
     let chronos = chronos.ok_or("Service de prédiction indisponible")?;
+    let _prediction_guard = chronos.lock_prediction().await;
     let endpoint = sidecar::start(chronos, model_id, runtime.family_id)
         .await
         .map_err(|_| "Impossible de démarrer le service de prédiction".to_string())?;

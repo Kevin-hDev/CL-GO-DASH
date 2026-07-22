@@ -12,6 +12,9 @@ export function ModelDownloadBadge() {
       <span className="mdb-label">
         {t(`modelDownloads.kinds.${activeDownload.kind}`)}
       </span>
+      <span className="mdb-phase">
+        {t(`modelDownloads.phases.${activeDownload.phase}`)}
+      </span>
       <div className="mdb-track">
         <div className="mdb-fill" style={{ width: `${activeDownload.percent}%` }} />
       </div>

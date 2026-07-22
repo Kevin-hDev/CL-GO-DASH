@@ -62,6 +62,11 @@ async fn evaluate_inner(
     if !analysis.covariates_used.is_empty() && !runtime.capabilities.future_covariates {
         return Err("model_incompatible".into());
     }
+    let _prediction_guard = if crate::services::forecast::registry::is_cloud(runtime) {
+        None
+    } else {
+        Some(chronos.lock_prediction().await)
+    };
     let executor = if crate::services::forecast::registry::is_cloud(runtime) {
         let policy =
             crate::services::forecast::selection_policy::get().map_err(|_| "cloud_not_allowed")?;

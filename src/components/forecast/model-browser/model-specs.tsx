@@ -67,8 +67,14 @@ export function ModelSpecs({ model, provider, onBack, onRefresh }: ModelSpecsPro
         </button>
         <div className="mp-header">
           <h2 className="mp-title">{model.display_name}</h2>
-          {!model.is_cloud && model.installable && !model.installed && (
-            <ModelInstallBtn modelId={model.id} installed={model.installed} onDone={onRefresh} />
+          {!model.is_cloud && model.installable && (
+            <ModelInstallBtn
+              modelId={model.id}
+              installed={model.installed}
+              runtimeReady={model.runtime_ready === true}
+              allowUninstall
+              onDone={onRefresh}
+            />
           )}
         </div>
 
@@ -139,9 +145,25 @@ function buildRows(
     { label: t("forecast.models.gpuLabel"), value: model.is_cloud ? "—" : (model.gpu_supported ? t("forecast.models.supported") : t("forecast.models.unsupported")) },
     { label: t("forecast.models.horizonMax"), value: String(model.horizon_max), mono: true },
     { label: t("forecast.models.frequencies"), value: model.frequencies, mono: true },
-    { label: t("forecast.models.status"), value: model.is_cloud ? (provider?.configured ? t("forecast.models.cloud") : t("forecast.models.noKeyConfigured")) : (model.installed ? t("forecast.models.installed") : t("forecast.models.uninstalled")) },
+    { label: t("forecast.models.status"), value: modelStatus(t, model, provider) },
     { label: t("forecast.models.licenseLabel"), value: details?.license || "—", mono: true },
     { label: t("forecast.models.libraryLabel"), value: details?.library_name || "—", mono: true },
     { label: t("forecast.models.pipelineLabel"), value: details?.pipeline_tag || "—", mono: true },
   ];
+}
+
+function modelStatus(
+  t: (key: string) => string,
+  model: ForecastModelEntry,
+  provider: ForecastProviderEntry | null,
+): string {
+  if (model.is_cloud) {
+    return provider?.configured
+      ? t("forecast.models.cloud")
+      : t("forecast.models.noKeyConfigured");
+  }
+  if (!model.installed) return t("forecast.models.uninstalled");
+  return model.runtime_ready === true
+    ? t("forecast.models.installed")
+    : t("forecast.models.preparationRequired");
 }

@@ -179,8 +179,13 @@ function ModelListRow({ model, isLast, onSelect, onRefresh }: ModelListRowProps)
       <div className="fs-model-actions">
         {model.is_cloud ? (
           <span className="fs-cloud-badge">☁</span>
-        ) : model.installable && !model.installed ? (
-          <ModelInstallBtn modelId={model.id} installed={model.installed} onDone={onRefresh} />
+        ) : model.installable ? (
+          <ModelInstallBtn
+            modelId={model.id}
+            installed={model.installed}
+            runtimeReady={model.runtime_ready === true}
+            onDone={onRefresh}
+          />
         ) : null}
       </div>
     </div>

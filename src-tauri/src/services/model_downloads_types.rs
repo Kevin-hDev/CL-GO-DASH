@@ -24,6 +24,7 @@ pub enum ModelDownloadStatus {
 pub enum ModelDownloadPhase {
     Starting,
     Downloading,
+    PreparingRuntime,
     Installing,
     Completed,
 }

@@ -510,6 +510,7 @@
       "starting": "開始中",
       "downloading": "ダウンロード中",
       "installing": "インストール中",
+      "preparing-runtime": "実行環境を準備中",
       "completed": "完了"
     },
     "errors": {
@@ -1659,7 +1660,12 @@
       "modelCapabilities": "モデルの能力",
       "engine": "使用エンジン",
       "install": "インストール",
+      "prepare": "準備",
       "installed": "インストール済み",
+      "preparationRequired": "準備が必要",
+      "uninstall": "アンインストール",
+      "confirmUninstall": "アンインストールを確認",
+      "uninstalling": "アンインストール中…",
       "cancel": "キャンセル",
       "parameters": "パラメータ",
       "diskSize": "ディスクサイズ",

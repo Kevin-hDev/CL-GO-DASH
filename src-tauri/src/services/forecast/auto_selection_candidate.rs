@@ -19,11 +19,15 @@ pub(super) fn evaluate(
     let id = model["id"].as_str().ok_or("invalid_model")?;
     let spec = catalog::find_model(id).ok_or("unknown_model")?;
     let runtime = registry::find_runtime(id).ok_or("adapter_unavailable")?;
-    if !model["runnable"].as_bool().unwrap_or(false) {
-        return Err("not_runnable");
-    }
     let runtime_ready = model["runtime_ready"].as_bool().unwrap_or(false);
-    if !runtime_ready && !explicitly_requested {
+    if !model["runnable"].as_bool().unwrap_or(false) {
+        return Err(if !spec.is_cloud && !runtime_ready {
+            "runtime_not_ready"
+        } else {
+            "not_runnable"
+        });
+    }
+    if !runtime_ready {
         return Err("runtime_not_ready");
     }
     if spec.is_cloud && !cloud_allowed {
@@ -43,7 +47,7 @@ pub(super) fn evaluate(
     let backtest = full_evidence
         .as_ref()
         .and_then(|summary| compact_backtest(id, summary));
-    let mut reasons = reasons(profile, resource_fit, explicitly_requested, runtime_ready);
+    let mut reasons = reasons(profile, resource_fit, explicitly_requested);
     if backtest.is_some() {
         reasons.push("backtest_available");
     }
@@ -112,18 +116,10 @@ fn compact_backtest(model_id: &str, summary: &BacktestIndexSummary) -> Option<Ca
     })
 }
 
-fn reasons(
-    profile: &DataProfile,
-    fit: ResourceFit,
-    requested: bool,
-    runtime_ready: bool,
-) -> Vec<&'static str> {
+fn reasons(profile: &DataProfile, fit: ResourceFit, requested: bool) -> Vec<&'static str> {
     let mut reasons = vec!["horizon_supported", "frequency_supported"];
     if requested {
         reasons.push("user_requested");
-    }
-    if !runtime_ready {
-        reasons.push("runtime_setup_required");
     }
     if profile.series_count > 1 {
         reasons.push("multi_series_supported");

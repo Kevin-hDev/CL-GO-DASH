@@ -16,6 +16,20 @@ fn requested_model_id_is_optional_and_strictly_validated() {
     .is_err());
     assert_eq!(
         requested_model_id(&serde_json::json!({
+            "requested_model_id": ""
+        }))
+        .unwrap(),
+        None
+    );
+    assert_eq!(
+        requested_model_id(&serde_json::json!({
+            "requested_model_id": "moirai-2.0"
+        }))
+        .unwrap(),
+        Some("moirai-2.0")
+    );
+    assert_eq!(
+        requested_model_id(&serde_json::json!({
             "requested_model_id": "moirai-2.0-r-small"
         }))
         .unwrap(),

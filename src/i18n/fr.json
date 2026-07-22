@@ -515,6 +515,7 @@
       "starting": "Démarrage",
       "downloading": "Téléchargement",
       "installing": "Installation",
+      "preparing-runtime": "Préparation du moteur",
       "completed": "Terminé"
     },
     "errors": {
@@ -1734,7 +1735,12 @@
       "modelCapabilities": "Capacités du modèle",
       "engine": "Moteur utilisé",
       "install": "Installer",
+      "prepare": "Préparer",
       "installed": "Installé",
+      "preparationRequired": "Préparation requise",
+      "uninstall": "Désinstaller",
+      "confirmUninstall": "Confirmer la désinstallation",
+      "uninstalling": "Désinstallation…",
       "cancel": "Annuler",
       "parameters": "Paramètres",
       "diskSize": "Taille disque",

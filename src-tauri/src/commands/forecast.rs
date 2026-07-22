@@ -60,6 +60,7 @@ pub async fn run_forecast(
             return Err("Modèle non installé".into());
         }
         crate::services::forecast::hardware_profile::validate_model_resources(spec)?;
+        let _prediction_guard = chronos.lock_prediction().await;
         let endpoint = sidecar::start(&chronos, &model_id, runtime.family_id)
             .await
             .map_err(|_| "Impossible de démarrer le service de prédiction".to_string())?;

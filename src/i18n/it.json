@@ -510,6 +510,7 @@
       "starting": "Avvio",
       "downloading": "Download",
       "installing": "Installazione",
+      "preparing-runtime": "Preparazione del motore",
       "completed": "Completato"
     },
     "errors": {
@@ -1659,7 +1660,12 @@
       "modelCapabilities": "Capacità del modello",
       "engine": "Motore usato",
       "install": "Installa",
+      "prepare": "Prepara",
       "installed": "Installato",
+      "preparationRequired": "Preparazione necessaria",
+      "uninstall": "Disinstalla",
+      "confirmUninstall": "Conferma disinstallazione",
+      "uninstalling": "Disinstallazione…",
       "cancel": "Annulla",
       "parameters": "Parametri",
       "diskSize": "Dimensione disco",

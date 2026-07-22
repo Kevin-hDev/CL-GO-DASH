@@ -510,6 +510,7 @@
       "starting": "正在启动",
       "downloading": "正在下载",
       "installing": "正在安装",
+      "preparing-runtime": "正在准备运行环境",
       "completed": "已完成"
     },
     "errors": {
@@ -1659,7 +1660,12 @@
       "modelCapabilities": "模型能力",
       "engine": "使用的引擎",
       "install": "安装",
+      "prepare": "准备",
       "installed": "已安装",
+      "preparationRequired": "需要准备",
+      "uninstall": "卸载",
+      "confirmUninstall": "确认卸载",
+      "uninstalling": "正在卸载…",
       "cancel": "取消",
       "parameters": "参数",
       "diskSize": "磁盘大小",

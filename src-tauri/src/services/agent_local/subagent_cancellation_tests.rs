@@ -106,13 +106,16 @@ async fn stopped_parent_stream_rejects_late_registration_but_fresh_stream_succee
 fn parent_stream_token_reaches_delegate_registration_on_every_control_path() {
     let batch = include_str!("tool_executor_delegate_batch.rs");
     let dispatcher = include_str!("tool_dispatcher.rs");
+    let fallback = include_str!("tool_dispatcher_fallback.rs");
     let message = include_str!("tool_subagent_message.rs");
     let delegate = include_str!("tool_delegate.rs");
 
     assert!(batch.contains("tool_executor_delegate_launch::launch"));
     assert!(batch.contains("cancel.clone()"));
     assert!(dispatcher.contains("dispatch_delegate(args, session_id, cancel.clone())"));
-    assert!(dispatcher.contains("tool_subagent_control::dispatch(tool_name, args, session_id, cancel)"));
+    assert!(fallback.contains(
+        "tool_subagent_control::dispatch(tool_name, args, session_id, cancel.clone())"
+    ));
     assert!(message.contains("dispatch_delegate(&payload, parent_id, cancel)"));
     assert!(delegate.contains("register_execution_for_parent_stream"));
     assert!(delegate.contains("&parent_cancel"));

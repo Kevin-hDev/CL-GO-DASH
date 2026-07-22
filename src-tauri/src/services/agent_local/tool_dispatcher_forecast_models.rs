@@ -90,7 +90,7 @@ pub async fn handle(args: &Value, session_id: &str) -> ToolResult {
                 .as_ref()
                 .is_some_and(|requested| requested.status == "candidate")
             {
-                "Use the explicitly requested candidate. Pass selection_source='explicit_user_override' and selection_reason_codes=['user_requested'] to forecast. Runtime setup may occur on first use."
+                "Use the explicitly requested candidate. Pass selection_source='explicit_user_override' and selection_reason_codes=['user_requested'] to forecast. The model and its runtime are already ready."
             } else if selection.requested_model.is_some() {
                 "The explicitly requested model was excluded. Explain requested_model.exclusion_reason and do not silently replace it. Use another candidate only after the user accepts."
             } else if selection.basis == "rolling_backtest" {
@@ -134,7 +134,11 @@ fn requested_model_id(args: &Value) -> Result<Option<&str>, String> {
     match args.get("requested_model_id") {
         None | Some(Value::Null) => Ok(None),
         Some(Value::String(id)) => {
-            validation::validate_model_id(id)?;
+            let id = id.trim();
+            if id.is_empty() {
+                return Ok(None);
+            }
+            validation::validate_model_id_format(id)?;
             Ok(Some(id))
         }
         Some(_) => Err("Modèle demandé invalide".to_string()),

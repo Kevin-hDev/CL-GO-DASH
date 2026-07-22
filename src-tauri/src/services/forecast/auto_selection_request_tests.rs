@@ -46,7 +46,7 @@ fn hardware() -> HardwareProfile {
 }
 
 #[test]
-fn explicitly_requested_runtime_can_be_prepared_on_demand() {
+fn explicitly_requested_runtime_must_already_be_ready() {
     let models = [
         model("chronos-bolt-tiny", true, true),
         model("moirai-2.0-r-small", true, false),
@@ -60,17 +60,16 @@ fn explicitly_requested_runtime_can_be_prepared_on_demand() {
         Some("moirai-2.0-r-small"),
     );
 
-    assert_eq!(selection.candidates[0].model_id, "moirai-2.0-r-small");
-    assert!(selection.candidates[0]
-        .reasons
-        .contains(&"runtime_setup_required"));
+    assert_eq!(selection.candidates.len(), 1);
+    assert_eq!(selection.candidates[0].model_id, "chronos-bolt-tiny");
     let requested = selection.requested_model.unwrap();
-    assert_eq!(requested.status, "candidate");
-    assert!(requested.runtime_setup_required);
+    assert_eq!(requested.status, "excluded");
+    assert_eq!(requested.exclusion_reason, Some("runtime_not_ready"));
+    assert!(!requested.runtime_setup_required);
 }
 
 #[test]
-fn explicitly_requested_unrunnable_model_has_a_clear_reason() {
+fn explicitly_requested_unprepared_model_has_a_clear_reason() {
     let models = [model("moirai-2.0-r-small", false, false)];
     let selection = select_with_requested_model(
         &models,
@@ -84,7 +83,7 @@ fn explicitly_requested_unrunnable_model_has_a_clear_reason() {
     assert!(selection.candidates.is_empty());
     let requested = selection.requested_model.unwrap();
     assert_eq!(requested.status, "excluded");
-    assert_eq!(requested.exclusion_reason, Some("not_runnable"));
+    assert_eq!(requested.exclusion_reason, Some("runtime_not_ready"));
 }
 
 #[test]

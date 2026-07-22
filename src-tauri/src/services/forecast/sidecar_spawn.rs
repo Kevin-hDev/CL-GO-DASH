@@ -10,15 +10,9 @@ pub fn sidecar_dir() -> PathBuf {
     data_dir().join("forecast-sidecar")
 }
 
-pub async fn install_runtime(family_id: &str) -> Result<PathBuf, String> {
-    tokio::task::spawn_blocking({
-        let dir = sidecar_dir();
-        let family = family_id.to_string();
-        move || sidecar_runtime::ensure_runtime(&dir, &family)
-    })
-    .await
-    .map_err(|_| "Initialisation du moteur Forecast impossible".to_string())?
-    .map_err(|_| "Initialisation du moteur Forecast impossible".to_string())
+pub fn ready_runtime(family_id: &str) -> Result<PathBuf, String> {
+    sidecar_runtime::ensure_runtime(&sidecar_dir(), family_id)
+        .map_err(|_| "Moteur Forecast non préparé".to_string())
 }
 
 #[allow(clippy::too_many_arguments)]

@@ -4,14 +4,21 @@ mod forecast_error;
 use self::forecast_error::model_error;
 use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::forecast::types::ForecastRequest;
-use crate::services::forecast::{
-    data_profiles, registry, selected_model, selection_policy, storage, validation,
-};
+use crate::services::forecast::{data_profiles, registry, selected_model, selection_policy, validation};
 use serde_json::Value;
 use std::path::Path;
 use std::time::Instant;
+use tokio_util::sync::CancellationToken;
 
-pub async fn handle(args: &Value, working_dir: &Path, session_id: &str) -> ToolResult {
+pub async fn handle(
+    args: &Value,
+    working_dir: &Path,
+    session_id: &str,
+    cancel: CancellationToken,
+) -> ToolResult {
+    if cancel.is_cancelled() {
+        return ToolResult::err("Annulé.");
+    }
     let started_at = Instant::now();
     let mut request: ForecastRequest = match serde_json::from_value(args.clone()) {
         Ok(request) => request,
@@ -101,8 +108,11 @@ pub async fn handle(args: &Value, working_dir: &Path, session_id: &str) -> ToolR
             )
         }
     };
-    let model_id = match validation::model_id(&request) {
-        Ok(id) => id,
+    let (model_id, runtime) = match super::tool_dispatcher_forecast_runtime::resolve(
+        &request,
+        &data_profile,
+    ) {
+        Ok(runtime) => runtime,
         Err(error) => {
             return model_error(
                 Some(selection_mode),
@@ -112,37 +122,17 @@ pub async fn handle(args: &Value, working_dir: &Path, session_id: &str) -> ToolR
             )
         }
     };
-    let runtime = match registry::find_runtime(model_id) {
-        Some(runtime) if registry::has_predict_adapter(runtime) => runtime,
-        _ => {
-            return model_error(
-                Some(selection_mode),
-                &selected,
-                requested_model.as_deref(),
-                "Moteur indisponible",
-            )
-        }
-    };
-    if data_profile.future_rows > 0
-        && !request.covariate_columns.is_empty()
-        && !runtime.capabilities.future_covariates
-    {
-        return model_error(
-            Some(selection_mode),
-            &selected,
-            requested_model.as_deref(),
-            "Variables futures non supportées par ce moteur",
-        );
-    }
 
     let result = if registry::is_cloud(runtime) {
-        super::tool_dispatcher_forecast_execute::run_cloud(&request, session_id).await
+        super::tool_dispatcher_forecast_execute::run_cloud(&request, session_id, cancel.clone())
+            .await
     } else {
         super::tool_dispatcher_forecast_execute::run_local(
             &request,
             model_id,
             runtime,
             session_id,
+            cancel.clone(),
         )
         .await
     };
@@ -172,27 +162,20 @@ pub async fn handle(args: &Value, working_dir: &Path, session_id: &str) -> ToolR
             &error,
         );
     }
-    if let Some(profile) = &forecast.data_profile {
-        if data_profiles::save(profile, &request).await.is_err() {
-            return model_error(
-                Some(selection_mode),
-                &selected,
-                requested_model.as_deref(),
-                "Sauvegarde du profil de données échouée",
-            );
-        }
-    }
-    if storage::save(&mut forecast).await.is_err() {
-        return model_error(
+    match super::tool_dispatcher_forecast_persist::save(
+        &mut forecast,
+        &request,
+        session_id,
+        &cancel,
+    )
+    .await
+    {
+        Ok(json) => ToolResult::ok(json),
+        Err(error) => model_error(
             Some(selection_mode),
             &selected,
             requested_model.as_deref(),
-            "Sauvegarde de la prévision échouée",
-        );
-    }
-    super::tool_dispatcher_forecast_execute::emit_created(&forecast.id, session_id);
-    match super::tool_dispatcher_forecast_output::created_payload(&forecast) {
-        Ok(json) => ToolResult::ok(json),
-        Err(error) => ToolResult::err(error),
+            &error,
+        ),
     }
 }

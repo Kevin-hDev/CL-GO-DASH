@@ -38,6 +38,7 @@ pub mod ollama_ps;
 pub mod paths;
 pub mod personality_injection;
 pub mod private_store;
+pub mod process_tree;
 pub mod provider_usage;
 pub mod reasoning;
 mod reasoning_effort;

@@ -2,16 +2,19 @@ use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::forecast::storage;
 use serde_json::Value;
 use std::path::Path;
+use tokio_util::sync::CancellationToken;
 
 pub async fn dispatch_forecast(
     tool_name: &str,
     args: &Value,
     working_dir: &Path,
     session_id: &str,
+    cancel: CancellationToken,
 ) -> Option<ToolResult> {
     match tool_name {
         "forecast" => Some(
-            super::tool_dispatcher_forecast_run::handle(args, working_dir, session_id).await,
+            super::tool_dispatcher_forecast_run::handle(args, working_dir, session_id, cancel)
+                .await,
         ),
         "forecast_models" => Some(
             super::tool_dispatcher_forecast_models::handle(args, session_id).await,

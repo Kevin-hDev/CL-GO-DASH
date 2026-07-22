@@ -117,6 +117,7 @@ export function forecastModels() {
       frequencies: "D,H",
       is_cloud: false,
       installed: true,
+      runtime_ready: true,
       runnable: true,
     }],
   };
