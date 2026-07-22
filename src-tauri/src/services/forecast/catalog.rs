@@ -44,7 +44,24 @@ pub fn find_provider(id: &str) -> Option<&'static ForecastProviderSpec> {
 }
 
 pub fn find_model(id: &str) -> Option<&'static ForecastModelSpec> {
-    FORECAST_MODELS.iter().find(|m| m.id == id)
+    FORECAST_MODELS
+        .iter()
+        .find(|model| model.id == id)
+        .or_else(|| (id == "tabpfn-ts").then_some(&catalog_specs::TABPFN_TS_ALIAS))
+}
+
+pub fn hf_file(model_id: &str) -> Option<&'static str> {
+    match model_id {
+        "tabpfn-ts" | "tabpfn-ts-3" => Some("tabpfn-v3-regressor-v3_20260506_timeseries.ckpt"),
+        _ => None,
+    }
+}
+
+pub fn requires_remote_code(model_id: &str) -> bool {
+    matches!(
+        model_id,
+        "kairos-10m" | "kairos-23m" | "kairos-50m" | "sundial-128m"
+    )
 }
 
 pub const FORECAST_PROVIDERS: &[ForecastProviderSpec] = catalog_specs::FORECAST_PROVIDERS;

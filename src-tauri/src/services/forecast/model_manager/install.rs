@@ -1,6 +1,9 @@
 use super::{
-    download, download_github, family_has_installed_model, is_installed_in, models_dir,
-    runtime_install::prepare_runtime, sidecar_dir,
+    download, download_github,
+    install_plan::{install_plan, should_remove_prepared_runtime, InstallPlan},
+    models_dir,
+    runtime_install::prepare_runtime,
+    sidecar_dir, smoke,
 };
 use crate::services::forecast::{catalog, sidecar_runtime, validation};
 use crate::services::model_downloads::{ModelDownloadPhase, ProgressUpdate};
@@ -8,13 +11,6 @@ use std::path::Path;
 use tokio_util::sync::CancellationToken;
 
 const DOWNLOAD_SHARE: u16 = 70;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum InstallPlan {
-    Full,
-    RuntimeOnly,
-    Ready,
-}
 
 pub async fn install_with_callback<F>(
     model_id: &str,
@@ -42,6 +38,9 @@ async fn install_with_roots(
     on_progress: &(dyn Fn(ProgressUpdate) + Send + Sync),
 ) -> Result<(), String> {
     validation::validate_model_id(model_id)?;
+    if catalog::requires_remote_code(model_id) {
+        return Err("Modèle Forecast désactivé par la politique de sécurité".into());
+    }
     let spec =
         catalog::find_model(model_id).ok_or_else(|| "Modèle Forecast inconnu".to_string())?;
     let plan = install_plan(models, sidecar, model_id)?;
@@ -59,7 +58,15 @@ async fn install_with_roots(
             on_progress(progress);
         };
         let result = if let Some(repo) = spec.hf_repo {
-            download::download_model(repo, spec.hf_revision, &staging, cancel, &scaled).await
+            download::download_model(
+                repo,
+                spec.hf_revision,
+                catalog::hf_file(model_id),
+                &staging,
+                cancel,
+                &scaled,
+            )
+            .await
         } else if let Some(repo) = spec.github_repo {
             download_github::download_repo_snapshot(
                 repo,
@@ -78,50 +85,73 @@ async fn install_with_roots(
         }
     }
 
-    if let Err(error) = prepare_runtime(sidecar, spec.family_id, cancel, on_progress).await {
+    let runtime_python = match prepare_runtime(sidecar, spec.family_id, cancel, on_progress).await {
+        Ok(python) => python,
+        Err(error) => {
+            if plan == InstallPlan::Full {
+                let _ = tokio::fs::remove_dir_all(&staging).await;
+            }
+            return Err(error);
+        }
+    };
+    let smoke_target = if plan == InstallPlan::Full {
+        &staging
+    } else {
+        &target
+    };
+    if let Err(error) = smoke::validate_model(
+        &runtime_python,
+        sidecar,
+        models,
+        smoke_target,
+        spec.family_id,
+        cancel,
+    )
+    .await
+    {
         if plan == InstallPlan::Full {
             let _ = tokio::fs::remove_dir_all(&staging).await;
         }
+        remove_unvalidated_runtime(runtime_was_ready, sidecar, spec.family_id).await;
         return Err(error);
     }
-    if plan == InstallPlan::RuntimeOnly {
+    if matches!(plan, InstallPlan::RuntimeOnly | InstallPlan::Validate) {
         return Ok(());
     }
     let result = finalize_model(&staging, &target, cancel, on_progress).await;
-    if result.is_err() && should_remove_prepared_runtime(runtime_was_ready, models, spec.family_id)
-    {
-        let directory = sidecar.to_path_buf();
-        let family = spec.family_id.to_string();
-        let _ = tokio::task::spawn_blocking(move || {
-            sidecar_runtime::remove_family_runtime(&directory, &family)
-        })
-        .await;
+    if result.is_err() {
+        remove_orphan_runtime(runtime_was_ready, models, sidecar, spec.family_id).await;
     }
     result
 }
 
-pub(super) fn should_remove_prepared_runtime(
-    runtime_was_ready: bool,
-    models: &Path,
-    family_id: &str,
-) -> bool {
-    !runtime_was_ready && !family_has_installed_model(models, family_id)
+async fn remove_unvalidated_runtime(runtime_was_ready: bool, sidecar: &Path, family_id: &str) {
+    if runtime_was_ready {
+        return;
+    }
+    let directory = sidecar.to_path_buf();
+    let family = family_id.to_string();
+    let _ = tokio::task::spawn_blocking(move || {
+        sidecar_runtime::remove_family_runtime(&directory, &family)
+    })
+    .await;
 }
 
-pub(super) fn install_plan(
+async fn remove_orphan_runtime(
+    runtime_was_ready: bool,
     models: &Path,
     sidecar: &Path,
-    model_id: &str,
-) -> Result<InstallPlan, String> {
-    let spec =
-        catalog::find_model(model_id).ok_or_else(|| "Modèle Forecast inconnu".to_string())?;
-    let weights = is_installed_in(models, model_id);
-    let runtime = sidecar_runtime::family_runtime_ready(sidecar, spec.family_id);
-    Ok(match (weights, runtime) {
-        (true, true) => InstallPlan::Ready,
-        (true, false) => InstallPlan::RuntimeOnly,
-        (false, _) => InstallPlan::Full,
+    family_id: &str,
+) {
+    if !should_remove_prepared_runtime(runtime_was_ready, models, family_id) {
+        return;
+    }
+    let directory = sidecar.to_path_buf();
+    let family = family_id.to_string();
+    let _ = tokio::task::spawn_blocking(move || {
+        sidecar_runtime::remove_family_runtime(&directory, &family)
     })
+    .await;
 }
 
 async fn prepare_model_staging(staging: &Path) -> Result<(), String> {

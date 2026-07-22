@@ -32,6 +32,7 @@ export interface ForecastModelEntry {
   capabilities?: {
     past_covariates: boolean;
     future_covariates: boolean;
+    multi_series: boolean;
     multivariate: boolean;
     probabilistic: boolean;
     backtesting_ready: boolean;
@@ -43,6 +44,7 @@ export interface ForecastModelEntry {
 export interface ForecastCapabilitySet {
   context: boolean;
   futureContext: boolean;
+  multiSeries: boolean;
   multivariate: boolean;
   probabilistic: boolean;
   backtesting: boolean;
@@ -126,6 +128,11 @@ export function isForecastModelSelectable(model: ForecastModelEntry): boolean {
     : model.installed && model.runtime_ready === true;
 }
 
+export function isForecastModelConfigurable(model: ForecastModelEntry): boolean {
+  if (model.is_cloud) return Boolean(model.provider_configured && model.runnable);
+  return model.installed && model.installable !== false;
+}
+
 export function getForecastModelSummaryKey(modelId: string): string {
   return `forecast.models.descriptions.${modelId}`;
 }
@@ -142,6 +149,7 @@ export function getModelCapabilities(model: ForecastModelEntry): ForecastCapabil
   return {
     context: Boolean(caps?.past_covariates),
     futureContext: Boolean(caps?.future_covariates),
+    multiSeries: Boolean(caps?.multi_series),
     multivariate: Boolean(caps?.multivariate),
     probabilistic: Boolean(caps?.probabilistic),
     backtesting: Boolean(caps?.backtesting_ready),

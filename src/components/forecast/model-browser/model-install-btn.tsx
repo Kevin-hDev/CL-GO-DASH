@@ -26,6 +26,7 @@ export function ModelInstallBtn({
 }: ModelInstallBtnProps) {
   const { t } = useTranslation();
   const [uninstalling, setUninstalling] = useState(false);
+  const [startFailed, setStartFailed] = useState(false);
   const { activeDownload, startDownload, cancelDownload, downloads } = useModelDownloads();
   const ownDownload = activeDownload?.kind === "forecast" && activeDownload.modelId === modelId
     ? activeDownload
@@ -34,13 +35,21 @@ export function ModelInstallBtn({
   const finishedOwn = downloads.find(
     (item) => item.kind === "forecast" && item.modelId === modelId && item.status === "completed",
   );
+  const failedOwn = downloads.find(
+    (item) => item.kind === "forecast" && item.modelId === modelId && item.status === "failed",
+  );
 
   useEffect(() => {
     if (finishedOwn) onDone();
   }, [finishedOwn, onDone]);
 
   const handleInstall = useCallback(async () => {
-    await startDownload({ kind: "forecast", modelId }).catch(() => undefined);
+    setStartFailed(false);
+    try {
+      await startDownload({ kind: "forecast", modelId });
+    } catch {
+      setStartFailed(true);
+    }
   }, [modelId, startDownload]);
 
   const handleCancel = useCallback(async () => {
@@ -85,15 +94,37 @@ export function ModelInstallBtn({
     );
   }
 
-  if (installed && runtimeReady && allowUninstall) {
+  const downloadAction = (
+    <div className="fmi-action">
+      <button
+        className="ollama-btn fmi-btn"
+        disabled={blocked}
+        onClick={() => void handleInstall()}
+      >
+        {blocked
+          ? t("modelDownloads.busy")
+          : installed
+            ? t("forecast.models.prepare")
+            : t("forecast.models.install")}
+      </button>
+      {(failedOwn || startFailed) && (
+        <span className="fmi-error" role="alert">{t("errors.downloadFailed")}</span>
+      )}
+    </div>
+  );
+
+  if (installed && allowUninstall) {
     return (
-      <ConfirmButton
-        className="ollama-btn fmi-btn fmi-uninstall"
-        label={uninstalling ? t("forecast.models.uninstalling") : t("forecast.models.uninstall")}
-        confirmLabel={t("forecast.models.confirmUninstall")}
-        onConfirm={() => void handleUninstall()}
-        disabled={uninstalling || blocked}
-      />
+      <div className="fmi-actions">
+        {!runtimeReady && downloadAction}
+        <ConfirmButton
+          className="ollama-btn fmi-btn fmi-uninstall"
+          label={uninstalling ? t("forecast.models.uninstalling") : t("forecast.models.uninstall")}
+          confirmLabel={t("forecast.models.confirmUninstall")}
+          onConfirm={() => void handleUninstall()}
+          disabled={uninstalling || blocked}
+        />
+      </div>
     );
   }
 
@@ -107,17 +138,5 @@ export function ModelInstallBtn({
     );
   }
 
-  return (
-    <button
-      className="ollama-btn fmi-btn"
-      disabled={blocked}
-      onClick={() => void handleInstall()}
-    >
-      {blocked
-        ? t("modelDownloads.busy")
-        : installed
-          ? t("forecast.models.prepare")
-          : t("forecast.models.install")}
-    </button>
-  );
+  return downloadAction;
 }

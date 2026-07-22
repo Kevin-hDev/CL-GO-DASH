@@ -56,7 +56,7 @@ async fn evaluate_inner(
     let runtime = crate::services::forecast::registry::find_runtime(model_id)
         .filter(|runtime| crate::services::forecast::registry::has_predict_adapter(runtime))
         .ok_or("model_unavailable")?;
-    if analysis.input_data.series_column.is_some() && !runtime.capabilities.multivariate {
+    if analysis.input_data.series_column.is_some() && !runtime.capabilities.multi_series {
         return Err("model_incompatible".into());
     }
     if !analysis.covariates_used.is_empty() && !runtime.capabilities.future_covariates {
@@ -77,7 +77,7 @@ async fn evaluate_inner(
             crate::services::api_keys::get_key("nixtla").map_err(|_| "cloud_not_configured")?,
         )
     } else {
-        if !crate::services::forecast::model_manager::is_installed(model_id) {
+        if !crate::services::forecast::model_manager::is_ready(model_id) {
             return Err("model_not_installed".into());
         }
         let spec =

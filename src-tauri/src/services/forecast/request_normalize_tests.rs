@@ -13,7 +13,7 @@ fn request() -> ForecastRequest {
         covariate_columns: vec![" ".into(), " temp ".into()],
         horizon: 3,
         frequency: " D ".into(),
-        model: Some(" kairos-10m ".into()),
+        model: Some(" tirex-35m ".into()),
         confidence_level: 0.8,
         selection_id: None,
         selection_source: None,
@@ -29,7 +29,7 @@ fn drops_blank_optional_fields() {
 
     assert_eq!(request.file_path, None);
     assert_eq!(request.series_column, None);
-    assert_eq!(request.model.as_deref(), Some("kairos-10m"));
+    assert_eq!(request.model.as_deref(), Some("tirex-35m"));
 }
 
 #[test]

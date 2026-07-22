@@ -1,7 +1,12 @@
-from .adapter_utils import forecast_payload_result, values_tensor
-from .config_utils import config_int, standard_quantile_levels
-from .device_utils import move_tensor, transformers_device_map
-from .quantile_utils import select_standard_quantiles
+import os
+from collections import OrderedDict
+
+from .adapter_utils import forecast_jobs, row_series_id
+from .config_utils import config_bool, config_int
+from .timesfm_output import format_result
+from .validation import read_numeric_value, validate_column_names
+
+MAX_CONTEXT = 16_384
 
 
 class TimesFmAdapter:
@@ -9,77 +14,141 @@ class TimesFmAdapter:
         self.model_dir = str(model_dir)
         self.device = device
         self.model = None
+        self.compiled_signature = None
 
     def predict(self, payload, horizon, quantile_levels):
-        quantile_levels = standard_quantile_levels(quantile_levels)
-        return forecast_payload_result(
-            payload,
-            horizon,
-            quantile_levels,
-            lambda values, length, levels: self._forecast_one(
-                values, length, levels, payload
-            ),
-        )
+        levels = validate_decile_levels(quantile_levels)
+        jobs = forecast_jobs(payload, horizon)
+        validate_future_dates(payload, jobs, horizon)
+        covariates = strict_covariate_columns(payload)
+        dynamic = build_dynamic_covariates(payload, jobs, horizon, covariates)
+        inputs = [job["values"] for job in jobs]
+        model = self._compiled_model(payload, inputs, horizon, bool(dynamic))
 
-    def _forecast_one(self, values, horizon, quantile_levels, payload):
-        try:
-            return self._predict_transformers(values, horizon, quantile_levels)
-        except Exception:
-            return self._predict_timesfm_package(
-                values, horizon, quantile_levels, payload
+        if dynamic:
+            points, quantiles = model.forecast_with_covariates(
+                inputs=inputs,
+                dynamic_numerical_covariates=dynamic,
+                xreg_mode="xreg + timesfm",
             )
+        else:
+            points, quantiles = model.forecast(horizon=horizon, inputs=inputs)
+        return format_result(jobs, points, quantiles, levels, horizon)
 
-    def _predict_transformers(self, values, horizon, quantile_levels):
-        import torch
-        from transformers import TimesFm2_5ModelForPrediction
-
-        model = self._load_transformers_model(TimesFm2_5ModelForPrediction)
-        with torch.no_grad():
-            context = move_tensor(values_tensor(values), self.device)
-            outputs = model(past_values=[context], return_dict=True)
-        median = outputs.mean_predictions[0][:horizon]
-        quantiles = self._select_quantiles(
-            getattr(outputs, "full_predictions", None),
-            horizon,
-            quantile_levels,
-            drop_mean=True,
-        )
-        return median, quantiles
-
-    def _load_transformers_model(self, model_class):
-        if self.model is None:
-            self.model = model_class.from_pretrained(
-                self.model_dir, device_map=transformers_device_map(self.device)
-            ).eval()
-        return self.model
-
-    def _predict_timesfm_package(self, values, horizon, quantile_levels, payload):
+    def _compiled_model(self, payload, inputs, horizon, with_covariates):
+        if self.device == "cpu":
+            os.environ["CUDA_VISIBLE_DEVICES"] = ""
         import timesfm
 
-        checkpoint = self._timesfm_checkpoint(timesfm)
-        context_len = config_int(payload, "context_length", 0, 0, 100000)
-        hparams = timesfm.TimesFmHparams(
-            backend="torch",
-            per_core_batch_size=1,
-            horizon_len=horizon,
-            context_len=context_len or min(len(values), 2048),
-        )
-        model = timesfm.TimesFm(hparams=hparams, checkpoint=checkpoint)
-        forecast, quantile_forecast = model.forecast([values], freq=[0])
-        quantiles = self._select_quantiles(
-            quantile_forecast, horizon, quantile_levels, drop_mean=True
-        )
-        return forecast[0][:horizon], quantiles
+        if self.model is None:
+            self.model = timesfm.TimesFM_2p5_200M_torch.from_pretrained(
+                self.model_dir
+            )
+        configured = config_int(payload, "context_length", 0, 0, MAX_CONTEXT)
+        observed = min(MAX_CONTEXT, max(len(values) for values in inputs))
+        context = max(32, configured or observed)
+        positive = config_bool(payload, "non_negative_output", False)
+        signature = (context, horizon, with_covariates, positive)
+        if signature != self.compiled_signature:
+            self.model.compile(
+                timesfm.ForecastConfig(
+                    max_context=context,
+                    max_horizon=horizon,
+                    normalize_inputs=True,
+                    use_continuous_quantile_head=True,
+                    force_flip_invariance=True,
+                    infer_is_positive=positive,
+                    fix_quantile_crossing=True,
+                    return_backcast=with_covariates,
+                )
+            )
+            self.compiled_signature = signature
+        return self.model
 
-    def _select_quantiles(self, quantiles, horizon, quantile_levels, drop_mean):
-        if quantiles is None:
-            return None
-        return select_standard_quantiles(
-            quantiles[0], horizon, quantile_levels, drop_mean=drop_mean
-        )
 
-    def _timesfm_checkpoint(self, timesfm):
-        try:
-            return timesfm.TimesFmCheckpoint(path=self.model_dir)
-        except TypeError:
-            return timesfm.TimesFmCheckpoint(huggingface_repo_id=self.model_dir)
+def strict_covariate_columns(payload):
+    raw = payload.get("covariate_columns")
+    if raw in (None, []):
+        return []
+    columns = validate_column_names(raw)
+    if not isinstance(raw, list) or len(columns) != len(raw):
+        raise ValueError("invalid_covariates")
+    if len(set(columns)) != len(columns):
+        raise ValueError("invalid_covariates")
+    return columns
+
+
+def grouped_rows(payload, key):
+    rows = payload.get(key)
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("invalid_covariates")
+    grouped = OrderedDict()
+    for row in rows:
+        if not isinstance(row, dict):
+            raise ValueError("invalid_covariates")
+        grouped.setdefault(row_series_id(row, payload.get("series_column")), []).append(
+            row
+        )
+    return grouped
+
+
+def validate_future_dates(payload, jobs, horizon):
+    rows = payload.get("future_rows")
+    if not rows:
+        return
+    grouped = grouped_rows(payload, "future_rows")
+    expected_ids = [job["series_id"] for job in jobs]
+    invalid_count = any(len(items) != horizon for items in grouped.values())
+    if set(grouped) != set(expected_ids) or invalid_count:
+        raise ValueError("invalid_future_rows")
+    date_column = payload.get("date_column")
+    if not isinstance(date_column, str) or not date_column.strip():
+        raise ValueError("invalid_future_rows")
+    for items in grouped.values():
+        if any(
+            not isinstance(row.get(date_column), str)
+            or not row[date_column].strip()
+            for row in items
+        ):
+            raise ValueError("invalid_future_rows")
+
+
+def build_dynamic_covariates(payload, jobs, horizon, columns):
+    if not columns:
+        return None
+    history = grouped_rows(payload, "history_rows")
+    future = grouped_rows(payload, "future_rows")
+    expected_ids = [job["series_id"] for job in jobs]
+    if list(history) != expected_ids or set(future) != set(expected_ids):
+        raise ValueError("invalid_covariates")
+    result = {column: [] for column in columns}
+    for job in jobs:
+        series_id = job["series_id"]
+        history_rows = history[series_id][-len(job["values"]):]
+        future_rows = future[series_id]
+        if len(future_rows) != horizon:
+            raise ValueError("invalid_covariates")
+        for column in columns:
+            values = [
+                read_numeric_value(row.get(column), "invalid_covariates")
+                for row in history_rows + future_rows
+            ]
+            result[column].append(values)
+    return result
+
+
+def validate_decile_levels(levels):
+    if not isinstance(levels, list) or not levels:
+        raise ValueError("invalid_quantiles")
+    normalized = []
+    for level in levels:
+        if isinstance(level, bool) or not isinstance(level, (int, float)):
+            raise ValueError("invalid_quantiles")
+        value = float(level)
+        decile = round(value * 10)
+        if decile < 1 or decile > 9 or abs(value * 10 - decile) > 1e-6:
+            raise ValueError("invalid_quantiles")
+        normalized.append(decile / 10)
+    if normalized != sorted(set(normalized)) or 0.5 not in normalized:
+        raise ValueError("invalid_quantiles")
+    return normalized

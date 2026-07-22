@@ -136,9 +136,7 @@ async fn finish_forecast(
         Err(e) if e == "cancelled" => ModelDownloadStatus::Cancelled,
         Err(_) => ModelDownloadStatus::Failed,
     };
-    if status == ModelDownloadStatus::Completed {
-        let _ = app.emit("forecast-models-changed", ());
-    }
+    let _ = app.emit("forecast-models-changed", ());
     let error = (status == ModelDownloadStatus::Failed).then_some("model-download-failed");
     emit_states(&app, manager.finish(&state.id, status, error).await);
 }

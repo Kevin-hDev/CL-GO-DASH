@@ -26,14 +26,24 @@ fn accepts_covariates_for_chronos2() {
 }
 
 #[test]
-fn accepts_covariates_for_toto2() {
-    let mut request = make_request("toto-2.0-2.5b");
+fn accepts_covariates_for_timesfm_2_5() {
+    let mut request = make_request("timesfm-2.5-200m");
     request.confidence_level = 0.8;
     assert!(validate_request(&request).is_ok());
 }
 
 #[test]
-fn rejects_multiseries_for_timegpt_in_current_app() {
+fn rejects_covariates_for_toto2_until_the_adapter_supports_them() {
+    let mut request = make_request("toto-2.0-2.5b");
+    request.confidence_level = 0.8;
+    assert_eq!(
+        validate_request(&request),
+        Err("Variables de contexte non supportées par ce moteur".into())
+    );
+}
+
+#[test]
+fn accepts_multiseries_for_timegpt() {
     let mut request = make_request("timegpt-2-mini");
     request.series_column = Some("asset_id".into());
 
@@ -41,8 +51,41 @@ fn rejects_multiseries_for_timegpt_in_current_app() {
 }
 
 #[test]
+fn accepts_independent_multiseries_for_timesfm() {
+    let mut request = make_request("timesfm-2.5-200m");
+    request.series_column = Some("asset_id".into());
+    request.confidence_level = 0.8;
+
+    assert!(validate_request(&request).is_ok());
+}
+
+#[test]
+fn rejects_multiseries_for_chronos_bolt() {
+    let mut request = make_request("chronos-bolt-tiny");
+    request.series_column = Some("asset_id".into());
+    request.covariate_columns.clear();
+
+    assert_eq!(
+        validate_request(&request),
+        Err("Multi-séries non supporté par ce moteur".into())
+    );
+}
+
+#[test]
+fn rejects_models_requiring_unapproved_remote_code() {
+    let mut request = make_request("sundial-128m");
+    request.covariate_columns.clear();
+    request.confidence_level = 0.8;
+
+    assert_eq!(
+        validate_request(&request),
+        Err("Modèle indisponible".into())
+    );
+}
+
+#[test]
 fn rejects_confidence_unavailable_from_decile_only_model() {
-    let mut request = make_request("kairos-10m");
+    let mut request = make_request("tirex-35m");
     request.covariate_columns.clear();
     request.confidence_level = 0.9;
 

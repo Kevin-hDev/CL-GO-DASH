@@ -19,6 +19,7 @@ function caps(past: boolean, future: boolean) {
   return {
     past_covariates: past,
     future_covariates: future,
+    multi_series: false,
     multivariate: false,
     probabilistic: false,
     backtesting_ready: false,

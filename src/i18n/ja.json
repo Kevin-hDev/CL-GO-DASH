@@ -1699,7 +1699,8 @@
       "capabilities": {
         "context": "コンテキスト変数",
         "futureContext": "将来コンテキスト",
-        "multivariate": "複数系列",
+        "multiSeries": "独立した複数系列",
+        "multivariate": "共同多変量",
         "probabilistic": "確率予測",
         "backtesting": "バックテスト"
       }

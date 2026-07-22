@@ -9,6 +9,8 @@ mod nixtla;
 mod providers;
 mod salesforce;
 
+pub(super) const TABPFN_TS_ALIAS: ForecastModelSpec = experimental::TABPFN_TS;
+
 pub const FORECAST_PROVIDERS: &[ForecastProviderSpec] = providers::FORECAST_PROVIDERS;
 
 pub const FORECAST_MODELS: &[ForecastModelSpec] = &[
@@ -30,7 +32,6 @@ pub const FORECAST_MODELS: &[ForecastModelSpec] = &[
     salesforce::MOIRAI_2_0_R_SMALL,
     ibm::FLOWSTATE_R1,
     ibm::FLOWSTATE_R1_1,
-    experimental::TABPFN_TS,
     experimental::TABPFN_TS_3,
     experimental::TIREX,
     experimental::KAIROS_10M,

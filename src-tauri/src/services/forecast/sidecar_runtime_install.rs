@@ -92,18 +92,31 @@ fn check_cancel(cancel: &CancellationToken) -> Result<(), String> {
 }
 
 fn find_python() -> Result<PathBuf, String> {
-    for candidate in [
-        "python3.12",
-        "python3.13",
-        "python3.14",
-        "python3",
-        "python",
-    ] {
+    for candidate in ["python3.12", "python3", "python"] {
         if let Ok(path) = which::which(candidate) {
-            return Ok(path);
+            if python_version_supported(&path) {
+                return Ok(path);
+            }
         }
     }
-    Err("Runtime Python introuvable".to_string())
+    Err("Runtime Python compatible indisponible".to_string())
+}
+
+fn python_version_supported(path: &Path) -> bool {
+    Command::new(path)
+        .args([
+            "-c",
+            "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')",
+        ])
+        .output()
+        .ok()
+        .filter(|output| output.status.success())
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .is_some_and(|version| is_supported_version(&version))
+}
+
+fn is_supported_version(version: &str) -> bool {
+    version.trim() == "3.12"
 }
 
 fn run_cancellable(
@@ -128,5 +141,16 @@ fn run_cancellable(
             Ok(Some(_)) | Err(_) => return Err(message.to_string()),
             Ok(None) => std::thread::sleep(Duration::from_millis(100)),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_supported_version;
+
+    #[test]
+    fn runtime_python_is_fixed_to_3_12() {
+        assert!(is_supported_version("3.12\n"));
+        assert!(!is_supported_version("3.13"));
     }
 }

@@ -1,4 +1,7 @@
-use super::install::{install_plan, should_remove_prepared_runtime, InstallPlan};
+use super::install_plan::{
+    install_plan, plan_for_state, should_remove_prepared_runtime, InstallPlan,
+};
+use super::is_installed_in;
 use super::uninstall::uninstall_from_roots;
 use std::fs;
 
@@ -6,6 +9,24 @@ fn mark_installed(models: &std::path::Path, model_id: &str) {
     let model = models.join(model_id);
     fs::create_dir_all(&model).unwrap();
     fs::write(model.join(".complete"), "ok").unwrap();
+    fs::write(model.join(".smoke-v1"), "ok").unwrap();
+}
+
+#[test]
+fn ready_plan_requires_a_model_smoke_proof() {
+    assert_eq!(plan_for_state(true, true, false), InstallPlan::Validate);
+    assert_eq!(plan_for_state(true, true, true), InstallPlan::Ready);
+    assert_eq!(plan_for_state(true, false, true), InstallPlan::RuntimeOnly);
+}
+
+#[test]
+fn downloaded_legacy_model_remains_installed_before_smoke_validation() {
+    let temp = tempfile::tempdir().unwrap();
+    let model = temp.path().join("chronos-bolt-tiny");
+    fs::create_dir_all(&model).unwrap();
+    fs::write(model.join(".complete"), "ok").unwrap();
+
+    assert!(is_installed_in(temp.path(), "chronos-bolt-tiny"));
 }
 
 #[test]

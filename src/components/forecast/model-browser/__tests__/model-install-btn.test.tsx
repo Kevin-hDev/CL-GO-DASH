@@ -138,7 +138,33 @@ describe("ModelInstallBtn", () => {
     expect(startDownload).toHaveBeenCalledWith({ kind: "forecast", modelId: "moirai-small" });
   });
 
-  it("confirme la desinstallation depuis la fiche modele", async () => {
+  it("affiche l'echec de validation au lieu de le masquer", () => {
+    mockedUseModelDownloads.mockReturnValue({
+      activeDownload: null,
+      startDownload,
+      cancelDownload,
+      downloads: [{
+        id: "forecast-failed",
+        kind: "forecast",
+        modelId: "chronos-tiny",
+        status: "failed",
+        errorKey: "model-download-failed",
+      }],
+    });
+
+    render(
+      <ModelInstallBtn
+        modelId="chronos-tiny"
+        installed
+        runtimeReady={false}
+        onDone={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("alert").textContent).toBe("errors.downloadFailed");
+  });
+
+  it.each([true, false])("confirme la desinstallation, moteur pret=%s", async (runtimeReady) => {
     const onDone = vi.fn();
     mockedUseModelDownloads.mockReturnValue({
       activeDownload: null,
@@ -151,7 +177,7 @@ describe("ModelInstallBtn", () => {
       <ModelInstallBtn
         modelId="moirai-small"
         installed
-        runtimeReady
+        runtimeReady={runtimeReady}
         allowUninstall
         onDone={onDone}
       />,

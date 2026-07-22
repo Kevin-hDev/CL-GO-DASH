@@ -4,7 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 import { useTranslation } from "react-i18next";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import {
-  isForecastModelSelectable,
+  isForecastModelConfigurable,
   listForecastFamilies,
   type ForecastModelEntry,
   type ForecastModelsResponse,
@@ -51,7 +51,7 @@ export function ForecastSettings({ navState, onNavChange, onNavReplace }: Foreca
   }, [refresh]);
 
   const families = useMemo(() => listForecastFamilies(models), [models]);
-  const configModels = useMemo(() => models.filter(isForecastModelSelectable), [models]);
+  const configModels = useMemo(() => models.filter(isForecastModelConfigurable), [models]);
   const selectedConfigModel = useMemo(
     () => configModels.find((model) => model.id === navState.forecastConfigModelId)
       ?? configModels[0]
@@ -104,6 +104,7 @@ export function ForecastSettings({ navState, onNavChange, onNavReplace }: Foreca
             models={configModels}
             selectedModel={selectedConfigModel}
             onSelectModel={(id) => onNavChange({ forecastConfigModelId: id })}
+            onModelsChanged={refresh}
           />
         ) : (
           <ForecastModelsView

@@ -5,7 +5,9 @@ use std::path::{Path, PathBuf};
 pub mod download;
 pub mod download_github;
 mod install;
+mod install_plan;
 mod runtime_install;
+mod smoke;
 mod uninstall;
 
 pub use install::install_with_callback;
@@ -27,6 +29,18 @@ pub fn is_installed(model_id: &str) -> bool {
     validation::validate_model_id(model_id).is_ok() && is_installed_in(&models_dir(), model_id)
 }
 
+pub fn is_ready(model_id: &str) -> bool {
+    let Some(spec) = crate::services::forecast::catalog::find_model(model_id) else {
+        return false;
+    };
+    is_installed(model_id)
+        && crate::services::forecast::sidecar_runtime::family_runtime_ready(
+            &sidecar_dir(),
+            spec.family_id,
+        )
+        && smoke::is_validated(&model_path(model_id), &sidecar_dir())
+}
+
 pub fn get_model_size(model_id: &str) -> u64 {
     if validation::validate_model_id(model_id).is_err() {
         return 0;
@@ -35,7 +49,11 @@ pub fn get_model_size(model_id: &str) -> u64 {
 }
 
 fn is_installed_in(root: &Path, model_id: &str) -> bool {
-    root.join(model_id).join(".complete").exists()
+    has_downloaded_weights(root, model_id)
+}
+
+fn has_downloaded_weights(root: &Path, model_id: &str) -> bool {
+    root.join(model_id).join(".complete").is_file()
 }
 
 fn family_has_installed_model(models: &Path, family_id: &str) -> bool {

@@ -32,7 +32,7 @@ describe("ModelDownloadBadge", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("affiche le type et la progression active", () => {
+  it("ne duplique pas la progression locale Forecast", () => {
     mockedUseModelDownloads.mockReturnValue({
       activeDownload: {
         kind: "forecast",
@@ -41,9 +41,23 @@ describe("ModelDownloadBadge", () => {
       },
     });
 
+    const { container } = render(<ModelDownloadBadge />);
+
+    expect(container.firstChild).toBeNull();
+  });
+
+  it("affiche toujours la progression globale Ollama", () => {
+    mockedUseModelDownloads.mockReturnValue({
+      activeDownload: {
+        kind: "ollama",
+        phase: "downloading",
+        percent: 64,
+      },
+    });
+
     render(<ModelDownloadBadge />);
 
-    expect(screen.getByText("modelDownloads.kinds.forecast")).toBeTruthy();
+    expect(screen.getByText("modelDownloads.kinds.ollama")).toBeTruthy();
     expect(screen.getByText("modelDownloads.phases.downloading")).toBeTruthy();
     expect(screen.getByText("64%")).toBeTruthy();
   });

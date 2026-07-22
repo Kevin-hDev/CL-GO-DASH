@@ -56,7 +56,7 @@ pub async fn run_forecast(
             .await
             .map_err(|_| "Erreur du service de prédiction".to_string())?
     } else {
-        if !model_manager::is_installed(&model_id) {
+        if !model_manager::is_ready(&model_id) {
             return Err("Modèle non installé".into());
         }
         crate::services::forecast::hardware_profile::validate_model_resources(spec)?;

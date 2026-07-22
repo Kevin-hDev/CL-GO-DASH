@@ -15,15 +15,22 @@ import {
   toDraft,
   valueToText,
 } from "./forecast-config-helpers";
+import { ForecastConfigDeleteAction } from "./forecast-config-delete-action";
 import "./forecast-settings.css";
 
 interface ForecastConfigViewProps {
   models: ForecastModelEntry[];
   selectedModel: ForecastModelEntry | null;
   onSelectModel: (id: string) => void;
+  onModelsChanged?: () => void;
 }
 
-export function ForecastConfigView({ models, selectedModel, onSelectModel }: ForecastConfigViewProps) {
+export function ForecastConfigView({
+  models,
+  selectedModel,
+  onSelectModel,
+  onModelsChanged = () => undefined,
+}: ForecastConfigViewProps) {
   const { t } = useTranslation();
   const [config, setConfig] = useState<ForecastModelConfig | null>(null);
   const [draft, setDraft] = useState<Record<string, string>>({});
@@ -94,6 +101,13 @@ export function ForecastConfigView({ models, selectedModel, onSelectModel }: For
       </SettingsCard>
 
       <div className="fs-edit-actions">
+        {!selectedModel.is_cloud && selectedModel.installed && (
+          <ForecastConfigDeleteAction
+            modelId={selectedModel.id}
+            disabled={saving}
+            onDeleted={onModelsChanged}
+          />
+        )}
         {editing && (
           <button className="ollama-btn" onClick={cancelEdit} disabled={saving}>
             {t("forecast.modelConfig.cancel")}

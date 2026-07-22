@@ -76,7 +76,7 @@ fn task_compatible(
     validation::effective_horizon_max(spec.id, spec.horizon_max)
         .is_ok_and(|maximum| profile.horizon <= maximum)
         && validation::supports_frequency(spec, &profile.frequency)
-        && (profile.series_count <= 1 || runtime.capabilities.multivariate)
+        && (profile.series_count <= 1 || runtime.capabilities.multi_series)
         && (!needs_covariates || runtime.capabilities.past_covariates)
         && (!needs_future || runtime.capabilities.future_covariates)
         && runtime.capabilities.probabilistic

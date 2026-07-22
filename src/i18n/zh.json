@@ -1699,7 +1699,8 @@
       "capabilities": {
         "context": "上下文变量",
         "futureContext": "未来上下文",
-        "multivariate": "多序列",
+        "multiSeries": "独立多序列",
+        "multivariate": "联合多变量",
         "probabilistic": "概率预测",
         "backtesting": "回测"
       }

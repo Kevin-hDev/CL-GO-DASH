@@ -2,11 +2,14 @@ use crate::services::model_downloads::{ModelDownloadPhase, ProgressUpdate};
 use futures_util::StreamExt;
 use std::io::Cursor;
 use std::path::{Component, Path};
+use std::time::Duration;
 use tokio_util::sync::CancellationToken;
 
 const MAX_GITHUB_ARCHIVE_BYTES: u64 = 200 * 1024 * 1024;
 const MAX_GITHUB_EXTRACTED_BYTES: u64 = 500 * 1024 * 1024;
 const MAX_GITHUB_FILES: usize = 20_000;
+const RESPONSE_TIMEOUT: Duration = Duration::from_secs(30);
+const CHUNK_TIMEOUT: Duration = Duration::from_secs(60);
 
 pub async fn download_repo_snapshot(
     repo: &str,
@@ -16,14 +19,21 @@ pub async fn download_repo_snapshot(
     on_progress: &(dyn Fn(ProgressUpdate) + Send + Sync),
 ) -> Result<(), String> {
     let rev = revision.unwrap_or("main");
-    let url = format!("https://codeload.github.com/{repo}/zip/refs/heads/{rev}");
-    let client = reqwest::Client::new();
-    let resp = client
-        .get(&url)
-        .header("User-Agent", "CL-GO-DASH/1.0")
-        .send()
-        .await
+    let url = format!("https://codeload.github.com/{repo}/zip/{rev}");
+    let client = reqwest::Client::builder()
+        .connect_timeout(Duration::from_secs(15))
+        .build()
         .map_err(|_| "Téléchargement GitHub échoué".to_string())?;
+    let resp = tokio::time::timeout(
+        RESPONSE_TIMEOUT,
+        client
+            .get(&url)
+            .header("User-Agent", "CL-GO-DASH/1.0")
+            .send(),
+    )
+    .await
+    .map_err(|_| "Téléchargement GitHub expiré".to_string())?
+    .map_err(|_| "Téléchargement GitHub échoué".to_string())?;
 
     if !resp.status().is_success() {
         return Err("GitHub erreur".into());
@@ -39,7 +49,10 @@ pub async fn download_repo_snapshot(
     let mut downloaded = 0u64;
     let mut bytes = Vec::new();
     let mut stream = resp.bytes_stream();
-    while let Some(chunk) = stream.next().await {
+    while let Some(chunk) = tokio::time::timeout(CHUNK_TIMEOUT, stream.next())
+        .await
+        .map_err(|_| "Téléchargement GitHub expiré".to_string())?
+    {
         if cancel.is_cancelled() {
             return Err("cancelled".into());
         }

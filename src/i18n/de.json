@@ -1699,7 +1699,8 @@
       "capabilities": {
         "context": "Kontextvariablen",
         "futureContext": "Zukünftiger Kontext",
-        "multivariate": "Mehrere Serien",
+        "multiSeries": "Unabhängige Mehrfachreihen",
+        "multivariate": "Gemeinsam multivariat",
         "probabilistic": "Probabilistische Prognose",
         "backtesting": "Backtesting"
       }

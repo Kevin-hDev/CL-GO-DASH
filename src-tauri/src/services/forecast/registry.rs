@@ -27,6 +27,7 @@ pub enum ForecastEngineKind {
 pub struct ForecastCapabilities {
     pub past_covariates: bool,
     pub future_covariates: bool,
+    pub multi_series: bool,
     pub multivariate: bool,
     pub probabilistic: bool,
     pub backtesting_ready: bool,

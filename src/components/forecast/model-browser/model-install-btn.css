@@ -1,8 +1,10 @@
 .fmi-progress {
   display: grid;
+  flex: 0 1 var(--forecast-download-progress-width);
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: var(--space-xs);
+  width: min(100%, var(--forecast-download-progress-width));
 }
 
 .fmi-phase {
@@ -38,6 +40,25 @@
 .fmi-cancel {
   width: fit-content;
   white-space: nowrap;
+}
+
+.fmi-action {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.fmi-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.fmi-error {
+  color: var(--signal-error);
+  font-size: var(--text-xs);
 }
 
 .fmi-uninstall[data-confirming="true"] {

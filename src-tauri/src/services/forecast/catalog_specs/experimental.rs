@@ -7,11 +7,13 @@ pub const TABPFN_TS: ForecastModelSpec = build(
     "priorlabs",
     "Toutes",
     "—",
-    3,
-    120,
-    Some(60),
-    None,
+    233,
+    8192,
+    Some(8192),
+    Some("Prior-Labs/tabpfn_3"),
+    Some("24a16a89d245878b846555110985634aa2e656d7"),
     "PriorLabs/tabpfn-time-series",
+    "73a134f1dc1ded17d2c079c11c137faa8be58d56",
 );
 pub const TABPFN_TS_3: ForecastModelSpec = build(
     "tabpfn-ts-3",
@@ -20,11 +22,13 @@ pub const TABPFN_TS_3: ForecastModelSpec = build(
     "priorlabs",
     "Toutes",
     "—",
-    3,
-    120,
-    Some(60),
-    None,
+    233,
+    8192,
+    Some(8192),
+    Some("Prior-Labs/tabpfn_3"),
+    Some("24a16a89d245878b846555110985634aa2e656d7"),
     "PriorLabs/tabpfn-time-series",
+    "73a134f1dc1ded17d2c079c11c137faa8be58d56",
 );
 pub const TIREX: ForecastModelSpec = ForecastModelSpec {
     id: "tirex-35m",
@@ -37,14 +41,14 @@ pub const TIREX: ForecastModelSpec = ForecastModelSpec {
     vram_mb: Some(420),
     cpu_supported: true,
     gpu_supported: true,
-    multivariate: true,
+    multivariate: false,
     covariates: false,
     horizon_max: 1024,
     frequencies: "Toutes",
     hf_repo: Some("NX-AI/TiRex"),
-    hf_revision: None,
+    hf_revision: Some("63c740922493f5fbe60b277609ec62babfba2762"),
     github_repo: Some("NX-AI/TiRex"),
-    github_revision: None,
+    github_revision: Some("94475192e952ad57dc83abc8973731a8028f9e0d"),
     is_cloud: false,
 };
 pub const KAIROS_10M: ForecastModelSpec = build(
@@ -58,7 +62,9 @@ pub const KAIROS_10M: ForecastModelSpec = build(
     320,
     Some(140),
     Some("mldi-lab/Kairos_10m"),
+    Some("786ecafbb3fb1e33208ebdd706e0ccb09e3486ef"),
     "foundation-model-research/Kairos",
+    "0322393840ccf6e2bfe9c663f9dcd088a5a7ee07",
 );
 pub const KAIROS_23M: ForecastModelSpec = build(
     "kairos-23m",
@@ -71,7 +77,9 @@ pub const KAIROS_23M: ForecastModelSpec = build(
     520,
     Some(220),
     Some("mldi-lab/Kairos_23m"),
+    Some("5123edcc9d6ee6f495bef78ec9fb63bb00ce878d"),
     "foundation-model-research/Kairos",
+    "0322393840ccf6e2bfe9c663f9dcd088a5a7ee07",
 );
 pub const KAIROS_50M: ForecastModelSpec = build(
     "kairos-50m",
@@ -84,7 +92,9 @@ pub const KAIROS_50M: ForecastModelSpec = build(
     980,
     Some(420),
     Some("mldi-lab/Kairos_50m"),
+    Some("b788434dd95f9893be002e6858bfb2afb0e3f360"),
     "foundation-model-research/Kairos",
+    "0322393840ccf6e2bfe9c663f9dcd088a5a7ee07",
 );
 pub const SUNDIAL_128M: ForecastModelSpec = build(
     "sundial-128m",
@@ -97,7 +107,9 @@ pub const SUNDIAL_128M: ForecastModelSpec = build(
     2400,
     Some(1000),
     Some("thuml/sundial-base-128m"),
+    Some("3212e42564493f520593e5414af4367fc4b49226"),
     "thuml/Sundial",
+    "3ef03b8c3804f64a506e57101a173470040aaece",
 );
 
 const fn build(
@@ -111,7 +123,9 @@ const fn build(
     ram_mb: u32,
     vram_mb: Option<u32>,
     hf_repo: Option<&'static str>,
+    hf_revision: Option<&'static str>,
     github_repo: &'static str,
+    github_revision: &'static str,
 ) -> ForecastModelSpec {
     ForecastModelSpec {
         id,
@@ -124,14 +138,14 @@ const fn build(
         vram_mb,
         cpu_supported: true,
         gpu_supported: true,
-        multivariate: true,
+        multivariate: false,
         covariates: false,
         horizon_max: 1024,
         frequencies,
         hf_repo,
-        hf_revision: None,
+        hf_revision,
         github_repo: Some(github_repo),
-        github_revision: None,
+        github_revision: Some(github_revision),
         is_cloud: false,
     }
 }

@@ -131,7 +131,11 @@ function buildRows(
   const capabilities = [
     modelCaps.context ? t("forecast.models.capabilities.context") : null,
     modelCaps.futureContext ? t("forecast.models.capabilities.futureContext") : null,
-    modelCaps.multivariate ? t("forecast.models.capabilities.multivariate") : null,
+    modelCaps.multivariate
+      ? t("forecast.models.capabilities.multivariate")
+      : modelCaps.multiSeries
+        ? t("forecast.models.capabilities.multiSeries")
+        : null,
     modelCaps.probabilistic ? t("forecast.models.capabilities.probabilistic") : null,
     modelCaps.backtesting ? t("forecast.models.capabilities.backtesting") : null,
   ].filter(Boolean).join(", ") || "—";

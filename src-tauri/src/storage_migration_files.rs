@@ -33,21 +33,56 @@ pub(crate) fn install_default_skills(app_handle: &tauri::AppHandle, base: &std::
     }
 }
 
-pub(crate) fn install_forecast_sidecar(app_handle: &tauri::AppHandle, base: &std::path::Path) {
-    use std::fs;
-
+pub(crate) fn install_forecast_sidecar(
+    app_handle: &tauri::AppHandle,
+    base: &std::path::Path,
+) -> Result<(), String> {
     let target = base.join("forecast-sidecar");
-    let resource_base = match app_handle.path().resource_dir() {
-        Ok(p) => p.join("resources").join("forecast-sidecar"),
-        Err(_) => return,
-    };
-    if !resource_base.exists() {
-        return;
-    }
-    if let Err(e) = copy_recursive(&resource_base, &target) {
-        let _ = fs::remove_dir_all(&target);
-        eprintln!("[forecast] sidecar install: {e}");
-    }
+    let resource_dir = app_handle
+        .path()
+        .resource_dir()
+        .map_err(|_| "Ressources Forecast indisponibles".to_string())?;
+    let manifest_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let resource_base = resolve_forecast_resource_base(&resource_dir, manifest_dir)?;
+    sync_forecast_sidecar_from(&resource_base, &target)
+}
+
+fn resolve_forecast_resource_base(
+    resource_dir: &std::path::Path,
+    manifest_dir: &std::path::Path,
+) -> Result<std::path::PathBuf, String> {
+    let candidates = [
+        resource_dir.join("resources/forecast-sidecar"),
+        resource_dir.join("forecast-sidecar"),
+        manifest_dir.join("resources/forecast-sidecar"),
+    ];
+    candidates
+        .into_iter()
+        .find(|candidate| validate_forecast_assets(candidate).is_ok())
+        .ok_or_else(|| "Ressources Forecast incomplètes".to_string())
+}
+
+fn sync_forecast_sidecar_from(
+    resource_base: &std::path::Path,
+    target: &std::path::Path,
+) -> Result<(), String> {
+    validate_forecast_assets(resource_base)?;
+    copy_recursive(resource_base, target)
+        .map_err(|_| "Synchronisation Forecast impossible".to_string())?;
+    validate_forecast_assets(target)
+}
+
+fn validate_forecast_assets(root: &std::path::Path) -> Result<(), String> {
+    const REQUIRED: [&str; 3] = [
+        "server.py",
+        "test_model_smoke.py",
+        "forecast_runtime/adapters.py",
+    ];
+    REQUIRED
+        .iter()
+        .all(|relative| root.join(relative).is_file())
+        .then_some(())
+        .ok_or_else(|| "Ressources Forecast incomplètes".to_string())
 }
 
 pub(crate) fn copy_items(src: &std::path::Path, dst: &std::path::Path) {
@@ -113,3 +148,7 @@ fn copy_recursive_inner(
     }
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "storage_migration_files_tests.rs"]
+mod tests;

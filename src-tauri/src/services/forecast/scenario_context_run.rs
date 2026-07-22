@@ -31,7 +31,7 @@ pub async fn rerun(
         return client_nixtla::predict(&key, &request, None).await;
     }
 
-    if !model_manager::is_installed(model_id) {
+    if !model_manager::is_ready(model_id) {
         return Err("Modèle non installé".into());
     }
     let chronos = chronos.ok_or("Service de prédiction indisponible")?;

@@ -63,3 +63,51 @@ fn missing_staging_never_removes_the_live_runtime() {
         "live-python"
     );
 }
+
+#[test]
+fn model_family_manifests_are_version_pinned() {
+    let temp = tempfile::tempdir().unwrap();
+    fs::write(temp.path().join("requirements.txt"), "# base\n").unwrap();
+
+    for family in [
+        "chronos-bolt",
+        "chronos-2",
+        "timesfm-2-5",
+        "toto-2",
+        "moirai-2",
+        "flowstate",
+        "tabpfn-ts",
+        "tirex",
+        "kairos",
+        "sundial",
+    ] {
+        let requirements = expected_requirements(temp.path(), family).unwrap();
+        for line in requirements
+            .lines()
+            .filter(|line| !line.is_empty() && !line.starts_with('#'))
+        {
+            if let Some((_, revision)) = line.rsplit_once('@') {
+                assert!(is_sha(revision), "{family}: {line}");
+            } else {
+                assert!(line.contains("=="), "{family}: {line}");
+            }
+        }
+    }
+}
+
+#[test]
+fn moirai_uses_the_official_wheel_with_bounded_resolution() {
+    let temp = tempfile::tempdir().unwrap();
+    fs::write(temp.path().join("requirements.txt"), "# base\n").unwrap();
+
+    let requirements = expected_requirements(temp.path(), "moirai-2").unwrap();
+
+    assert!(requirements.contains("uni2ts==2.0.0"));
+    assert!(requirements.contains("jax[cpu]==0.6.1"));
+    assert!(requirements.contains("multiprocess==0.70.16"));
+    assert!(!requirements.contains("git+"));
+}
+
+fn is_sha(value: &str) -> bool {
+    value.len() == 40 && value.chars().all(|character| character.is_ascii_hexdigit())
+}

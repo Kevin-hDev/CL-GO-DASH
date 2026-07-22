@@ -48,10 +48,13 @@ pub fn validate_request(request: &ForecastRequest) -> Result<(), String> {
     let model_id = model_id(request)?;
     validate_runnable_model_id(model_id)?;
     let spec = catalog::find_model(model_id).ok_or("Modèle inconnu")?;
+    if catalog::requires_remote_code(model_id) {
+        return Err("Modèle indisponible".into());
+    }
     let runtime = registry::find_runtime(model_id).ok_or("Moteur indisponible")?;
     validate_confidence_support(runtime, request.confidence_level)?;
 
-    if request.series_column.is_some() && !runtime.capabilities.multivariate {
+    if request.series_column.is_some() && !runtime.capabilities.multi_series {
         return Err("Multi-séries non supporté par ce moteur".into());
     }
     if !request.covariate_columns.is_empty() && !runtime.capabilities.past_covariates {

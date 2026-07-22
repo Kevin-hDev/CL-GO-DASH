@@ -5,7 +5,7 @@ import "./model-download-badge.css";
 export function ModelDownloadBadge() {
   const { t } = useTranslation();
   const { activeDownload } = useModelDownloads();
-  if (!activeDownload) return null;
+  if (!activeDownload || activeDownload.kind === "forecast") return null;
 
   return (
     <div className="mdb-badge" aria-live="polite">

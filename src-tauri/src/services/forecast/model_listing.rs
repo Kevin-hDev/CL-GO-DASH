@@ -1,5 +1,4 @@
-use super::{catalog, model_manager, registry, sidecar_runtime};
-use crate::services::paths::data_dir;
+use super::{catalog, model_manager, registry};
 use serde_json::Value;
 
 pub fn list_models() -> Value {
@@ -42,7 +41,7 @@ fn enrich_model_object(
     let runtime = registry::find_runtime(model.id);
     let installed_model = model_manager::is_installed(model.id);
     let provider_configured = configured.iter().any(|id| id == model.provider_id);
-    let runtime_ready = runtime_ready_state(runtime, installed_model, provider_configured);
+    let runtime_ready = runtime_ready_state(model, runtime, provider_configured);
     if let Some(runtime) = runtime {
         object.insert(
             "engine_kind".into(),
@@ -95,6 +94,7 @@ fn empty_capabilities() -> Value {
     serde_json::json!({
         "past_covariates": false,
         "future_covariates": false,
+        "multi_series": false,
         "multivariate": false,
         "probabilistic": false,
         "backtesting_ready": false,
@@ -104,7 +104,9 @@ fn empty_capabilities() -> Value {
 }
 
 fn installable(model: &catalog::ForecastModelSpec) -> bool {
-    !model.is_cloud && (model.hf_repo.is_some() || model.github_repo.is_some())
+    !model.is_cloud
+        && !catalog::requires_remote_code(model.id)
+        && (model.hf_repo.is_some() || model.github_repo.is_some())
 }
 
 fn runnable_state(
@@ -115,6 +117,7 @@ fn runnable_state(
     runtime_ready: bool,
 ) -> bool {
     match runtime {
+        Some(_) if catalog::requires_remote_code(model.id) => false,
         Some(spec) if registry::is_cloud(spec) => {
             registry::has_predict_adapter(spec) && provider_configured
         }
@@ -126,8 +129,8 @@ fn runnable_state(
 }
 
 fn runtime_ready_state(
+    model: &catalog::ForecastModelSpec,
     runtime: Option<&registry::ForecastRuntimeSpec>,
-    installed: bool,
     provider_configured: bool,
 ) -> bool {
     let Some(spec) = runtime else {
@@ -136,12 +139,7 @@ fn runtime_ready_state(
     if registry::is_cloud(spec) {
         return registry::has_predict_adapter(spec) && provider_configured;
     }
-    registry::has_predict_adapter(spec)
-        && installed
-        && sidecar_runtime::family_runtime_ready(
-            &data_dir().join("forecast-sidecar"),
-            spec.family_id,
-        )
+    registry::has_predict_adapter(spec) && model_manager::is_ready(model.id)
 }
 
 #[cfg(test)]

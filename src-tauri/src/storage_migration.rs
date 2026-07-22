@@ -55,7 +55,7 @@ pub fn run(app_handle: &tauri::AppHandle) -> Result<(), String> {
 
     init_base_structure(&new)?;
     crate::storage_migration_files::install_default_skills(app_handle, &new);
-    crate::storage_migration_files::install_forecast_sidecar(app_handle, &new);
+    crate::storage_migration_files::install_forecast_sidecar(app_handle, &new)?;
 
     Ok(())
 }

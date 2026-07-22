@@ -36,17 +36,25 @@ pub(super) fn validate_family_id(family_id: &str) -> Result<(), String> {
 
 fn family_requirements(family_id: &str) -> Option<&'static str> {
     match family_id {
-        "chronos-bolt" | "chronos-2" => Some("pandas<3\nchronos-forecasting==2.2.2\n"),
-        "timesfm-2-5" => Some("timesfm\ntransformers\naccelerate\n"),
-        "toto-2" => Some(
-            "torch>=2.6,<3\ntoto-2 @ git+https://github.com/DataDog/toto.git#subdirectory=toto2\n",
+        "chronos-bolt" | "chronos-2" => {
+            Some("pandas==2.3.3\nchronos-forecasting==2.2.2\n")
+        }
+        "timesfm-2-5" => Some("timesfm[torch,xreg]==2.0.2\n"),
+        "toto-2" => Some("toto-2==2.0.0\n"),
+        "moirai-2" => Some(
+            "uni2ts==2.0.0\ngluonts==0.14.4\njax[cpu]==0.6.1\nmultiprocess==0.70.16\n",
         ),
-        "moirai-2" => Some("git+https://github.com/SalesforceAIResearch/uni2ts.git\ngluonts\n"),
-        "flowstate" => Some("granite-tsfm\n"),
-        "tabpfn-ts" => Some("pandas\ntabpfn-time-series\ntabpfn\n"),
-        "tirex" => Some("tirex-ts\n"),
-        "kairos" => Some("git+https://github.com/foundation-model-research/Kairos.git\n"),
-        "sundial" => Some("transformers>=4.40.1\naccelerate\n"),
+        "flowstate" => Some("granite-tsfm==0.3.6\n"),
+        "tabpfn-ts" => {
+            Some("pandas==2.3.3\ntabpfn-time-series==1.2.0\ntabpfn==8.1.0\n")
+        }
+        "tirex" => Some("tirex-ts==1.4.2\n"),
+        "kairos" => Some(
+            "git+https://github.com/foundation-model-research/Kairos.git@0322393840ccf6e2bfe9c663f9dcd088a5a7ee07\n",
+        ),
+        "sundial" => {
+            Some("torch==2.2.2\ntransformers==4.40.1\naccelerate==0.29.3\n")
+        }
         _ => None,
     }
 }

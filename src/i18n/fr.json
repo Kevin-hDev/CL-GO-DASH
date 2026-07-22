@@ -1774,7 +1774,8 @@
       "capabilities": {
         "context": "Variables de contexte",
         "futureContext": "Contexte futur",
-        "multivariate": "Multi-séries",
+        "multiSeries": "Multi-séries indépendantes",
+        "multivariate": "Multivarié conjoint",
         "probabilistic": "Prévision probabiliste",
         "backtesting": "Backtesting"
       }
