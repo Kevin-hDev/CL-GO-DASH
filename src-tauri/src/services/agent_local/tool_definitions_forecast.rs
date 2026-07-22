@@ -141,6 +141,11 @@ fn forecast_models_definition_for(auto: bool) -> Value {
                 "type": "string",
                 "maxLength": 64,
                 "description": "Validated profile id returned by forecast_data_audit for the current task."
+            },
+            "requested_model_id": {
+                "type": "string",
+                "maxLength": crate::services::forecast::limits::MAX_MODEL_ID_CHARS,
+                "description": "Optional exact catalog model id. Pass it only when the user explicitly requested this Forecast model."
             }
         })
     } else {
@@ -148,7 +153,7 @@ fn forecast_models_definition_for(auto: bool) -> Value {
     };
     super::tool_definitions::tool_def(
         "forecast_models",
-        "Inspect the Forecast selection policy. In Manual, use only forced_model. In Auto, pass the validated data_profile_id and choose only one compatible candidate. Prefer rolling backtests when selection_basis is rolling_backtest. Hardware data is exposed only in this Forecast response. Pass the returned selection_id to forecast and never call a capability-only choice the best model.",
+        "Inspect the Forecast selection policy. In Manual, use only forced_model. In Auto, pass the validated data_profile_id and choose only one compatible candidate. If the user explicitly names a model, also pass requested_model_id and follow requested_model status. Prefer rolling backtests when selection_basis is rolling_backtest. Hardware data is exposed only in this Forecast response. Pass the returned selection_id to forecast and never call a capability-only choice the best model.",
         serde_json::json!({
             "type": "object",
             "properties": properties,
@@ -167,24 +172,5 @@ pub(super) fn definition_for_tool(name: &str) -> Option<Value> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn auto_models_schema_requires_a_bounded_profile_id() {
-        let auto = forecast_models_definition_for(true);
-        let manual = forecast_models_definition_for(false);
-        let auto_parameters = &auto["function"]["parameters"];
-
-        assert_eq!(auto_parameters["properties"]["data_profile_id"]["maxLength"], 64);
-        assert!(auto_parameters["required"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|value| value == "data_profile_id"));
-        assert!(manual["function"]["parameters"]["required"]
-            .as_array()
-            .unwrap()
-            .is_empty());
-    }
-}
+#[path = "tool_definitions_forecast_models_tests.rs"]
+mod tests;

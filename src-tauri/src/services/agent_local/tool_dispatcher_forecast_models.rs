@@ -1,7 +1,7 @@
 use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::forecast::{
     data_profiles, hardware_profile, limits, model_listing, selection_policy, selection_tickets,
-    storage,
+    storage, validation,
 };
 use serde_json::Value;
 
@@ -63,12 +63,18 @@ pub async fn handle(args: &Value, session_id: &str) -> ToolResult {
                 Ok(evidence) => evidence,
                 Err(error) => return ToolResult::err(error),
             };
-            let selection = crate::services::forecast::auto_selection::select(
+            let requested_model_id = match requested_model_id(args) {
+                Ok(requested) => requested,
+                Err(error) => return ToolResult::err(error),
+            };
+            let selection =
+                crate::services::forecast::auto_selection::select_with_requested_model(
                 models,
                 &profile,
                 policy.allow_cloud_in_auto,
                 hardware,
                 &evidence,
+                requested_model_id,
             );
             let selection_id = match selection_tickets::issue(
                 session_id,
@@ -79,7 +85,15 @@ pub async fn handle(args: &Value, session_id: &str) -> ToolResult {
                 Ok(id) => id,
                 Err(error) => return ToolResult::err(error),
             };
-            let usage = if selection.basis == "rolling_backtest" {
+            let usage = if selection
+                .requested_model
+                .as_ref()
+                .is_some_and(|requested| requested.status == "candidate")
+            {
+                "Use the explicitly requested candidate. Pass selection_source='explicit_user_override' and selection_reason_codes=['user_requested'] to forecast. Runtime setup may occur on first use."
+            } else if selection.requested_model.is_some() {
+                "The explicitly requested model was excluded. Explain requested_model.exclusion_reason and do not silently replace it. Use another candidate only after the user accepts."
+            } else if selection.basis == "rolling_backtest" {
                 "Choose only one returned candidate. Prefer the lowest MASE that beats the best baseline, unless the user's explicit speed, local, cloud, or cost need justifies another safe candidate. Pass selection_id, selection_source, and short selection_reason_codes to forecast."
             } else {
                 "Choose only one returned candidate. This ranking uses capabilities and current resources, so do not call it the best model. Pass selection_id, selection_source, and short selection_reason_codes to forecast."
@@ -104,6 +118,7 @@ pub async fn handle(args: &Value, session_id: &str) -> ToolResult {
                 },
                 "selection_id": selection_id,
                 "candidates": selection.candidates,
+                "requested_model": selection.requested_model,
                 "selection_basis": selection.basis,
                 "usage": usage
             })
@@ -112,6 +127,17 @@ pub async fn handle(args: &Value, session_id: &str) -> ToolResult {
     match serde_json::to_string_pretty(&payload) {
         Ok(json) => ToolResult::ok(json),
         Err(_) => ToolResult::err("Catalogue Forecast indisponible"),
+    }
+}
+
+fn requested_model_id(args: &Value) -> Result<Option<&str>, String> {
+    match args.get("requested_model_id") {
+        None | Some(Value::Null) => Ok(None),
+        Some(Value::String(id)) => {
+            validation::validate_model_id(id)?;
+            Ok(Some(id))
+        }
+        Some(_) => Err("Modèle demandé invalide".to_string()),
     }
 }
 
@@ -145,3 +171,6 @@ fn model_sort_key(model: &Value) -> (bool, bool, bool, String) {
 #[cfg(test)]
 #[path = "tool_dispatcher_forecast_models_tests.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "tool_dispatcher_forecast_models_request_tests.rs"]
+mod request_tests;

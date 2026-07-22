@@ -173,6 +173,7 @@ mod tests {
                 estimated_ram_mb: 1_000,
             }],
             basis: "capabilities_and_resources",
+            requested_model: None,
         };
         let session = Uuid::new_v4().to_string();
         let profile = Uuid::new_v4().to_string();

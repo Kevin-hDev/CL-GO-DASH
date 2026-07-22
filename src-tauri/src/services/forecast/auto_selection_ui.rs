@@ -13,12 +13,13 @@ pub async fn verify_choice(
         .as_array()
         .ok_or("Catalogue Forecast indisponible")?;
     let evidence = storage::comparable_backtests(profile).await?;
-    let selection = auto_selection::select(
+    let selection = auto_selection::select_with_requested_model(
         models,
         profile,
         policy.allow_cloud_in_auto,
         hardware_profile::detect(),
         &evidence,
+        Some(model_id),
     );
     let candidate = selection
         .candidates

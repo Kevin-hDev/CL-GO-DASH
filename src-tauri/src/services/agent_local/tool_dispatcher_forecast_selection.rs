@@ -29,12 +29,18 @@ pub async fn verify(
         .as_array()
         .ok_or("Catalogue Forecast indisponible")?;
     let evidence = storage::comparable_backtests(profile).await?;
-    let current = auto_selection::select(
+    let requested_model = (request.selection_source
+        == Some(
+            crate::services::forecast::provenance_types::ForecastSelectionSource::ExplicitUserOverride,
+        ))
+    .then_some(model_id);
+    let current = auto_selection::select_with_requested_model(
         models,
         profile,
         policy.allow_cloud_in_auto,
         hardware_profile::detect(),
         &evidence,
+        requested_model,
     );
     let candidate = current
         .candidates

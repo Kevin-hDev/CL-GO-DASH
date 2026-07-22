@@ -44,7 +44,7 @@ pub fn kill_child_process(mut child: Child) {
     let start = Instant::now();
     while start.elapsed() < Duration::from_secs(3) {
         if let Ok(Some(_)) = child.try_wait() {
-            eprintln!("[forecast] sidecar arrêté proprement");
+            eprintln!("[forecast] sidecar arrêté");
             return;
         }
         std::thread::sleep(Duration::from_millis(100));

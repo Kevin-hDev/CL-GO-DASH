@@ -98,6 +98,9 @@ pub(super) fn classify_error(message: &str, is_connection: bool) -> String {
     if lower.contains("timeout") {
         return "timeout".to_string();
     }
+    if lower.contains("overloaded") || lower.contains("temporarily unavailable") {
+        return "provider_overloaded".to_string();
+    }
     if matches!(
         lower.as_str(),
         "provider_connection_failed"

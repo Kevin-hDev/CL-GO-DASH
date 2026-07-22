@@ -68,6 +68,8 @@ pub mod workbench_drafts;
 pub mod workbench_geometry;
 
 #[cfg(test)]
+mod auto_selection_request_tests;
+#[cfg(test)]
 mod file_input_tests;
 #[cfg(test)]
 mod input_data_tests;
