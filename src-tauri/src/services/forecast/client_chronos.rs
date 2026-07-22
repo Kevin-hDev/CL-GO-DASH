@@ -14,7 +14,8 @@ pub async fn predict(
     let input = parse_request_input(request)?;
     let payload = build_payload(&input, request)?;
 
-    let client = client_http::loopback_client()?;
+    let client =
+        client_http::loopback_client().map_err(|_| "prediction_runtime_failed".to_string())?;
     let http_request = client
         .post(format!("{base_url}/predict"))
         .header("Content-Type", "application/json")
@@ -23,17 +24,24 @@ pub async fn predict(
     let resp = client
         .send(http_request)
         .await
-        .map_err(|_| "Erreur du service de prédiction".to_string())?;
+        .map_err(|_| "prediction_runtime_failed".to_string())?;
 
     if !resp.status().is_success() {
         let status = resp.status();
-        eprintln!("[chronos] erreur {status}");
-        return Err("Erreur du service de prédiction".to_string());
+        eprintln!("[forecast] requête de prédiction refusée status={status}");
+        return Err(if status.is_client_error() {
+            "prediction_rejected".to_string()
+        } else {
+            "prediction_runtime_failed".to_string()
+        });
     }
 
-    let body: Value = client_http::read_json(resp).await?;
+    let body: Value = client_http::read_json(resp)
+        .await
+        .map_err(|_| "invalid_prediction_output".to_string())?;
 
     client_local_response::parse_response(&body, request, &input, session_id)
+        .map_err(|_| "invalid_prediction_output".to_string())
 }
 
 fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value, String> {

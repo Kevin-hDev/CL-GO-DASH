@@ -67,6 +67,10 @@ fn enrich_model_object(
         "interval_support".into(),
         Value::String(super::validation::interval_support(model.id).to_string()),
     );
+    object.insert(
+        "interval_capability".into(),
+        serde_json::to_value(super::interval_capability::for_model(model.id)).unwrap_or_default(),
+    );
     object.insert("installed".into(), Value::Bool(installed_model));
     object.insert("installable".into(), Value::Bool(installable(model)));
     object.insert(

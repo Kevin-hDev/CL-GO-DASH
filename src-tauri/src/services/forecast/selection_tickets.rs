@@ -168,6 +168,9 @@ mod tests {
                 compatibility: "recommended",
                 resource_fit: ResourceFit::Comfortable,
                 reasons: vec!["resources_checked"],
+                interval_capability: super::super::interval_capability::for_model(
+                    "chronos-bolt-tiny",
+                ),
                 backtest: None,
                 evidence: None,
                 estimated_ram_mb: 1_000,

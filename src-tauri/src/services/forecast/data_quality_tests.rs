@@ -116,3 +116,20 @@ fn reports_categorical_covariates_without_rejecting_compatible_models() {
         .iter()
         .any(|issue| issue.code == "categorical_covariate"));
 }
+
+#[test]
+fn profile_preserves_the_requested_confidence_contract() {
+    let mut input = request(
+        json!([
+            {"date": "2026-01-01", "value": 1},
+            {"date": "2026-01-02", "value": 2}
+        ]),
+        1,
+        "D",
+    );
+    input.confidence_level = 0.92;
+
+    let (_, profile) = audit_request_data(&input).unwrap();
+
+    assert_eq!(profile.confidence_level, Some(0.92));
+}

@@ -95,6 +95,7 @@ pub(super) fn build_profile(
         covariate_columns: request.covariate_columns.clone(),
         frequency: request.frequency.clone(),
         horizon: request.horizon,
+        confidence_level: Some(request.confidence_level),
         row_count,
         history_points: history_points_by_series.values().sum(),
         future_rows,

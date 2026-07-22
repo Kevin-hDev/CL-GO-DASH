@@ -26,6 +26,7 @@ fn profile(series_count: usize, covariates: bool, future_rows: usize) -> DataPro
         },
         frequency: "D".into(),
         horizon: 12,
+        confidence_level: Some(0.8),
         row_count: 100,
         history_points: 100,
         future_rows,
@@ -184,5 +185,6 @@ fn backtest(
         calibration: None,
         duration_ms: 10,
         beats_best_baseline,
+        failure: None,
     }
 }

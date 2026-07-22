@@ -149,6 +149,8 @@ pub struct ForecastAnalysisMeta {
     pub provider: String,
     pub horizon: u32,
     pub frequency: String,
+    #[serde(default)]
+    pub confidence_level: Option<f64>,
     pub points: usize,
     pub mape: Option<f64>,
     pub session_id: Option<String>,
@@ -172,6 +174,7 @@ impl ForecastResult {
             provider: self.provider.clone(),
             horizon: self.horizon,
             frequency: self.frequency.clone(),
+            confidence_level: Some(self.confidence_level),
             points: self.input_summary.points,
             mape: self.metrics.as_ref().and_then(|m| m.mape),
             session_id: self.session_id.clone(),

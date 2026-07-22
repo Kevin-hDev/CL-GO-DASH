@@ -49,12 +49,18 @@ fn auto_schema_requires_a_candidate_model() {
         .as_str()
         .unwrap()
         .contains("call forecast_models"));
+    assert!(parameters["required"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|value| value == "confidence_level"));
 
     let args = serde_json::json!({
         "target_column": "sales",
         "date_column": "date",
         "horizon": 7,
         "frequency": "D",
+        "confidence_level": 0.8,
         "model": "chronos-bolt-small",
         "selection_id": "550e8400-e29b-41d4-a716-446655440000",
         "selection_source": "auto",

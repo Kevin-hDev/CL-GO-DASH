@@ -33,6 +33,44 @@ pub struct ModelBacktestResult {
     pub rank: Option<usize>,
     pub beats_best_baseline: Option<bool>,
     pub warning: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub failure: Option<BacktestFailure>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BacktestFailure {
+    pub code: String,
+    pub stage: String,
+    pub retryable: bool,
+}
+
+impl BacktestFailure {
+    pub fn from_code(code: &str) -> Self {
+        let (code, stage, retryable) = match code {
+            "model_unavailable"
+            | "model_incompatible"
+            | "confidence_unsupported"
+            | "cloud_not_allowed"
+            | "cloud_not_configured"
+            | "model_not_installed"
+            | "invalid_backtest_data"
+            | "invalid_backtest_horizon"
+            | "legacy_columns_unavailable" => (code, "preflight", false),
+            "resources_unavailable" => (code, "preflight", true),
+            "model_start_failed" => (code, "startup", true),
+            "prediction_rejected" | "model_request_invalid" => (code, "request", false),
+            "invalid_prediction_output" | "incomplete_predictions" | "missing_series" => {
+                (code, "output", false)
+            }
+            "prediction_runtime_failed" | "window_failed" => (code, "runtime", true),
+            _ => ("backtest_failed", "runtime", false),
+        };
+        Self {
+            code: code.to_string(),
+            stage: stage.to_string(),
+            retryable,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -86,6 +124,8 @@ pub struct BacktestIndexResult {
     pub calibration: Option<IntervalCalibration>,
     pub duration_ms: u64,
     pub beats_best_baseline: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub failure: Option<BacktestFailure>,
 }
 
 impl ForecastEvaluation {
@@ -104,8 +144,13 @@ impl ForecastEvaluation {
                     calibration: result.calibration.clone(),
                     duration_ms: result.duration_ms,
                     beats_best_baseline: result.beats_best_baseline,
+                    failure: result.failure.clone(),
                 })
                 .collect(),
         }
     }
 }
+
+#[cfg(test)]
+#[path = "types_tests.rs"]
+mod tests;

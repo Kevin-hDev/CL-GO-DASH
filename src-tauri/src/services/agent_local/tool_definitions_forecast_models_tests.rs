@@ -32,3 +32,12 @@ fn auto_models_schema_accepts_an_explicit_user_model() {
         crate::services::forecast::limits::MAX_MODEL_ID_CHARS
     );
 }
+
+#[test]
+fn model_tool_explains_that_candidates_are_already_confidence_safe() {
+    let auto = forecast_models_definition_for(true);
+    let description = auto["function"]["description"].as_str().unwrap();
+
+    assert!(description.contains("confidence"));
+    assert!(description.contains("candidates"));
+}

@@ -48,7 +48,7 @@ pub async fn handle(args: &Value, session_id: &str) -> ToolResult {
                 "runnable_model_ids": runnable_model_ids
             },
             "models": compact,
-            "usage": "You must use the forced model and keep the user's policy unchanged."
+            "usage": "Compare the audited confidence_level with forced_model_state.interval_capability. Use the forced model only when it supports the exact level. Never round an explicit request; ask the user to change the level or selected model if they are incompatible."
         }),
         selection_policy::ForecastSelectionMode::Auto => {
             let Some(profile_id) = args["data_profile_id"].as_str() else {
@@ -58,6 +58,11 @@ pub async fn handle(args: &Value, session_id: &str) -> ToolResult {
                 Ok(profile) => profile,
                 Err(error) => return ToolResult::err(error),
             };
+            if profile.confidence_level.is_none() {
+                return ToolResult::err(
+                    "Profil Forecast obsolète : relancer forecast_data_audit",
+                );
+            }
             let hardware = hardware_profile::detect();
             let evidence = match storage::comparable_backtests(&profile).await {
                 Ok(evidence) => evidence,
@@ -90,13 +95,13 @@ pub async fn handle(args: &Value, session_id: &str) -> ToolResult {
                 .as_ref()
                 .is_some_and(|requested| requested.status == "candidate")
             {
-                "Use the explicitly requested candidate. Pass selection_source='explicit_user_override' and selection_reason_codes=['user_requested'] to forecast. The model and its runtime are already ready."
+                "Use the explicitly requested candidate. It supports the profile's exact confidence_level; pass that level unchanged with selection_source='explicit_user_override' and selection_reason_codes=['user_requested'] to forecast. The model and its runtime are already ready."
             } else if selection.requested_model.is_some() {
                 "The explicitly requested model was excluded. Explain requested_model.exclusion_reason and do not silently replace it. Use another candidate only after the user accepts."
             } else if selection.basis == "rolling_backtest" {
-                "Choose only one returned candidate. Prefer the lowest MASE that beats the best baseline, unless the user's explicit speed, local, cloud, or cost need justifies another safe candidate. Pass selection_id, selection_source, and short selection_reason_codes to forecast."
+                "Choose only one returned candidate. Every candidate supports the profile's exact confidence_level; pass it unchanged. Prefer the lowest MASE that beats the best baseline, unless the user's explicit speed, local, cloud, or cost need justifies another safe candidate. Pass selection_id, selection_source, and short selection_reason_codes to forecast."
             } else {
-                "Choose only one returned candidate. This ranking uses capabilities and current resources, so do not call it the best model. Pass selection_id, selection_source, and short selection_reason_codes to forecast."
+                "Choose only one returned candidate. Every candidate supports the profile's exact confidence_level; pass it unchanged. This ranking uses capabilities and current resources, so do not call it the best model. Pass selection_id, selection_source, and short selection_reason_codes to forecast."
             };
             serde_json::json!({
                 "selection_policy": {
@@ -107,6 +112,7 @@ pub async fn handle(args: &Value, session_id: &str) -> ToolResult {
                     "history_points": profile.history_points,
                     "series_count": profile.series_count,
                     "horizon": profile.horizon,
+                    "confidence_level": profile.confidence_level,
                     "frequency": profile.frequency,
                     "past_covariates": !profile.covariate_columns.is_empty(),
                     "future_covariates": profile.future_rows > 0 && !profile.covariate_columns.is_empty(),
@@ -159,6 +165,7 @@ fn compact_model(model: &Value, forced_model: Option<&str>) -> Option<Value> {
         "provider_configured": model["provider_configured"].as_bool().unwrap_or(false),
         "is_cloud": model["is_cloud"].as_bool().unwrap_or(false),
         "interval_support": crate::services::forecast::validation::interval_support(id),
+        "interval_capability": crate::services::forecast::interval_capability::for_model(id),
         "capabilities": model["capabilities"].clone()
     }))
 }

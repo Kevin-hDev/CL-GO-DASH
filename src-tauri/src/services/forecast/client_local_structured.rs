@@ -77,12 +77,24 @@ fn output_date(
     index: usize,
     expected_dates: &BTreeMap<String, Vec<String>>,
 ) -> Result<String, String> {
+    let expected = expected_dates
+        .get(series_id)
+        .and_then(|dates| dates.get(index))
+        .ok_or("Date de sortie invalide")?;
     if raw_date.trim().to_ascii_uppercase().starts_with("T+") {
-        return expected_dates
-            .get(series_id)
-            .and_then(|dates| dates.get(index))
-            .cloned()
-            .ok_or("Date de sortie invalide".into());
+        return Ok(expected.clone());
     }
-    Ok(raw_date.to_string())
+    if raw_date == expected {
+        return Ok(expected.clone());
+    }
+    let raw_datetime = super::input_dates::parse_input_datetime(raw_date);
+    let expected_datetime = super::input_dates::parse_input_datetime(expected);
+    if raw_datetime.is_some() && raw_datetime == expected_datetime {
+        return Ok(expected.clone());
+    }
+    Err("Date de sortie invalide".into())
 }
+
+#[cfg(test)]
+#[path = "client_local_structured_tests.rs"]
+mod tests;

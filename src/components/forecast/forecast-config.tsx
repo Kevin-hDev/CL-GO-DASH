@@ -50,7 +50,7 @@ export function ForecastConfig({
   const [covariates, setCovariates] = useState<string[]>([]);
   const [horizon, setHorizon] = useState(12);
   const [frequency, setFrequency] = useState("M");
-  const [confidence, setConfidence] = useState(0.9);
+  const [confidence, setConfidence] = useState(0.8);
   const { models, model, setModel } = useForecastConfigModels(
     defaultModelId,
     selectFallbackModel,
@@ -69,9 +69,19 @@ export function ForecastConfig({
     () => models.find((entry) => entry.id === model) ?? null,
     [models, model]
   );
-  const limitedConfidence = selectedModel?.interval_support === "central_60_or_80";
-  const effectiveConfidence = limitedConfidence && confidence !== 0.6 && confidence !== 0.8
-    ? 0.8
+  const fixedConfidenceLevels: number[] = selectedModel?.interval_capability?.mode === "fixed_grid"
+    ? selectedModel.interval_capability.supported_confidence_levels
+    : selectedModel?.interval_support === "central_60_or_80"
+      ? [0.6, 0.8]
+      : [];
+  const limitedConfidence = fixedConfidenceLevels.length > 0;
+  const fixedConfidenceMin = fixedConfidenceLevels[0] ?? 0.6;
+  const fixedConfidenceMax = fixedConfidenceLevels[fixedConfidenceLevels.length - 1] ?? 0.8;
+  const fixedConfidenceStep = fixedConfidenceLevels.length > 1
+    ? (fixedConfidenceLevels[1] ?? fixedConfidenceMax) - fixedConfidenceMin
+    : 0.01;
+  const effectiveConfidence = limitedConfidence && !fixedConfidenceLevels.includes(confidence)
+    ? fixedConfidenceMax
     : confidence;
   const contextProfile = useMemo(
     () =>
@@ -167,9 +177,9 @@ export function ForecastConfig({
         <div className="fcc-field">
           <label className="fcc-label" htmlFor="fcc-confidence">{t("forecast.config.confidence")}: {Math.round(effectiveConfidence * 100)}%</label>
           <input className="fcc-range" id="fcc-confidence" type="range"
-            min={limitedConfidence ? 0.6 : 0.5}
-            max={limitedConfidence ? 0.8 : 0.99}
-            step={limitedConfidence ? 0.2 : 0.01}
+            min={limitedConfidence ? fixedConfidenceMin : 0.5}
+            max={limitedConfidence ? fixedConfidenceMax : 0.99}
+            step={limitedConfidence ? fixedConfidenceStep : 0.01}
             value={effectiveConfidence} onChange={(e) => setConfidence(Number(e.target.value))} />
         </div>
         {(configError || error) && (

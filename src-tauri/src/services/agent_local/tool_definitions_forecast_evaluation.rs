@@ -4,7 +4,7 @@ use serde_json::Value;
 pub(super) fn backtest() -> Value {
     super::super::tool_definitions::tool_def(
         "forecast_backtest",
-        "Run bounded rolling temporal validation on one saved analysis. It evaluates Naive, Seasonal Naive, Drift, ETS and the requested forecast models on identical windows. Use the saved analysis_id returned by forecast. Results are persisted and compact; never call a model best unless this tool reports that it beats the baselines.",
+        "Run bounded rolling temporal validation on one saved analysis. It evaluates Naive, Seasonal Naive, Drift, ETS and requested forecast models on identical windows. Only pass models returned as candidates by forecast_models for the same audited task. Use the saved analysis_id returned by forecast. Results are persisted and compact. Inspect status and model_failures: never present a partial run as fully validated, and never call a model best unless a successful result beats the baselines.",
         serde_json::json!({
             "type": "object",
             "properties": {
@@ -34,7 +34,7 @@ pub(super) fn backtest() -> Value {
 pub(super) fn compare() -> Value {
     super::super::tool_definitions::tool_def(
         "forecast_compare_models",
-        "Read the comparable rolling-backtest ranking saved on one Forecast analysis. It returns bounded metrics, baseline status and measured interval coverage without returning raw folds or data.",
+        "Read the comparable rolling-backtest ranking saved on one Forecast analysis. It returns bounded metrics, baseline status and measured interval coverage without returning raw folds or data. Inspect status, model_failures and baseline_failures; never present a partial comparison as complete.",
         serde_json::json!({
             "type": "object",
             "properties": {
@@ -69,5 +69,13 @@ mod tests {
             compare["function"]["parameters"]["required"][0],
             "analysis_id"
         );
+        assert!(backtest["function"]["description"]
+            .as_str()
+            .unwrap()
+            .contains("model_failures"));
+        assert!(compare["function"]["description"]
+            .as_str()
+            .unwrap()
+            .contains("partial"));
     }
 }

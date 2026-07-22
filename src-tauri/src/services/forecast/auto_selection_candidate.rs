@@ -33,6 +33,10 @@ pub(super) fn evaluate(
     if spec.is_cloud && !cloud_allowed {
         return Err("cloud_not_allowed");
     }
+    let confidence = profile.confidence_level.ok_or("profile_outdated")?;
+    if !validation::supports_confidence(id, confidence) {
+        return Err("confidence_unsupported");
+    }
     if !task_compatible(spec, runtime, profile) {
         return Err("task_incompatible");
     }
@@ -60,6 +64,7 @@ pub(super) fn evaluate(
         compatibility: "compatible",
         resource_fit,
         reasons,
+        interval_capability: crate::services::forecast::interval_capability::for_model(id),
         backtest,
         evidence: full_evidence,
         estimated_ram_mb: spec.ram_mb,
@@ -117,7 +122,11 @@ fn compact_backtest(model_id: &str, summary: &BacktestIndexSummary) -> Option<Ca
 }
 
 fn reasons(profile: &DataProfile, fit: ResourceFit, requested: bool) -> Vec<&'static str> {
-    let mut reasons = vec!["horizon_supported", "frequency_supported"];
+    let mut reasons = vec![
+        "horizon_supported",
+        "frequency_supported",
+        "confidence_supported",
+    ];
     if requested {
         reasons.push("user_requested");
     }

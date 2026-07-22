@@ -95,6 +95,19 @@ fn rejects_confidence_unavailable_from_decile_only_model() {
 }
 
 #[test]
+fn continuous_models_accept_whole_percentage_confidence_levels() {
+    let mut request = make_request("chronos-2");
+    request.confidence_level = 0.92;
+    assert!(validate_request(&request).is_ok());
+
+    request.confidence_level = 0.925;
+    assert_eq!(
+        validate_request(&request),
+        Err("Niveau de confiance invalide".into())
+    );
+}
+
+#[test]
 fn rejects_frequency_outside_the_model_catalog_range() {
     let mut request = make_request("timegpt-2-mini");
     request.frequency = "10S".into();

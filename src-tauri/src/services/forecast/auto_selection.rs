@@ -17,6 +17,7 @@ pub struct AutoCandidate {
     pub compatibility: &'static str,
     pub resource_fit: ResourceFit,
     pub reasons: Vec<&'static str>,
+    pub interval_capability: super::interval_capability::IntervalCapability,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub backtest: Option<CandidateBacktest>,
     #[serde(skip)]

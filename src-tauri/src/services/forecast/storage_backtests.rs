@@ -15,6 +15,12 @@ pub fn comparable(
             entry.data_fingerprint == profile.fingerprint
                 && entry.horizon == profile.horizon
                 && entry.frequency == profile.frequency
+                && entry
+                    .confidence_level
+                    .zip(profile.confidence_level)
+                    .is_some_and(|(entry_level, profile_level)| {
+                        (entry_level - profile_level).abs() < 0.000_001
+                    })
         })
         .filter_map(|entry| entry.backtest)
         .collect();
@@ -39,6 +45,7 @@ mod tests {
             "covariate_columns": [],
             "frequency": "D",
             "horizon": 12,
+            "confidence_level": 0.8,
             "row_count": 20,
             "history_points": 20,
             "future_rows": 0,
@@ -63,6 +70,7 @@ mod tests {
             provider: "chronos-bolt".into(),
             horizon: 12,
             frequency: "D".into(),
+            confidence_level: Some(0.8),
             points: 20,
             mape: None,
             session_id: None,

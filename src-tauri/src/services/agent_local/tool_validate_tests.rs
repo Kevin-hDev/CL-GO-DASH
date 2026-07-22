@@ -138,7 +138,8 @@ mod tests {
                 "target_column": "sales",
                 "date_column": "date",
                 "horizon": 7,
-                "frequency": "D"
+                "frequency": "D",
+                "confidence_level": 0.8
             }),
         )
         .unwrap();
@@ -181,7 +182,8 @@ mod tests {
                 "target_column": "sales",
                 "date_column": "date",
                 "horizon": 7,
-                "frequency": "D"
+                "frequency": "D",
+                "confidence_level": 0.8
             }),
         )
         .unwrap();

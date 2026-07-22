@@ -19,6 +19,7 @@ fn result(id: &str, kind: BacktestKind, mase: f64) -> ModelBacktestResult {
         rank: None,
         beats_best_baseline: None,
         warning: None,
+        failure: None,
     }
 }
 

@@ -79,25 +79,18 @@ pub fn supports_frequency(spec: &catalog::ForecastModelSpec, frequency: &str) ->
 }
 
 pub fn interval_support(model_id: &str) -> &'static str {
-    match registry::find_runtime(model_id).map(|runtime| runtime.family_id) {
-        Some("timesfm-2-5" | "toto-2" | "flowstate" | "tabpfn-ts" | "tirex" | "kairos") => {
-            "central_60_or_80"
-        }
-        _ => "continuous",
-    }
+    super::interval_capability::legacy_label(model_id)
+}
+
+pub fn supports_confidence(model_id: &str, confidence: f64) -> bool {
+    super::interval_capability::supports(model_id, confidence)
 }
 
 fn validate_confidence_support(
     runtime: &registry::ForecastRuntimeSpec,
     confidence: f64,
 ) -> Result<(), String> {
-    if interval_support(runtime.model_id) == "continuous" {
-        return Ok(());
-    }
-    if [0.6, 0.8]
-        .iter()
-        .any(|supported| (confidence - supported).abs() < 0.000_001)
-    {
+    if supports_confidence(runtime.model_id, confidence) {
         return Ok(());
     }
     Err("Niveau de confiance non supporté par ce moteur".into())
@@ -132,7 +125,7 @@ pub fn validate_data_request(request: &ForecastRequest) -> Result<(), String> {
     if request.horizon == 0 || request.horizon > limits::MAX_HORIZON {
         return Err("Horizon invalide".into());
     }
-    if !(0.5..=0.99).contains(&request.confidence_level) {
+    if !super::interval_capability::valid_input_level(request.confidence_level) {
         return Err("Niveau de confiance invalide".into());
     }
     if !ALLOWED_FREQUENCIES.contains(&request.frequency.as_str()) {

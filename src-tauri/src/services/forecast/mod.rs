@@ -24,6 +24,7 @@ pub mod input_dates;
 pub mod input_future;
 pub mod input_parse_utils;
 pub mod input_series;
+pub mod interval_capability;
 pub mod intervals;
 pub mod limits;
 pub mod model_config;

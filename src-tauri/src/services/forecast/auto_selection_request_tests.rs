@@ -23,6 +23,7 @@ fn profile() -> DataProfile {
         covariate_columns: Vec::new(),
         frequency: "M".into(),
         horizon: 12,
+        confidence_level: Some(0.92),
         row_count: 100,
         history_points: 100,
         future_rows: 0,
@@ -35,6 +36,43 @@ fn profile() -> DataProfile {
         outlier_count: 0,
         issues: Vec::new(),
     }
+}
+
+#[test]
+fn auto_excludes_fixed_grid_models_before_the_llm_sees_them() {
+    let models = [
+        model("chronos-2", true, true),
+        model("timesfm-2.5-200m", true, true),
+        model("toto-2.0-1b", true, true),
+    ];
+
+    let selection = select_with_requested_model(&models, &profile(), false, hardware(), &[], None);
+
+    assert_eq!(selection.candidates.len(), 1);
+    assert_eq!(selection.candidates[0].model_id, "chronos-2");
+    assert!(selection.candidates[0]
+        .reasons
+        .contains(&"confidence_supported"));
+}
+
+#[test]
+fn requested_incompatible_confidence_has_a_precise_exclusion_reason() {
+    let models = [model("timesfm-2.5-200m", true, true)];
+
+    let selection = select_with_requested_model(
+        &models,
+        &profile(),
+        false,
+        hardware(),
+        &[],
+        Some("timesfm-2.5-200m"),
+    );
+
+    assert!(selection.candidates.is_empty());
+    assert_eq!(
+        selection.requested_model.unwrap().exclusion_reason,
+        Some("confidence_unsupported")
+    );
 }
 
 fn hardware() -> HardwareProfile {

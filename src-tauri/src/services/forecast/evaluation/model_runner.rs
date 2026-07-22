@@ -1,7 +1,7 @@
 use super::baselines::seasonal_period;
 use super::folds::BacktestPlan;
 use super::metrics::{self, Observation};
-use super::types::{BacktestFoldMetric, BacktestKind, ModelBacktestResult};
+use super::types::{BacktestFailure, BacktestFoldMetric, BacktestKind, ModelBacktestResult};
 use crate::services::forecast::sidecar::{ChronosSidecar, SidecarEndpoint};
 use crate::services::forecast::types::{ForecastRequest, ForecastResult};
 use std::time::Instant;
@@ -32,18 +32,23 @@ pub(super) async fn evaluate(
             rank: None,
             beats_best_baseline: None,
             warning: None,
+            failure: None,
         },
-        Err(warning) => ModelBacktestResult {
-            model_id: model_id.to_string(),
-            kind: BacktestKind::Model,
-            metrics: None,
-            calibration: None,
-            folds: Vec::new(),
-            duration_ms,
-            rank: None,
-            beats_best_baseline: None,
-            warning: Some(warning),
-        },
+        Err(code) => {
+            let failure = BacktestFailure::from_code(&code);
+            ModelBacktestResult {
+                model_id: model_id.to_string(),
+                kind: BacktestKind::Model,
+                metrics: None,
+                calibration: None,
+                folds: Vec::new(),
+                duration_ms,
+                rank: None,
+                beats_best_baseline: None,
+                warning: Some(failure.code.clone()),
+                failure: Some(failure),
+            }
+        }
     }
 }
 
@@ -56,6 +61,12 @@ async fn evaluate_inner(
     let runtime = crate::services::forecast::registry::find_runtime(model_id)
         .filter(|runtime| crate::services::forecast::registry::has_predict_adapter(runtime))
         .ok_or("model_unavailable")?;
+    if !crate::services::forecast::validation::supports_confidence(
+        model_id,
+        analysis.confidence_level,
+    ) {
+        return Err("confidence_unsupported".into());
+    }
     if analysis.input_data.series_column.is_some() && !runtime.capabilities.multi_series {
         return Err("model_incompatible".into());
     }
@@ -107,7 +118,8 @@ async fn evaluate_windows(
     let mut fold_metrics = Vec::new();
     let period = seasonal_period(&analysis.frequency);
     for fold in &plan.folds {
-        let request = super::model_request::build(analysis, fold, model_id, plan.horizon)?;
+        let request = super::model_request::build(analysis, fold, model_id, plan.horizon)
+            .map_err(|_| "model_request_invalid".to_string())?;
         let forecast = predict(executor, &request).await?;
         let (mut next, metric) = super::model_observations::collect(fold, &forecast, period)?;
         observations.append(&mut next);
@@ -125,11 +137,18 @@ async fn predict(executor: &Executor, request: &ForecastRequest) -> Result<Forec
             None,
         )
         .await
-        .map_err(|_| "window_failed".to_string()),
+        .map_err(normalize_prediction_error),
         Executor::Cloud(key) => {
             crate::services::forecast::client_nixtla::predict(key, request, None)
                 .await
-                .map_err(|_| "window_failed".to_string())
+                .map_err(|_| "prediction_runtime_failed".to_string())
         }
+    }
+}
+
+fn normalize_prediction_error(error: String) -> String {
+    match error.as_str() {
+        "prediction_rejected" | "prediction_runtime_failed" | "invalid_prediction_output" => error,
+        _ => "window_failed".to_string(),
     }
 }

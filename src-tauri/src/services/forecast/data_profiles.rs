@@ -150,6 +150,9 @@ fn matches_request(profile: &DataProfile, request: &ForecastRequest) -> bool {
         && profile.covariate_columns == request.covariate_columns
         && profile.frequency == request.frequency
         && profile.horizon == request.horizon
+        && profile
+            .confidence_level
+            .is_some_and(|confidence| (confidence - request.confidence_level).abs() < 0.000_001)
 }
 
 async fn profile_path_for_write(id: &str) -> Result<PathBuf, String> {

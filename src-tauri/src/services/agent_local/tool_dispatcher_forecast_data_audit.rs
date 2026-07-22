@@ -33,7 +33,7 @@ pub async fn handle(args: &Value, working_dir: &Path) -> ToolResult {
         "data_profile_id": profile.valid.then_some(profile.id.as_str()),
         "profile": profile,
         "next_step": if profile.valid {
-            "In Auto, call forecast_models with data_profile_id, then use the chosen model and the same data_profile_id in forecast. In Manual, use data_profile_id directly in forecast."
+            "Call forecast_models next. In Auto, choose only a returned confidence-compatible candidate. In Manual, verify forced_model_state.interval_capability. Then use the same data_profile_id and exact confidence_level in forecast; never round it."
         } else {
             "Correct every error issue, then run forecast_data_audit again."
         }

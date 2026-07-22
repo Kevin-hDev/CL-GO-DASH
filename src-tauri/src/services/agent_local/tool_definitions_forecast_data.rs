@@ -29,7 +29,12 @@ pub(super) fn properties() -> Map<String, Value> {
         },
         "horizon": {"type": "integer", "minimum": 1, "maximum": limits.horizon, "description": "Future steps to predict."},
         "frequency": {"type": "string", "maxLength": limits.frequency_chars, "description": "Frequency such as D, B, W, M, Q, Y, H, or T."},
-        "confidence_level": {"type": "number", "minimum": 0.5, "maximum": 0.99, "description": "Prediction interval confidence, usually 0.9."}
+        "confidence_level": {
+            "type": "number",
+            "minimum": 0.5,
+            "maximum": 0.99,
+            "description": "Use the user's exact requested prediction-interval confidence. If none was requested, use 0.8, the common safe default. Use whole percentage steps only and never round an explicit request to fit a model."
+        }
     }))
     .unwrap_or_default()
 }

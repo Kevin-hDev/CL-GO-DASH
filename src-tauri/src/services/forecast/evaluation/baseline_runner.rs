@@ -1,7 +1,7 @@
 use super::baselines::Baseline;
 use super::folds::BacktestPlan;
 use super::metrics::{self, Observation};
-use super::types::{BacktestFoldMetric, BacktestKind, ModelBacktestResult};
+use super::types::{BacktestFailure, BacktestFoldMetric, BacktestKind, ModelBacktestResult};
 use std::time::Instant;
 
 pub(super) fn evaluate(
@@ -22,18 +22,23 @@ pub(super) fn evaluate(
             rank: None,
             beats_best_baseline: None,
             warning: None,
+            failure: None,
         },
-        Err(warning) => ModelBacktestResult {
-            model_id: baseline.id().to_string(),
-            kind: BacktestKind::Baseline,
-            metrics: None,
-            calibration: None,
-            folds: Vec::new(),
-            duration_ms: elapsed_ms(started),
-            rank: None,
-            beats_best_baseline: None,
-            warning: Some(warning),
-        },
+        Err(code) => {
+            let failure = BacktestFailure::from_code(&code);
+            ModelBacktestResult {
+                model_id: baseline.id().to_string(),
+                kind: BacktestKind::Baseline,
+                metrics: None,
+                calibration: None,
+                folds: Vec::new(),
+                duration_ms: elapsed_ms(started),
+                rank: None,
+                beats_best_baseline: None,
+                warning: Some(failure.code.clone()),
+                failure: Some(failure),
+            }
+        }
     }
 }
 

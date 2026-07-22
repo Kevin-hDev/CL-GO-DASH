@@ -37,6 +37,8 @@ pub struct DataProfile {
     pub covariate_columns: Vec<String>,
     pub frequency: String,
     pub horizon: u32,
+    #[serde(default)]
+    pub confidence_level: Option<f64>,
     pub row_count: usize,
     pub history_points: usize,
     pub future_rows: usize,

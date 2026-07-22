@@ -29,6 +29,11 @@ export interface ForecastModelEntry {
   engine_kind?: string;
   config_params?: string[];
   interval_support?: "continuous" | "central_60_or_80";
+  interval_capability?: {
+    mode: "continuous" | "fixed_grid";
+    supported_confidence_levels: number[];
+    confidence_step: number | null;
+  };
   capabilities?: {
     past_covariates: boolean;
     future_covariates: boolean;
