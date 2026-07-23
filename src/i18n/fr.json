@@ -1246,8 +1246,6 @@
       "draftSaveFailed": "Impossible d'enregistrer les modifications de l'espace Forecast.",
       "newAnalysis": "Nouvelle analyse",
       "workspace": "Espace de travail",
-      "foundationTitle": "Structure prête",
-      "foundationDescription": "Cet espace est lié à la conversation active. Les outils manuels seront ajoutés ici sans masquer le chat.",
       "sections": {
         "data": "Données",
         "forecast": "Prévision",
@@ -1257,12 +1255,36 @@
         "report": "Rapport"
       },
       "sectionDescriptions": {
-        "data": "Préparer, contrôler et corriger les séries avant une prévision.",
-        "forecast": "Configurer la cible, l'horizon, le modèle et le lancement.",
+        "data": "Inspecter les données, leur mapping et les contrôles de qualité.",
+        "forecast": "Consulter la prévision complète et ses différentes couches.",
         "evaluation": "Mesurer les modèles avec des baselines et des validations temporelles.",
         "comparison": "Comparer la qualité, la vitesse et les contraintes des modèles.",
         "scenarios": "Créer et modifier des hypothèses sans perdre la prévision de référence.",
         "report": "Rassembler la provenance, les notes et les exports avancés."
+      },
+      "data": {
+        "loadFailed": "Impossible de charger les données de l'analyse.",
+        "rows": "Lignes source",
+        "historyPoints": "Points historiques",
+        "futureRows": "Lignes futures",
+        "series": "Séries",
+        "missingPeriods": "Périodes manquantes",
+        "outliers": "Valeurs atypiques",
+        "target": "Cible",
+        "date": "Date",
+        "frequency": "Fréquence",
+        "covariates": "Variables externes",
+        "none": "Aucune",
+        "quality": "Qualité des données",
+        "valid": "Données validées",
+        "notAvailable": "Contrôle indisponible pour cette ancienne analyse",
+        "needsAttention": "Attention requise",
+        "issueError": "Erreur bloquante",
+        "issueWarning": "Avertissement",
+        "preview": "Aperçu des données",
+        "rowsDisplayed": "{{shown}} sur {{total}} lignes",
+        "noRows": "Aucune ligne n'est disponible pour cette analyse.",
+        "previewLimited": "L'aperçu est limité aux 200 premières lignes."
       },
       "evaluation": {
         "loading": "Chargement des évaluations…",
@@ -1344,7 +1366,6 @@
       "mainView": "Vue principale",
       "scenarios": "Scénarios",
       "comparisons": "Comparaisons",
-      "analysis": "Analyse",
       "notes": "Notes",
       "history": "Historique"
     },

@@ -15,4 +15,18 @@ describe("useForecastPanel browser mode", () => {
 
     expect(result.current.panelMode).toBe("browser");
   });
+
+  it("remplace l'ancien onglet Analyse par la vue principale", () => {
+    localStorage.setItem("fc-panel-session-analysis", JSON.stringify({
+      activeSection: "analysis",
+      navOpen: false,
+      currentAnalysisId: "analysis-id",
+      panelMode: "forecast",
+    }));
+
+    const { result } = renderHook(() => useForecastPanel("session-analysis"));
+
+    expect(result.current.activeSection).toBe("view");
+    expect(result.current.currentAnalysisId).toBe("analysis-id");
+  });
 });

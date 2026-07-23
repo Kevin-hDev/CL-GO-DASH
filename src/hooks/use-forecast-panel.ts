@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 
-export type ForecastSection = "view" | "scenarios" | "comparisons" | "analysis" | "notes" | "history";
+export type ForecastSection = "view" | "scenarios" | "comparisons" | "notes" | "history";
 export type PanelMode = "preview" | "forecast" | "browser";
 
 export interface ForecastPanelState {
@@ -17,7 +17,7 @@ const DEFAULT_PANEL_STATE = {
   panelMode: "preview" as PanelMode,
 };
 
-const SECTIONS: ForecastSection[] = ["view", "scenarios", "comparisons", "analysis", "notes", "history"];
+const SECTIONS: ForecastSection[] = ["view", "scenarios", "comparisons", "notes", "history"];
 
 function normalizePanelState(value: unknown): ForecastPanelState {
   if (!value || typeof value !== "object") return DEFAULT_PANEL_STATE;

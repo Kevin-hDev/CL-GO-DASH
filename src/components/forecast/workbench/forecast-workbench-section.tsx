@@ -1,6 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { ForecastEvaluationView } from "../evaluation/forecast-evaluation-view";
+import { ForecastWorkbenchData } from "./forecast-workbench-data";
+import { ForecastWorkbenchForecast } from "./forecast-workbench-forecast";
 import { ForecastWorkbenchReport } from "./forecast-workbench-report";
+import { ForecastWorkbenchScenarios } from "./forecast-workbench-scenarios";
 import type {
   ForecastWorkbenchSection,
   ForecastWorkbenchSnapshot,
@@ -16,10 +19,8 @@ export function ForecastWorkbenchSectionContent({
   snapshot,
 }: ForecastWorkbenchSectionProps) {
   const { t } = useTranslation();
-  if (section === "report" && snapshot.context.analysis_id) {
-    return <ForecastWorkbenchReport analysisId={snapshot.context.analysis_id} />;
-  }
-  if (section === "report") {
+  const analysisId = snapshot.context.analysis_id;
+  if (!analysisId) {
     return (
       <div className="fcw-foundation">
         <span>{t("forecast.workbench.evaluation.noAnalysis")}</span>
@@ -27,26 +28,17 @@ export function ForecastWorkbenchSectionContent({
       </div>
     );
   }
-  if ((section === "evaluation" || section === "comparison") && snapshot.context.analysis_id) {
+  if (section === "data") return <ForecastWorkbenchData analysisId={analysisId} />;
+  if (section === "forecast") return <ForecastWorkbenchForecast analysisId={analysisId} />;
+  if (section === "scenarios") return <ForecastWorkbenchScenarios analysisId={analysisId} />;
+  if (section === "report") return <ForecastWorkbenchReport analysisId={analysisId} />;
+  if (section === "evaluation" || section === "comparison") {
     return (
       <ForecastEvaluationView
-        analysisId={snapshot.context.analysis_id}
+        analysisId={analysisId}
         mode={section}
       />
     );
   }
-  if (section === "evaluation" || section === "comparison") {
-    return (
-      <div className="fcw-foundation">
-        <span>{t("forecast.workbench.evaluation.noAnalysis")}</span>
-        <p>{t("forecast.workbench.evaluation.noAnalysisDescription")}</p>
-      </div>
-    );
-  }
-  return (
-    <div className="fcw-foundation">
-      <span>{t("forecast.workbench.foundationTitle")}</span>
-      <p>{t("forecast.workbench.foundationDescription")}</p>
-    </div>
-  );
+  return null;
 }

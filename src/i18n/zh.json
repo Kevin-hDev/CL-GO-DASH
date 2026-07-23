@@ -1182,8 +1182,6 @@
       "draftSaveFailed": "无法保存 Forecast 工作区的更改。",
       "newAnalysis": "新分析",
       "workspace": "工作区",
-      "foundationTitle": "结构已就绪",
-      "foundationDescription": "此工作区与当前对话绑定。手动工具将在这里添加，不会隐藏聊天。",
       "sections": {
         "data": "数据",
         "forecast": "预测",
@@ -1193,12 +1191,36 @@
         "report": "报告"
       },
       "sectionDescriptions": {
-        "data": "在预测前准备、检查并修正时间序列。",
-        "forecast": "配置目标、预测范围、模型和运行。",
+        "data": "检查数据、字段映射和质量校验。",
+        "forecast": "查看完整预测及其可用图层。",
         "evaluation": "使用基线和时间验证衡量模型。",
         "comparison": "比较模型质量、速度和限制。",
         "scenarios": "创建和修改假设，同时保留参考预测。",
         "report": "汇总来源、备注和高级导出。"
+      },
+      "data": {
+        "loadFailed": "无法加载分析数据。",
+        "rows": "源数据行",
+        "historyPoints": "历史数据点",
+        "futureRows": "未来数据行",
+        "series": "序列",
+        "missingPeriods": "缺失周期",
+        "outliers": "异常值",
+        "target": "目标",
+        "date": "日期",
+        "frequency": "频率",
+        "covariates": "外部变量",
+        "none": "无",
+        "quality": "数据质量",
+        "valid": "数据已验证",
+        "notAvailable": "此旧版分析没有可用的质量检查",
+        "needsAttention": "需要注意",
+        "issueError": "阻塞错误",
+        "issueWarning": "警告",
+        "preview": "数据预览",
+        "rowsDisplayed": "显示 {{shown}} 行，共 {{total}} 行",
+        "noRows": "此分析没有可用数据行。",
+        "previewLimited": "预览仅显示前 200 行。"
       },
       "evaluation": {
         "loading": "正在加载评估…",
@@ -1269,7 +1291,6 @@
       "mainView": "主视图",
       "scenarios": "场景",
       "comparisons": "对比",
-      "analysis": "分析",
       "notes": "笔记",
       "history": "历史"
     },

@@ -1198,8 +1198,6 @@
       "draftSaveFailed": "Unable to save the Forecast workspace changes.",
       "newAnalysis": "New analysis",
       "workspace": "Workspace",
-      "foundationTitle": "Structure ready",
-      "foundationDescription": "This workspace is bound to the active conversation. Manual tools will be added here without hiding the chat.",
       "sections": {
         "data": "Data",
         "forecast": "Forecast",
@@ -1209,12 +1207,36 @@
         "report": "Report"
       },
       "sectionDescriptions": {
-        "data": "Prepare, inspect, and correct series before forecasting.",
-        "forecast": "Configure the target, horizon, model, and run.",
+        "data": "Inspect the data, its mapping, and quality checks.",
+        "forecast": "Review the complete forecast and its available layers.",
         "evaluation": "Measure models with baselines and temporal validation.",
         "comparison": "Compare model quality, speed, and constraints.",
         "scenarios": "Create and edit assumptions without losing the reference forecast.",
         "report": "Collect provenance, notes, and advanced exports."
+      },
+      "data": {
+        "loadFailed": "Unable to load the analysis data.",
+        "rows": "Source rows",
+        "historyPoints": "Historical points",
+        "futureRows": "Future rows",
+        "series": "Series",
+        "missingPeriods": "Missing periods",
+        "outliers": "Outliers",
+        "target": "Target",
+        "date": "Date",
+        "frequency": "Frequency",
+        "covariates": "External variables",
+        "none": "None",
+        "quality": "Data quality",
+        "valid": "Data validated",
+        "notAvailable": "Quality check unavailable for this legacy analysis",
+        "needsAttention": "Attention required",
+        "issueError": "Blocking error",
+        "issueWarning": "Warning",
+        "preview": "Data preview",
+        "rowsDisplayed": "{{shown}} of {{total}} rows",
+        "noRows": "No rows are available for this analysis.",
+        "previewLimited": "The preview is limited to the first 200 rows."
       },
       "evaluation": {
         "loading": "Loading evaluations…",
@@ -1296,7 +1318,6 @@
       "mainView": "Main view",
       "scenarios": "Scenarios",
       "comparisons": "Comparisons",
-      "analysis": "Analysis",
       "notes": "Notes",
       "history": "History"
     },

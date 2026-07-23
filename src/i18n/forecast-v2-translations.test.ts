@@ -17,6 +17,8 @@ describe("Forecast V2 translations", () => {
       expect(locale.forecast.workbench.draftSaveFailed.trim()).not.toBe("");
       expect(locale.forecast.workbench.sections.data.trim()).not.toBe("");
       expect(locale.forecast.workbench.sections.report.trim()).not.toBe("");
+      expect(locale.forecast.workbench.data.preview.trim()).not.toBe("");
+      expect(locale.forecast.workbench.data.loadFailed.trim()).not.toBe("");
       expect(locale.forecast.workbench.evaluation.run.trim()).not.toBe("");
       expect(locale.forecast.workbench.evaluation.warnings.execution.trim()).not.toBe("");
       expect(locale.forecast.workbench.evaluation.planWarnings.short_history.trim()).not.toBe("");

@@ -1,0 +1,25 @@
+.fcwf-root {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  margin-top: var(--space-lg);
+  overflow: hidden;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.fcwf-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--edge);
+}
+
+.fcwf-view {
+  min-height: 0;
+  flex: 1;
+}

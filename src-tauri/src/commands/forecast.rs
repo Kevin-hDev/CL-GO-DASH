@@ -1,7 +1,7 @@
 use crate::services::forecast::types::{ForecastAnalysisMeta, ForecastRequest, ForecastResult};
 use crate::services::forecast::{
     catalog, client_chronos, client_nixtla, data_profiles, export, model_manager, notes,
-    notes_cleanup, registry, scenarios, selected_model, sidecar, storage, validation,
+    notes_cleanup, registry, selected_model, sidecar, storage, validation,
 };
 use std::time::Instant;
 use tauri::State;
@@ -123,30 +123,6 @@ pub async fn export_forecast_analysis(
     format: String,
 ) -> Result<export::ForecastExportResult, String> {
     export::export_analysis(&analysis_id, &format).await
-}
-
-#[tauri::command]
-pub async fn create_forecast_scenario(
-    request: scenarios::ScenarioRequest,
-    chronos: State<'_, sidecar::ChronosSidecar>,
-) -> Result<ForecastResult, String> {
-    scenarios::create(request, Some(chronos.inner())).await
-}
-
-#[tauri::command]
-pub async fn update_forecast_scenario(
-    request: scenarios::ScenarioUpdateRequest,
-    chronos: State<'_, sidecar::ChronosSidecar>,
-) -> Result<ForecastResult, String> {
-    scenarios::update(request, Some(chronos.inner())).await
-}
-
-#[tauri::command]
-pub async fn delete_forecast_scenario(
-    analysis_id: String,
-    scenario_id: String,
-) -> Result<ForecastResult, String> {
-    scenarios::delete(&analysis_id, &scenario_id).await
 }
 
 #[tauri::command]

@@ -1182,8 +1182,6 @@
       "draftSaveFailed": "Die Änderungen im Forecast-Arbeitsbereich konnten nicht gespeichert werden.",
       "newAnalysis": "Neue Analyse",
       "workspace": "Arbeitsbereich",
-      "foundationTitle": "Struktur bereit",
-      "foundationDescription": "Dieser Bereich ist mit der aktiven Unterhaltung verbunden. Manuelle Werkzeuge werden hier ergänzt, ohne den Chat auszublenden.",
       "sections": {
         "data": "Daten",
         "forecast": "Prognose",
@@ -1193,12 +1191,36 @@
         "report": "Bericht"
       },
       "sectionDescriptions": {
-        "data": "Bereite Zeitreihen vor, prüfe und korrigiere sie vor der Prognose.",
-        "forecast": "Konfiguriere Ziel, Horizont, Modell und Ausführung.",
+        "data": "Untersuche Daten, Zuordnung und Qualitätsprüfungen.",
+        "forecast": "Sieh die vollständige Prognose und ihre verfügbaren Ebenen an.",
         "evaluation": "Bewerte Modelle mit Baselines und zeitlicher Validierung.",
         "comparison": "Vergleiche Qualität, Geschwindigkeit und Einschränkungen.",
         "scenarios": "Erstelle und bearbeite Annahmen, ohne die Referenzprognose zu verlieren.",
         "report": "Bündele Herkunft, Notizen und erweiterte Exporte."
+      },
+      "data": {
+        "loadFailed": "Die Analysedaten konnten nicht geladen werden.",
+        "rows": "Quelldatensätze",
+        "historyPoints": "Historische Punkte",
+        "futureRows": "Zukünftige Zeilen",
+        "series": "Reihen",
+        "missingPeriods": "Fehlende Zeiträume",
+        "outliers": "Ausreißer",
+        "target": "Ziel",
+        "date": "Datum",
+        "frequency": "Frequenz",
+        "covariates": "Externe Variablen",
+        "none": "Keine",
+        "quality": "Datenqualität",
+        "valid": "Daten validiert",
+        "notAvailable": "Prüfung für diese ältere Analyse nicht verfügbar",
+        "needsAttention": "Prüfung erforderlich",
+        "issueError": "Blockierender Fehler",
+        "issueWarning": "Warnung",
+        "preview": "Datenvorschau",
+        "rowsDisplayed": "{{shown}} von {{total}} Zeilen",
+        "noRows": "Für diese Analyse sind keine Zeilen verfügbar.",
+        "previewLimited": "Die Vorschau ist auf die ersten 200 Zeilen begrenzt."
       },
       "evaluation": {
         "loading": "Bewertungen werden geladen…",
@@ -1269,7 +1291,6 @@
       "mainView": "Hauptansicht",
       "scenarios": "Szenarien",
       "comparisons": "Vergleiche",
-      "analysis": "Analyse",
       "notes": "Notizen",
       "history": "Verlauf"
     },

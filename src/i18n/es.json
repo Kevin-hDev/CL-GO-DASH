@@ -1182,8 +1182,6 @@
       "draftSaveFailed": "No se pueden guardar los cambios del espacio Forecast.",
       "newAnalysis": "Nuevo análisis",
       "workspace": "Espacio de trabajo",
-      "foundationTitle": "Estructura preparada",
-      "foundationDescription": "Este espacio está vinculado a la conversación activa. Las herramientas manuales se añadirán aquí sin ocultar el chat.",
       "sections": {
         "data": "Datos",
         "forecast": "Previsión",
@@ -1193,12 +1191,36 @@
         "report": "Informe"
       },
       "sectionDescriptions": {
-        "data": "Prepara, revisa y corrige las series antes de la previsión.",
-        "forecast": "Configura el objetivo, el horizonte, el modelo y la ejecución.",
+        "data": "Inspecciona los datos, su asignación y los controles de calidad.",
+        "forecast": "Consulta la previsión completa y sus capas disponibles.",
         "evaluation": "Mide los modelos con referencias y validación temporal.",
         "comparison": "Compara la calidad, la velocidad y las restricciones.",
         "scenarios": "Crea y modifica hipótesis sin perder la previsión de referencia.",
         "report": "Reúne procedencia, notas y exportaciones avanzadas."
+      },
+      "data": {
+        "loadFailed": "No se pudieron cargar los datos del análisis.",
+        "rows": "Filas de origen",
+        "historyPoints": "Puntos históricos",
+        "futureRows": "Filas futuras",
+        "series": "Series",
+        "missingPeriods": "Periodos ausentes",
+        "outliers": "Valores atípicos",
+        "target": "Objetivo",
+        "date": "Fecha",
+        "frequency": "Frecuencia",
+        "covariates": "Variables externas",
+        "none": "Ninguna",
+        "quality": "Calidad de los datos",
+        "valid": "Datos validados",
+        "notAvailable": "Control no disponible para este análisis antiguo",
+        "needsAttention": "Requiere atención",
+        "issueError": "Error bloqueante",
+        "issueWarning": "Advertencia",
+        "preview": "Vista previa de los datos",
+        "rowsDisplayed": "{{shown}} de {{total}} filas",
+        "noRows": "No hay filas disponibles para este análisis.",
+        "previewLimited": "La vista previa está limitada a las primeras 200 filas."
       },
       "evaluation": {
         "loading": "Cargando evaluaciones…",
@@ -1269,7 +1291,6 @@
       "mainView": "Vista principal",
       "scenarios": "Escenarios",
       "comparisons": "Comparaciones",
-      "analysis": "Análisis",
       "notes": "Notas",
       "history": "Historial"
     },
