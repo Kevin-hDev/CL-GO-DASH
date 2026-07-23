@@ -1188,6 +1188,7 @@
         "evaluation": "Valutazione",
         "comparison": "Confronto",
         "scenarios": "Scenari",
+        "notes": "Note",
         "report": "Rapporto"
       },
       "sectionDescriptions": {
@@ -1196,6 +1197,7 @@
         "evaluation": "Misura i modelli con baseline e validazione temporale.",
         "comparison": "Confronta qualità, velocità e vincoli dei modelli.",
         "scenarios": "Crea e modifica ipotesi senza perdere la previsione di riferimento.",
+        "notes": "Crea, organizza e consulta le note collegate a questa previsione.",
         "report": "Raccogli provenienza, note ed esportazioni avanzate."
       },
       "data": {

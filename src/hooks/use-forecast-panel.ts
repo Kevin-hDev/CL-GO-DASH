@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 
-export type ForecastSection = "view" | "scenarios" | "comparisons" | "notes" | "history";
+export type ForecastSection = "view" | "comparisons" | "history";
 export type PanelMode = "preview" | "forecast" | "browser";
 
 export interface ForecastPanelState {
@@ -17,15 +17,19 @@ const DEFAULT_PANEL_STATE = {
   panelMode: "preview" as PanelMode,
 };
 
-const SECTIONS: ForecastSection[] = ["view", "scenarios", "comparisons", "notes", "history"];
+const SECTIONS: ForecastSection[] = ["view", "comparisons", "history"];
+
+export function normalizeForecastSection(value: unknown): ForecastSection {
+  return SECTIONS.includes(value as ForecastSection)
+    ? value as ForecastSection
+    : DEFAULT_PANEL_STATE.activeSection;
+}
 
 function normalizePanelState(value: unknown): ForecastPanelState {
   if (!value || typeof value !== "object") return DEFAULT_PANEL_STATE;
   const raw = value as Partial<ForecastPanelState>;
   return {
-    activeSection: SECTIONS.includes(raw.activeSection as ForecastSection)
-      ? raw.activeSection as ForecastSection
-      : DEFAULT_PANEL_STATE.activeSection,
+    activeSection: normalizeForecastSection(raw.activeSection),
     navOpen: typeof raw.navOpen === "boolean" ? raw.navOpen : DEFAULT_PANEL_STATE.navOpen,
     currentAnalysisId: typeof raw.currentAnalysisId === "string" ? raw.currentAnalysisId : null,
     panelMode: raw.panelMode === "forecast" || raw.panelMode === "browser"
@@ -93,8 +97,12 @@ export function useForecastPanel(sessionId: string | null) {
   }, [state, persist]);
 
   const restorePanelState = useCallback((next: ForecastPanelState) => {
-    if (samePanelState(state, next)) return;
-    persist(next);
+    const normalized = {
+      ...next,
+      activeSection: normalizeForecastSection(next.activeSection),
+    };
+    if (samePanelState(state, normalized)) return;
+    persist(normalized);
   }, [state, persist]);
 
   return {

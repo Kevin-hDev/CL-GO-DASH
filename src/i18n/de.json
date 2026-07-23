@@ -1188,6 +1188,7 @@
         "evaluation": "Bewertung",
         "comparison": "Vergleich",
         "scenarios": "Szenarien",
+        "notes": "Notizen",
         "report": "Bericht"
       },
       "sectionDescriptions": {
@@ -1196,6 +1197,7 @@
         "evaluation": "Bewerte Modelle mit Baselines und zeitlicher Validierung.",
         "comparison": "Vergleiche Qualität, Geschwindigkeit und Einschränkungen.",
         "scenarios": "Erstelle und bearbeite Annahmen, ohne die Referenzprognose zu verlieren.",
+        "notes": "Erstelle, organisiere und prüfe Notizen zu dieser Prognose.",
         "report": "Bündele Herkunft, Notizen und erweiterte Exporte."
       },
       "data": {

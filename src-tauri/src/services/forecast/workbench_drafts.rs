@@ -9,6 +9,7 @@ const SECTIONS: &[&str] = &[
     "evaluation",
     "comparison",
     "scenarios",
+    "notes",
     "report",
 ];
 static STORE_LOCK: Mutex<()> = Mutex::const_new(());
@@ -134,6 +135,7 @@ mod tests {
     #[test]
     fn section_and_revision_are_strictly_validated() {
         assert!(next(&ForecastWorkbenchDraft::default(), "forecast".into()).is_ok());
+        assert!(next(&ForecastWorkbenchDraft::default(), "notes".into()).is_ok());
         assert!(next(&ForecastWorkbenchDraft::default(), "unknown".into()).is_err());
     }
 

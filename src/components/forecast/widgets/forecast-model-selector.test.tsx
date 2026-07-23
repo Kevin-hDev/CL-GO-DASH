@@ -78,6 +78,8 @@ describe("ForecastModelSelector", () => {
     );
 
     fireEvent.click(screen.getByText("Auto"));
+    expect(screen.getByPlaceholderText("Rechercher un modèle…").closest(".fmsel-wrapper"))
+      .toBeNull();
     fireEvent.change(screen.getByPlaceholderText("Rechercher un modèle…"), {
       target: { value: "absent" },
     });

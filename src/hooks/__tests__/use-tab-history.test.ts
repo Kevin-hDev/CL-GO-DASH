@@ -16,6 +16,17 @@ describe("useTabHistory", () => {
     expect(result.current.current.settings.providersSubTab).toBe("api");
   });
 
+  it("migre les anciens onglets Forecast déplacés vers la vue principale", () => {
+    const legacy = {
+      ...DEFAULT_APP_NAV,
+      agentLocal: { ...DEFAULT_APP_NAV.agentLocal, forecastSection: "notes" },
+    } as unknown as typeof DEFAULT_APP_NAV;
+
+    const { result } = renderHook(() => useTabHistory(legacy));
+
+    expect(result.current.current.agentLocal.forecastSection).toBe("view");
+  });
+
   it("ignore les push identiques", () => {
     const { result } = renderHook(() => useTabHistory(DEFAULT_APP_NAV));
 

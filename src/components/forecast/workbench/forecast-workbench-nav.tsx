@@ -7,6 +7,7 @@ const SECTIONS: ForecastWorkbenchSection[] = [
   "evaluation",
   "comparison",
   "scenarios",
+  "notes",
   "report",
 ];
 

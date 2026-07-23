@@ -1188,6 +1188,7 @@
         "evaluation": "評価",
         "comparison": "比較",
         "scenarios": "シナリオ",
+        "notes": "ノート",
         "report": "レポート"
       },
       "sectionDescriptions": {
@@ -1196,6 +1197,7 @@
         "evaluation": "ベースラインと時系列検証でモデルを評価します。",
         "comparison": "モデルの品質、速度、制約を比較します。",
         "scenarios": "基準予測を保ったまま仮説を作成、編集します。",
+        "notes": "この予測に関連するノートを作成、整理、確認します。",
         "report": "出典、メモ、高度なエクスポートをまとめます。"
       },
       "data": {

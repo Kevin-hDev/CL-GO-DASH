@@ -13,7 +13,6 @@ interface ForecastNavigation {
   setSection: (section: ForecastSection) => void;
   toggleNav: () => void;
   loadAnalysis: (id: string) => void;
-  focusAnalysis: (id: string) => void;
   closeAnalysis: () => void;
 }
 
@@ -36,6 +35,13 @@ export function useAgentLocalForecastContent({
 }: Args) {
   const [fullscreenSwitching, setFullscreenSwitching] = useState(false);
   const fullscreenTimerRef = useRef<number | null>(null);
+  const setPreviewExtraWidth = filePreview.setExtraWidth;
+
+  useEffect(() => {
+    setPreviewExtraWidth(0);
+    return () => setPreviewExtraWidth(0);
+  }, [setPreviewExtraWidth]);
+
   const handlePreviewFullscreenChange = useCallback((value: boolean) => {
     if (fullscreenTimerRef.current !== null) window.clearTimeout(fullscreenTimerRef.current);
     setFullscreenSwitching(true);
@@ -71,12 +77,10 @@ export function useAgentLocalForecastContent({
       onSectionChange={forecastNav.setSection}
       onToggleNav={forecastNav.toggleNav}
       onLoadAnalysis={forecastNav.loadAnalysis}
-      onFocusAnalysis={forecastNav.focusAnalysis}
-      onPanelExtraWidthChange={filePreview.setExtraWidth}
       onCloseAnalysis={forecastNav.closeAnalysis}
       onOpenWorkbench={handleOpenForecastWorkbench}
     />
-  ), [filePreview.setExtraWidth, forecastNav, handleOpenForecastWorkbench]);
+  ), [forecastNav, handleOpenForecastWorkbench]);
 
   return {
     forecastContent, fullscreenSwitching, handleOpenForecastDocs, handlePreviewFullscreenChange,

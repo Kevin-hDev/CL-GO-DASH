@@ -1188,6 +1188,7 @@
         "evaluation": "评估",
         "comparison": "比较",
         "scenarios": "场景",
+        "notes": "笔记",
         "report": "报告"
       },
       "sectionDescriptions": {
@@ -1196,6 +1197,7 @@
         "evaluation": "使用基线和时间验证衡量模型。",
         "comparison": "比较模型质量、速度和限制。",
         "scenarios": "创建和修改假设，同时保留参考预测。",
+        "notes": "创建、整理和查看与此预测关联的笔记。",
         "report": "汇总来源、备注和高级导出。"
       },
       "data": {

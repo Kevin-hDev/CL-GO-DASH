@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { ForecastEvaluationView } from "../evaluation/forecast-evaluation-view";
 import { ForecastWorkbenchData } from "./forecast-workbench-data";
 import { ForecastWorkbenchForecast } from "./forecast-workbench-forecast";
+import { ForecastWorkbenchNotes } from "./forecast-workbench-notes";
 import { ForecastWorkbenchReport } from "./forecast-workbench-report";
 import { ForecastWorkbenchScenarios } from "./forecast-workbench-scenarios";
 import type {
@@ -31,6 +32,7 @@ export function ForecastWorkbenchSectionContent({
   if (section === "data") return <ForecastWorkbenchData analysisId={analysisId} />;
   if (section === "forecast") return <ForecastWorkbenchForecast analysisId={analysisId} />;
   if (section === "scenarios") return <ForecastWorkbenchScenarios analysisId={analysisId} />;
+  if (section === "notes") return <ForecastWorkbenchNotes analysisId={analysisId} />;
   if (section === "report") return <ForecastWorkbenchReport analysisId={analysisId} />;
   if (section === "evaluation" || section === "comparison") {
     return (

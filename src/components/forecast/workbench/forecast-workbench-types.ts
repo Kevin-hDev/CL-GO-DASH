@@ -29,10 +29,11 @@ export type ForecastWorkbenchSection =
   | "evaluation"
   | "comparison"
   | "scenarios"
+  | "notes"
   | "report";
 
 export function isForecastWorkbenchSection(value: unknown): value is ForecastWorkbenchSection {
-  return ["data", "forecast", "evaluation", "comparison", "scenarios", "report"]
+  return ["data", "forecast", "evaluation", "comparison", "scenarios", "notes", "report"]
     .includes(String(value));
 }
 

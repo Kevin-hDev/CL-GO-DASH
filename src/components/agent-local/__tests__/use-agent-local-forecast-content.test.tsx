@@ -13,6 +13,7 @@ describe("useAgentLocalForecastContent", () => {
 
   it("applies fullscreen changes and clears the transition state", () => {
     const setFullscreen = vi.fn();
+    const setExtraWidth = vi.fn();
     const { result } = renderHook(() => useAgentLocalForecastContent({
       forecastNav: {
         activeSection: "view",
@@ -21,17 +22,17 @@ describe("useAgentLocalForecastContent", () => {
         setSection: vi.fn(),
         toggleNav: vi.fn(),
         loadAnalysis: vi.fn(),
-        focusAnalysis: vi.fn(),
         closeAnalysis: vi.fn(),
       },
       filePreview: {
         fullscreen: false,
         setFullscreen,
-        setExtraWidth: vi.fn(),
+        setExtraWidth,
       },
       sessionId: "550e8400-e29b-41d4-a716-446655440000",
     }));
 
+    expect(setExtraWidth).toHaveBeenCalledWith(0);
     act(() => result.current.handlePreviewFullscreenChange(true));
     expect(setFullscreen).toHaveBeenCalledWith(true);
     expect(result.current.fullscreenSwitching).toBe(true);

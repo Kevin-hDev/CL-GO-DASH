@@ -31,7 +31,7 @@ describe("useAgentLocalPanelNav", () => {
         ...DEFAULT_APP_NAV.agentLocal,
         fileTreeOpen: true,
         panelMode: "forecast",
-        forecastSection: "scenarios",
+        forecastSection: "comparisons",
         forecastAnalysisId: "a1",
       },
       fileTree: tree,
@@ -40,7 +40,7 @@ describe("useAgentLocalPanelNav", () => {
 
     expect(tree.setOpen).toHaveBeenCalledWith(true);
     expect(panel.restorePanelState).toHaveBeenCalledWith({
-      activeSection: "scenarios",
+      activeSection: "comparisons",
       navOpen: false,
       currentAnalysisId: "a1",
       panelMode: "forecast",

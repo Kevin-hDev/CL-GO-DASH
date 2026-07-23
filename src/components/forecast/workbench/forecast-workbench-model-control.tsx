@@ -11,6 +11,7 @@ export function ForecastWorkbenchModelControl() {
       selectionReady={ready}
       onSelectModel={selectModel}
       onModeChange={setMode}
+      align="right"
     />
   );
 }

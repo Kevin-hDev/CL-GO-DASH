@@ -1,8 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
-import { PanelRightOpen, PanelRightClose } from "@/components/ui/icons";
-import { Tooltip } from "@/components/ui/tooltip";
 import type { ForecastSection } from "@/hooks/use-forecast-panel";
 import { ForecastHeader } from "./forecast-header";
 import { ForecastEmpty } from "./forecast-empty";
@@ -32,15 +30,13 @@ interface ForecastPanelProps {
   onSectionChange: (section: ForecastSection) => void;
   onToggleNav: () => void;
   onLoadAnalysis: (id: string) => void;
-  onFocusAnalysis: (id: string) => void;
-  onPanelExtraWidthChange: (width: number) => void;
   onCloseAnalysis: () => void;
   onOpenWorkbench: () => void;
 }
 
 export function ForecastPanel({
   activeSection, navOpen, currentAnalysisId,
-  onSectionChange, onToggleNav, onLoadAnalysis, onFocusAnalysis, onPanelExtraWidthChange, onCloseAnalysis, onOpenWorkbench,
+  onSectionChange, onToggleNav, onLoadAnalysis, onCloseAnalysis, onOpenWorkbench,
 }: ForecastPanelProps) {
   const { t } = useTranslation();
   const hasAnalysis = currentAnalysisId !== null;
@@ -48,7 +44,6 @@ export function ForecastPanel({
   const [launching, setLaunching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [layers, setLayers] = useState<ForecastLayerState>(createInitialLayerState);
-  const [scenarioPickerOpen, setScenarioPickerOpen] = useState(false);
   const handleExport = useForecastExport();
   const {
     policy,
@@ -105,20 +100,15 @@ export function ForecastPanel({
     }
   };
 
-  useEffect(() => {
-    const nextWidth = activeSection === "scenarios" && scenarioPickerOpen ? 320 : 0;
-    onPanelExtraWidthChange(nextWidth);
-  }, [activeSection, scenarioPickerOpen, onPanelExtraWidthChange]);
-
   return (
     <div className="fc-panel">
       <ForecastHeader
         activeSection={activeSection}
         navOpen={navOpen}
         hasAnalysis={hasAnalysis}
-        contextLabel={activeSection === "scenarios" || activeSection === "comparisons" ? currentAnalysisName : null}
+        contextLabel={activeSection === "comparisons" ? currentAnalysisName : null}
         filterSlot={
-          hasAnalysis ? (
+          hasAnalysis && activeSection === "view" ? (
             <ForecastViewFilters
               groups={filterGroups}
               layers={layers}
@@ -126,18 +116,7 @@ export function ForecastPanel({
             />
           ) : null
         }
-        rightSlot={
-          activeSection === "scenarios" && hasAnalysis ? (
-            <Tooltip label={t("forecast.scenarios.togglePredictions")} align="right">
-              <button
-                className={`icon-btn fp-icon-btn ${scenarioPickerOpen ? "fp-icon-btn-active" : ""}`}
-                onClick={() => setScenarioPickerOpen((open) => !open)}
-              >
-                {scenarioPickerOpen ? <PanelRightClose size="var(--icon-md)" /> : <PanelRightOpen size="var(--icon-md)" />}
-              </button>
-            </Tooltip>
-          ) : null
-        }
+        rightSlot={null}
         onToggleNav={onToggleNav}
         onSectionChange={onSectionChange}
         onCloseAnalysis={onCloseAnalysis}
@@ -167,9 +146,6 @@ export function ForecastPanel({
             analysisId={currentAnalysisId}
             layers={layers}
             onLoadAnalysis={onLoadAnalysis}
-            onFocusAnalysis={onFocusAnalysis}
-            onAnalysisChanged={() => void layerSources.refresh()}
-            scenarioPickerOpen={scenarioPickerOpen}
           />
         )}
       </div>

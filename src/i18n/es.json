@@ -1188,6 +1188,7 @@
         "evaluation": "Evaluación",
         "comparison": "Comparación",
         "scenarios": "Escenarios",
+        "notes": "Notas",
         "report": "Informe"
       },
       "sectionDescriptions": {
@@ -1196,6 +1197,7 @@
         "evaluation": "Mide los modelos con referencias y validación temporal.",
         "comparison": "Compara la calidad, la velocidad y las restricciones.",
         "scenarios": "Crea y modifica hipótesis sin perder la previsión de referencia.",
+        "notes": "Crea, organiza y consulta las notas vinculadas a esta previsión.",
         "report": "Reúne procedencia, notas y exportaciones avanzadas."
       },
       "data": {

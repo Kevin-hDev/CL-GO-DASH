@@ -1252,6 +1252,7 @@
         "evaluation": "Évaluation",
         "comparison": "Comparaison",
         "scenarios": "Scénarios",
+        "notes": "Notes",
         "report": "Rapport"
       },
       "sectionDescriptions": {
@@ -1260,6 +1261,7 @@
         "evaluation": "Mesurer les modèles avec des baselines et des validations temporelles.",
         "comparison": "Comparer la qualité, la vitesse et les contraintes des modèles.",
         "scenarios": "Créer et modifier des hypothèses sans perdre la prévision de référence.",
+        "notes": "Créer, organiser et consulter les notes liées à cette prévision.",
         "report": "Rassembler la provenance, les notes et les exports avancés."
       },
       "data": {

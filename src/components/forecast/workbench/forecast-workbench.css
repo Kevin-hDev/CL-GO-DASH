@@ -56,12 +56,6 @@
   font-size: var(--text-xs);
 }
 
-.fcw-header .fmsel-dropdown {
-  top: calc(100% + var(--chrome-2));
-  right: 0;
-  bottom: auto;
-}
-
 .fcw-layout {
   display: grid;
   grid-template-columns: var(--forecast-workbench-nav-width) minmax(0, 1fr);

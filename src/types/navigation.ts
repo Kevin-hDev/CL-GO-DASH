@@ -1,5 +1,9 @@
 import type { FilePreviewActiveTab } from "@/types/file-preview";
-import type { ForecastSection, PanelMode } from "@/hooks/use-forecast-panel";
+import {
+  normalizeForecastSection,
+  type ForecastSection,
+  type PanelMode,
+} from "@/hooks/use-forecast-panel";
 
 type MainTabId = "heartbeat" | "personality" | "agent-local" | "settings";
 export type SettingsSubTab =
@@ -105,6 +109,10 @@ export function migrateAppNav(input: AppNavState): AppNavState {
   const subTab: SettingsSubTab = settings.subTab === "api-keys" ? "providers" : settings.subTab;
   return {
     ...input,
+    agentLocal: {
+      ...input.agentLocal,
+      forecastSection: normalizeForecastSection(input.agentLocal.forecastSection),
+    },
     settings: {
       ...settings,
       subTab,

@@ -1204,6 +1204,7 @@
         "evaluation": "Evaluation",
         "comparison": "Comparison",
         "scenarios": "Scenarios",
+        "notes": "Notes",
         "report": "Report"
       },
       "sectionDescriptions": {
@@ -1212,6 +1213,7 @@
         "evaluation": "Measure models with baselines and temporal validation.",
         "comparison": "Compare model quality, speed, and constraints.",
         "scenarios": "Create and edit assumptions without losing the reference forecast.",
+        "notes": "Create, organize, and review notes linked to this forecast.",
         "report": "Collect provenance, notes, and advanced exports."
       },
       "data": {

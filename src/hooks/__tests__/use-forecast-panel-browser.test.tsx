@@ -29,4 +29,20 @@ describe("useForecastPanel browser mode", () => {
     expect(result.current.activeSection).toBe("view");
     expect(result.current.currentAnalysisId).toBe("analysis-id");
   });
+
+  it.each(["scenarios", "notes"])(
+    "remplace l'ancien onglet %s par la vue principale",
+    (activeSection) => {
+      localStorage.setItem("fc-panel-session-moved", JSON.stringify({
+        activeSection,
+        navOpen: false,
+        currentAnalysisId: "analysis-id",
+        panelMode: "forecast",
+      }));
+
+      const { result } = renderHook(() => useForecastPanel("session-moved"));
+
+      expect(result.current.activeSection).toBe("view");
+    },
+  );
 });
