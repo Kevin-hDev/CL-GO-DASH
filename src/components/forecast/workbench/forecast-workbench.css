@@ -1,10 +1,16 @@
-.fcw-shell {
+.fcw-viewport {
   container-type: inline-size;
+  min-width: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.fcw-shell {
   display: grid;
   grid-template-columns: var(--forecast-workbench-nav-width) minmax(0, 1fr);
   gap: var(--chrome-1);
   min-width: 0;
-  height: 100vh;
+  height: 100%;
   padding: var(--chrome-1);
   overflow: hidden;
   background: transparent;

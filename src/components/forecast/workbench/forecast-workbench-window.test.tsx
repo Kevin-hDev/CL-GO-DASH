@@ -47,8 +47,12 @@ describe("ForecastWorkbenchWindow", () => {
   it("renders the active section in a detached workspace", () => {
     const { container } = render(<ForecastWorkbenchWindow />);
 
-    const workspace = container.querySelector(".fcw-workspace");
+    const viewport = container.querySelector<HTMLElement>(".fcw-viewport");
+    const shell = viewport?.querySelector<HTMLElement>(".fcw-shell");
+    const workspace = container.querySelector<HTMLElement>(".fcw-workspace");
+    expect(shell).not.toBeNull();
     expect(workspace).not.toBeNull();
+    expect(shell).toContainElement(workspace);
     expect(workspace).toContainElement(screen.getByText("Contenu"));
     expect(workspace?.closest(".fcw-sidebar")).toBeNull();
   });

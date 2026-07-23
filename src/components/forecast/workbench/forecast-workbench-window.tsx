@@ -40,29 +40,31 @@ function ForecastWorkbenchContent({ snapshot }: { snapshot: ForecastWorkbenchSna
   };
 
   return (
-    <main className="fcw-shell">
-      <aside className="fcw-sidebar">
-        <header className="fcw-sidebar-header">
-          <h1>{snapshot.analysis_name ?? t("forecast.workbench.newAnalysis")}</h1>
-          <ForecastWorkbenchModelControl />
-        </header>
-        <ForecastWorkbenchNav active={section} onChange={(next) => void changeSection(next)} />
-      </aside>
-      <section className="fcw-workspace">
-        <div className="fcw-content" aria-labelledby="fcw-section-title">
-          {saveFailed ? (
-            <p className="fcw-inline-error" role="alert">
-              {t("forecast.workbench.draftSaveFailed")}
-            </p>
-          ) : null}
-          <div className="fcw-content-heading">
-            <span className="fcw-step">{t("forecast.workbench.workspace")}</span>
-            <h2 id="fcw-section-title">{t(`forecast.workbench.sections.${section}`)}</h2>
-            <p>{t(`forecast.workbench.sectionDescriptions.${section}`)}</p>
+    <div className="fcw-viewport">
+      <main className="fcw-shell">
+        <aside className="fcw-sidebar">
+          <header className="fcw-sidebar-header">
+            <h1>{snapshot.analysis_name ?? t("forecast.workbench.newAnalysis")}</h1>
+            <ForecastWorkbenchModelControl />
+          </header>
+          <ForecastWorkbenchNav active={section} onChange={(next) => void changeSection(next)} />
+        </aside>
+        <section className="fcw-workspace">
+          <div className="fcw-content" aria-labelledby="fcw-section-title">
+            {saveFailed ? (
+              <p className="fcw-inline-error" role="alert">
+                {t("forecast.workbench.draftSaveFailed")}
+              </p>
+            ) : null}
+            <div className="fcw-content-heading">
+              <span className="fcw-step">{t("forecast.workbench.workspace")}</span>
+              <h2 id="fcw-section-title">{t(`forecast.workbench.sections.${section}`)}</h2>
+              <p>{t(`forecast.workbench.sectionDescriptions.${section}`)}</p>
+            </div>
+            <ForecastWorkbenchSectionContent section={section} snapshot={snapshot} />
           </div>
-          <ForecastWorkbenchSectionContent section={section} snapshot={snapshot} />
-        </div>
-      </section>
-    </main>
+        </section>
+      </main>
+    </div>
   );
 }
