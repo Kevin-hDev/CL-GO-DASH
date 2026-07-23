@@ -42,9 +42,7 @@ function ForecastWorkbenchContent({ snapshot }: { snapshot: ForecastWorkbenchSna
     <main className="fcw-shell">
       <header className="fcw-header">
         <div className="fcw-heading">
-          <span className="fcw-kicker">{t("forecast.workbench.kicker")}</span>
           <h1>{snapshot.analysis_name ?? t("forecast.workbench.newAnalysis")}</h1>
-          <span className="fcw-session">{snapshot.session_name}</span>
         </div>
         <ForecastWorkbenchModelControl />
       </header>

@@ -1,6 +1,4 @@
-use crate::services::forecast::workbench_context::{
-    self, ForecastWorkbenchContext, ForecastWorkbenchSnapshot,
-};
+use crate::services::forecast::workbench_context::{self, ForecastWorkbenchSnapshot};
 use tauri::{AppHandle, Emitter};
 
 #[tauri::command]
@@ -10,7 +8,7 @@ pub async fn set_forecast_workbench_context(
     analysis_id: Option<String>,
 ) -> Result<ForecastWorkbenchSnapshot, String> {
     let snapshot = workbench_context::set(session_id, analysis_id).await?;
-    emit_context(&app, &snapshot.context)?;
+    emit_snapshot(&app, &snapshot)?;
     Ok(snapshot)
 }
 
@@ -40,7 +38,7 @@ pub async fn save_forecast_workbench_geometry(
     crate::services::forecast::workbench_geometry::save(geometry).await
 }
 
-fn emit_context(app: &AppHandle, context: &ForecastWorkbenchContext) -> Result<(), String> {
-    app.emit("forecast-workbench-context-changed", context)
+fn emit_snapshot(app: &AppHandle, snapshot: &ForecastWorkbenchSnapshot) -> Result<(), String> {
+    app.emit("forecast-workbench-context-changed", snapshot)
         .map_err(|_| "Impossible d'actualiser Forecast".to_string())
 }

@@ -16,7 +16,7 @@
   justify-content: space-between;
   gap: var(--space-lg);
   min-height: var(--forecast-workbench-header-height);
-  padding: var(--chrome-3) var(--chrome-5);
+  padding: var(--chrome-2) var(--chrome-4);
   border-bottom: 1px solid var(--edge);
   background: var(--shell-opaque);
 }
@@ -25,7 +25,6 @@
   min-width: 0;
 }
 
-.fcw-kicker,
 .fcw-step {
   display: block;
   color: var(--pulse);
@@ -37,23 +36,16 @@
 
 .fcw-heading h1,
 .fcw-content-heading h2 {
-  margin: var(--space-xs) 0 0;
   font-weight: 600;
   letter-spacing: -0.02em;
 }
 
 .fcw-heading h1 {
+  margin: 0;
   overflow: hidden;
   font-size: var(--text-lg);
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.fcw-session {
-  display: block;
-  margin-top: var(--space-xs);
-  color: var(--ink-faint);
-  font-size: var(--text-xs);
 }
 
 .fcw-layout {
@@ -122,6 +114,7 @@
 }
 
 .fcw-content-heading h2 {
+  margin: var(--space-xs) 0 0;
   font-size: var(--text-xl);
 }
 
@@ -163,22 +156,26 @@
 
 @container (max-width: 48rem) {
   .fcw-header {
-    align-items: flex-start;
+    align-items: center;
   }
 
   .fcw-layout {
     grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
   .fcw-nav {
     flex-direction: row;
+    align-items: center;
     overflow-x: auto;
+    padding: var(--chrome-2) var(--chrome-3);
     border-right: 0;
     border-bottom: 1px solid var(--edge);
   }
 
   .fcw-nav-item {
     flex: 0 0 auto;
+    height: var(--nav-item-height);
   }
 
   .fcw-content {

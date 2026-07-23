@@ -1237,10 +1237,10 @@
     },
     "workbench": {
       "windowTitle": "Espace Forecast",
-      "kicker": "Forecast · Session active",
       "navigation": "Espaces Forecast",
       "open": "Ouvrir l'espace Forecast",
       "openFailed": "Impossible d'ouvrir l'espace Forecast.",
+      "syncFailed": "Impossible d'actualiser l'espace Forecast.",
       "loading": "Chargement de l'espace Forecast…",
       "unavailable": "Le contexte Forecast est indisponible.",
       "draftSaveFailed": "Impossible d'enregistrer les modifications de l'espace Forecast.",

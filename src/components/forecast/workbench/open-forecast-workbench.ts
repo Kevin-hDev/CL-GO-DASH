@@ -1,12 +1,11 @@
-import { invoke } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import { FORECAST_WORKBENCH_WINDOW } from "./forecast-workbench-constants";
 import { restoredForecastWorkbenchGeometry } from "./forecast-workbench-geometry";
 import {
-  isForecastWorkbenchSnapshot,
-  type ForecastWorkbenchSnapshot,
-} from "./forecast-workbench-types";
+  forecastWorkbenchTitle,
+  setForecastWorkbenchContext,
+} from "./forecast-workbench-context-sync";
 
 interface OpenForecastWorkbenchOptions {
   sessionId: string;
@@ -19,16 +18,11 @@ export async function openForecastWorkbench({
   analysisId,
   title,
 }: OpenForecastWorkbenchOptions) {
-  const snapshot = await invoke<ForecastWorkbenchSnapshot>("set_forecast_workbench_context", {
+  const snapshot = await setForecastWorkbenchContext({
     sessionId,
     analysisId,
   });
-  if (!isForecastWorkbenchSnapshot(snapshot)) {
-    throw new Error("forecast-workbench-unavailable");
-  }
-  const windowTitle = snapshot.analysis_name
-    ? `${title} — ${snapshot.analysis_name}`
-    : title;
+  const windowTitle = forecastWorkbenchTitle(title, snapshot);
   const existing = await WebviewWindow.getByLabel(FORECAST_WORKBENCH_WINDOW.label);
   if (existing) {
     await existing.setTitle(windowTitle);

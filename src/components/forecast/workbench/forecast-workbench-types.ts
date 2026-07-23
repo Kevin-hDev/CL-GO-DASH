@@ -7,7 +7,6 @@ export interface ForecastWorkbenchContext {
 export interface ForecastWorkbenchSnapshot {
   context: ForecastWorkbenchContext;
   draft: ForecastWorkbenchDraft;
-  session_name: string;
   analysis_name: string | null;
 }
 
@@ -54,8 +53,6 @@ export function isForecastWorkbenchSnapshot(
     isForecastWorkbenchSection(snapshot.draft?.section) &&
     Number.isSafeInteger(snapshot.draft?.revision) &&
     Number(snapshot.draft?.revision) > 0 &&
-    typeof snapshot.session_name === "string" &&
-    snapshot.session_name.length <= 120 &&
     (snapshot.analysis_name === null || (
       typeof snapshot.analysis_name === "string" && snapshot.analysis_name.length <= 120
     ));

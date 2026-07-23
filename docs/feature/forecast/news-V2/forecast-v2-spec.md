@@ -236,7 +236,14 @@ Tu valides strictement ces identifiants dans le backend avant toute lecture ou m
 
 Tu n'inclus pas de dataset brut dans les événements de synchronisation.
 
-Tu affiches discrètement le nom de la session et celui de l'analyse dans le header de la fenêtre afin que l'utilisateur sache toujours sur quoi il travaille.
+Quand l'analyse active change dans le panneau Forecast, tu synchronises immédiatement
+le contexte partagé si la fenêtre est ouverte. Tu appliques directement dans la fenêtre
+le snapshot validé reçu par événement, sans attendre une seconde lecture. Si plusieurs
+sélections arrivent rapidement, tu garantis que la dernière sélection devient l'état final.
+
+Dans le header de la fenêtre, tu affiches uniquement le nom de l'analyse et le sélecteur
+de modèle. Tu n'affiches ni libellé de session active, ni nom de session, car ces
+informations sont redondantes avec le contexte Forecast déjà visible.
 
 ### 7.5 Fermeture et restauration
 

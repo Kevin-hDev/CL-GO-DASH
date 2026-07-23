@@ -1173,10 +1173,10 @@
     },
     "workbench": {
       "windowTitle": "Forecast 工作区",
-      "kicker": "Forecast · 当前会话",
       "navigation": "Forecast 工作区导航",
       "open": "打开 Forecast 工作区",
       "openFailed": "无法打开 Forecast 工作区。",
+      "syncFailed": "无法更新 Forecast 工作区。",
       "loading": "正在加载 Forecast 工作区…",
       "unavailable": "Forecast 上下文不可用。",
       "draftSaveFailed": "无法保存 Forecast 工作区的更改。",

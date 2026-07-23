@@ -1173,10 +1173,10 @@
     },
     "workbench": {
       "windowTitle": "Espacio Forecast",
-      "kicker": "Forecast · Sesión activa",
       "navigation": "Espacios Forecast",
       "open": "Abrir el espacio Forecast",
       "openFailed": "No se pudo abrir el espacio Forecast.",
+      "syncFailed": "No se pudo actualizar el espacio Forecast.",
       "loading": "Cargando el espacio Forecast…",
       "unavailable": "El contexto Forecast no está disponible.",
       "draftSaveFailed": "No se pueden guardar los cambios del espacio Forecast.",

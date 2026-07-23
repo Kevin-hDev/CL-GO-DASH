@@ -12,38 +12,38 @@ const FIRST: ForecastWorkbenchSnapshot = {
     revision: 1,
   },
   draft: { section: "data", revision: 1 },
-  session_name: "Session ventes",
   analysis_name: null,
 };
 
 describe("useForecastWorkbenchContext", () => {
   let contextChanged: (() => void) | null;
+  let eventSnapshot: ForecastWorkbenchSnapshot;
 
   beforeEach(() => {
     contextChanged = null;
+    eventSnapshot = FIRST;
     vi.mocked(invoke).mockReset();
     vi.mocked(listen).mockImplementation((_event, handler) => {
-      contextChanged = () => handler({ payload: FIRST.context } as never);
+      contextChanged = () => handler({ payload: eventSnapshot } as never);
       return Promise.resolve(() => {});
     });
   });
 
-  it("reloads the backend snapshot after a compact context event", async () => {
+  it("applies a complete snapshot event without another backend fetch", async () => {
     const second: ForecastWorkbenchSnapshot = {
       ...FIRST,
       context: { ...FIRST.context, revision: 2 },
       analysis_name: "Prévision juillet",
     };
-    vi.mocked(invoke)
-      .mockResolvedValueOnce(FIRST)
-      .mockResolvedValueOnce(second);
+    vi.mocked(invoke).mockResolvedValueOnce(FIRST);
     const { result } = renderHook(() => useForecastWorkbenchContext());
 
     await waitFor(() => expect(result.current.snapshot).toEqual(FIRST));
+    eventSnapshot = second;
     act(() => contextChanged?.());
     await waitFor(() => expect(result.current.snapshot).toEqual(second));
 
-    expect(invoke).toHaveBeenCalledTimes(2);
+    expect(invoke).toHaveBeenCalledTimes(1);
   });
 
   it("fails closed when the snapshot is malformed", async () => {

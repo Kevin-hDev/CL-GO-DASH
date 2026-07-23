@@ -12,7 +12,6 @@ pub struct ForecastWorkbenchContext {
 pub struct ForecastWorkbenchSnapshot {
     pub context: ForecastWorkbenchContext,
     pub draft: super::workbench_drafts::ForecastWorkbenchDraft,
-    pub session_name: String,
     pub analysis_name: Option<String>,
 }
 
@@ -30,7 +29,7 @@ pub async fn set(
     analysis_id: Option<String>,
 ) -> Result<ForecastWorkbenchSnapshot, String> {
     validate_ids(&session_id, analysis_id.as_deref())?;
-    let session = crate::services::agent_local::session_store::get(&session_id)
+    crate::services::agent_local::session_store::get(&session_id)
         .await
         .map_err(|_| context_error())?;
     let analysis = load_analysis(analysis_id.as_deref()).await?;
@@ -51,7 +50,6 @@ pub async fn set(
     Ok(ForecastWorkbenchSnapshot {
         context,
         draft,
-        session_name: bounded_name(session.name),
         analysis_name: analysis.map(|value| bounded_name(value.name)),
     })
 }
@@ -61,14 +59,13 @@ pub async fn get() -> Result<Option<ForecastWorkbenchSnapshot>, String> {
     let Some(active) = active else {
         return Ok(None);
     };
-    let session = crate::services::agent_local::session_store::get(&active.context.session_id)
+    crate::services::agent_local::session_store::get(&active.context.session_id)
         .await
         .map_err(|_| context_error())?;
     let analysis = load_analysis(active.context.analysis_id.as_deref()).await?;
     Ok(Some(ForecastWorkbenchSnapshot {
         context: active.context,
         draft: active.draft,
-        session_name: bounded_name(session.name),
         analysis_name: analysis.map(|value| bounded_name(value.name)),
     }))
 }

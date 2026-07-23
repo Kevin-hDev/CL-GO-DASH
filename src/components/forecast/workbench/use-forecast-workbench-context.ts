@@ -3,7 +3,6 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type {
-  ForecastWorkbenchContext,
   ForecastWorkbenchSnapshot,
 } from "./forecast-workbench-types";
 import { isForecastWorkbenchSnapshot } from "./forecast-workbench-types";
@@ -33,9 +32,17 @@ export function useForecastWorkbenchContext() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- backend snapshot hydration is intentional
     void refresh();
-    const unlisten = listen<ForecastWorkbenchContext>(
+    const unlisten = listen<ForecastWorkbenchSnapshot>(
       "forecast-workbench-context-changed",
-      () => void refresh(),
+      (event) => {
+        if (!isForecastWorkbenchSnapshot(event.payload)) {
+          setFailed(true);
+          return;
+        }
+        setSnapshot(event.payload);
+        setFailed(false);
+        setLoading(false);
+      },
     );
     return () => cleanupTauriListener(unlisten);
   }, [refresh]);

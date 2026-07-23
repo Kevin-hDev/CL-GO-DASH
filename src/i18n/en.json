@@ -1189,10 +1189,10 @@
     },
     "workbench": {
       "windowTitle": "Forecast workspace",
-      "kicker": "Forecast · Active session",
       "navigation": "Forecast workspaces",
       "open": "Open Forecast workspace",
       "openFailed": "Unable to open the Forecast workspace.",
+      "syncFailed": "Unable to update the Forecast workspace.",
       "loading": "Loading Forecast workspace…",
       "unavailable": "The Forecast context is unavailable.",
       "draftSaveFailed": "Unable to save the Forecast workspace changes.",

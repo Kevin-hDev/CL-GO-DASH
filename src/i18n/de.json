@@ -1173,10 +1173,10 @@
     },
     "workbench": {
       "windowTitle": "Forecast-Arbeitsbereich",
-      "kicker": "Forecast · Aktive Sitzung",
       "navigation": "Forecast-Bereiche",
       "open": "Forecast-Arbeitsbereich öffnen",
       "openFailed": "Der Forecast-Arbeitsbereich konnte nicht geöffnet werden.",
+      "syncFailed": "Der Forecast-Arbeitsbereich konnte nicht aktualisiert werden.",
       "loading": "Forecast-Arbeitsbereich wird geladen…",
       "unavailable": "Der Forecast-Kontext ist nicht verfügbar.",
       "draftSaveFailed": "Die Änderungen im Forecast-Arbeitsbereich konnten nicht gespeichert werden.",

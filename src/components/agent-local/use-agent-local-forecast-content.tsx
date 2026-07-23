@@ -3,6 +3,7 @@ import type { ForecastSection } from "@/hooks/use-forecast-panel";
 import { ForecastPanel } from "@/components/forecast/forecast-panel";
 import { openForecastDocsWindow } from "@/components/forecast/open-forecast-docs";
 import { openForecastWorkbench } from "@/components/forecast/workbench/open-forecast-workbench";
+import { syncOpenForecastWorkbenchContext } from "@/components/forecast/workbench/forecast-workbench-context-sync";
 import i18n from "@/i18n";
 import { showToast } from "@/lib/toast-emitter";
 
@@ -41,6 +42,15 @@ export function useAgentLocalForecastContent({
     setPreviewExtraWidth(0);
     return () => setPreviewExtraWidth(0);
   }, [setPreviewExtraWidth]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    void syncOpenForecastWorkbenchContext({
+      sessionId,
+      analysisId: forecastNav.currentAnalysisId,
+      title: i18n.t("forecast.workbench.windowTitle"),
+    }).catch(() => showToast(i18n.t("forecast.workbench.syncFailed")));
+  }, [forecastNav.currentAnalysisId, sessionId]);
 
   const handlePreviewFullscreenChange = useCallback((value: boolean) => {
     if (fullscreenTimerRef.current !== null) window.clearTimeout(fullscreenTimerRef.current);
