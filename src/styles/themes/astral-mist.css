@@ -39,6 +39,20 @@
   --shadow-lg: 0 12px 38px rgba(0, 3, 12, 0.56);
   --dialog-backdrop: rgba(0, 3, 12, 0.68);
 
+  /* Aliases — tokens référencés par les composants (spec phase 2 §2) */
+  --accent: var(--pulse);
+  --pulse-hover: color-mix(in srgb, var(--pulse) 88%, black);
+  --danger: var(--signal-error);
+  --red: var(--signal-error);
+  --border-subtle: var(--edge);
+  --surface-secondary: var(--surface);
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-muted);
+  --text-tertiary: var(--ink-faint);
+  --ink-primary: var(--ink);
+  /* Un cran de contraste au-dessus de --edge (sert aussi au §1.1) */
+  --edge-strong: rgba(186, 205, 226, 0.20);
+
   /* Surface variants */
   --surface-glass: rgba(18, 33, 58, 0.58);
   --surface-overlay: rgba(24, 42, 70, 0.78);
