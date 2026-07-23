@@ -104,6 +104,9 @@
   --fc-band-80: rgba(59, 130, 246, 0.12);
   --fc-band-50: rgba(59, 130, 246, 0.18);
   --fc-separator: var(--ink-faint);
+  --fc-forecast-zone: rgba(234, 88, 12, 0.05);
+  --fc-area-history-from: rgba(26, 26, 26, 0.12);
+  --fc-area-history-to: rgba(26, 26, 26, 0);
   --fc-annotation: var(--signal-info);
   --fc-anomaly: var(--signal-error);
   --fc-scenario-a: #3b82f6;

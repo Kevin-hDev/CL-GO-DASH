@@ -1175,7 +1175,8 @@
   },
   "forecast": {
     "chart": {
-      "resetZoom": "Zoom zurücksetzen"
+      "resetZoom": "Zoom zurücksetzen",
+      "today": "heute"
     },
     "title": "Prognose",
     "noAnalysis": "Keine laufende Analyse",

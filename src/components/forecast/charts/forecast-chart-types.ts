@@ -48,6 +48,9 @@ export interface ForecastChartPalette {
   pointPredict: string;
   band90: string;
   separator: string;
+  forecastZone: string;
+  areaHistoryFrom: string;
+  areaHistoryTo: string;
   annotationUser: string;
   annotationLlm: string;
   edge: string;
@@ -80,6 +83,7 @@ export interface ForecastChartOptionArgs {
     history: string;
     forecast: string;
     confidence: string;
+    today: string;
     annotationUser: string;
     annotationLlm: string;
   };

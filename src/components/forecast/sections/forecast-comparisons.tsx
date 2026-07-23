@@ -117,6 +117,7 @@ export function ForecastComparisons({ analysisId }: ForecastComparisonsProps) {
               history: t("forecast.view.historySeries"),
               forecast: current.name,
               confidence: t("forecast.view.confidenceRange"),
+              today: t("forecast.chart.today"),
               annotationUser: t("forecast.notes.userSource"),
               annotationLlm: t("forecast.notes.llmSource"),
             }}

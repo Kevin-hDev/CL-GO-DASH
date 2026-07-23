@@ -98,6 +98,7 @@ export function ForecastView({ analysisId, layers }: ForecastViewProps) {
               history: t("forecast.view.historySeries"),
               forecast: t("forecast.view.forecastSeries"),
               confidence: t("forecast.view.confidenceRange"),
+              today: t("forecast.chart.today"),
               annotationUser: t("forecast.notes.userSource"),
               annotationLlm: t("forecast.notes.llmSource"),
             }}

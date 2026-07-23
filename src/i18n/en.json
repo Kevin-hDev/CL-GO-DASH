@@ -1191,7 +1191,8 @@
   },
   "forecast": {
     "chart": {
-      "resetZoom": "Reset zoom"
+      "resetZoom": "Reset zoom",
+      "today": "today"
     },
     "title": "Forecast",
     "noAnalysis": "No analysis in progress",

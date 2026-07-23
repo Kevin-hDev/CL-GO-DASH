@@ -93,10 +93,11 @@ export function ForecastChart(props: ForecastChartProps) {
       const nextBucket = forecastXAxisSplitNumber(container.clientWidth);
       if (nextBucket === widthBucketRef.current) return;
       widthBucketRef.current = nextBucket;
-      applyOptions();
+      // Merge on resize: only the tick density changed, keep series/zoom intact.
+      applyOptions(false);
     });
 
-    const applyOptions = () => {
+    const applyOptions = (notMerge: boolean) => {
       if (!chartRef.current || !containerRef.current) return;
       const root = getComputedStyle(containerRef.current);
       widthBucketRef.current = forecastXAxisSplitNumber(containerRef.current.clientWidth);
@@ -107,7 +108,7 @@ export function ForecastChart(props: ForecastChartProps) {
         compact: Boolean(propsRef.current.compact),
         chartWidth: containerRef.current.clientWidth,
         zoomWindow: zoomWindowRef.current,
-      }), true);
+      }), notMerge);
     };
 
     const ensureChart = () => {
@@ -119,7 +120,7 @@ export function ForecastChart(props: ForecastChartProps) {
       chartRef.current = echarts.init(containerRef.current, undefined, { renderer: "canvas" });
       chartRef.current.on("datazoom", handleDataZoom);
       chartRef.current.on("click", handleChartClick);
-      applyOptions();
+      applyOptions(true);
       chartRef.current.resize();
     };
 
@@ -147,8 +148,7 @@ export function ForecastChart(props: ForecastChartProps) {
       compact: Boolean(props.compact),
       chartWidth: containerRef.current.clientWidth,
       zoomWindow: zoomWindowRef.current,
-    }), true);
-    chartRef.current.resize();
+    }), true); // resize() is handled by the ResizeObserver above
   }, [props]);
 
   return (

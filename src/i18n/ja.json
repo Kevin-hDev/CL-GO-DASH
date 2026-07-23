@@ -1175,7 +1175,8 @@
   },
   "forecast": {
     "chart": {
-      "resetZoom": "ズームをリセット"
+      "resetZoom": "ズームをリセット",
+      "today": "今日"
     },
     "title": "予測",
     "noAnalysis": "分析が進行中ではありません",

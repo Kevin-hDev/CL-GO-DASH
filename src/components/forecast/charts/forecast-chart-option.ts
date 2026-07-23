@@ -1,9 +1,11 @@
 import type { EChartsOption } from "echarts";
 import { inferMetricMeta, type ForecastMetricMeta } from "../forecast-view-format";
+import { formatAxisDate } from "./forecast-chart-axis-date";
 import { formatAxisValue, formatTooltip } from "./forecast-chart-format";
 import { buildSeries } from "./forecast-chart-series";
 import { buildTimeline } from "./forecast-chart-timeline";
-import type { ForecastChartOptionArgs, TimelineEntry } from "./forecast-chart-types";
+import type { ForecastChartOptionArgs } from "./forecast-chart-types";
+import { buildYAxisBounds } from "./forecast-chart-y-bounds";
 import { FORECAST_CHART_MIN_ZOOM_SPAN } from "./forecast-chart-zoom-utils";
 
 export function buildForecastChartOption(args: ForecastChartOptionArgs): EChartsOption {
@@ -73,7 +75,7 @@ export function buildForecastChartOption(args: ForecastChartOptionArgs): ECharts
 function buildXAxis(locale: string, edge: string, inkMuted: string, chartWidth: number) {
   return {
     type: "time" as const,
-    boundaryGap: ["0%", "0%"] as [string, string],
+    boundaryGap: ["0%", "2%"] as [string, string],
     splitNumber: forecastXAxisSplitNumber(chartWidth),
     axisLine: { lineStyle: { color: edge } },
     axisTick: { show: false },
@@ -90,12 +92,6 @@ function buildXAxis(locale: string, edge: string, inkMuted: string, chartWidth: 
 export function forecastXAxisSplitNumber(chartWidth: number): number {
   if (!Number.isFinite(chartWidth) || chartWidth <= 0) return 4;
   return Math.max(3, Math.min(8, Math.floor(chartWidth / 135)));
-}
-
-function formatAxisDate(value: number, locale: string): string {
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return "";
-  return new Intl.DateTimeFormat(locale, { month: "2-digit", day: "2-digit" }).format(parsed);
 }
 
 function tooltipPosition(
@@ -147,35 +143,5 @@ function buildYAxis(
       fontSize: 11,
       formatter: (value: number) => formatAxisValue(value, locale, metric),
     },
-  };
-}
-
-function buildYAxisBounds(
-  timeline: TimelineEntry[],
-  layers: ForecastChartOptionArgs["layers"],
-) {
-  const values: number[] = [];
-  for (const entry of timeline) {
-    if (entry.historyValue != null && layers.history) values.push(entry.historyValue);
-    if (entry.forecastValue != null && layers.forecast) values.push(entry.forecastValue);
-    if (layers.confidence) {
-      if (entry.lowerValue != null) values.push(entry.lowerValue);
-      if (entry.upperValue != null) values.push(entry.upperValue);
-    }
-    for (const scenario of entry.scenarioValues) values.push(scenario.value);
-    for (const variable of entry.variableValues) values.push(variable.value);
-  }
-  if (!values.length) return null;
-  let min = values[0];
-  let max = values[0];
-  for (const value of values) {
-    if (value < min) min = value;
-    if (value > max) max = value;
-  }
-  const span = max - min;
-  const padding = span <= 0 ? Math.max(Math.abs(max) * 0.08, 1) : span * 0.12;
-  return {
-    min: min - padding,
-    max: max + padding,
   };
 }

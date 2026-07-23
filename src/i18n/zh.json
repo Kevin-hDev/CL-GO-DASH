@@ -1175,7 +1175,8 @@
   },
   "forecast": {
     "chart": {
-      "resetZoom": "重置缩放"
+      "resetZoom": "重置缩放",
+      "today": "今天"
     },
     "title": "预测",
     "noAnalysis": "没有正在进行的分析",
