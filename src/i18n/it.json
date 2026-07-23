@@ -1178,6 +1178,19 @@
       "resetZoom": "Reimposta zoom",
       "today": "oggi"
     },
+    "chartCard": {
+      "main": "Grafico principale",
+      "fan": "Orizzonte ingrandito",
+      "seasonality": "Stagionalità",
+      "reliability": "Affidabilità (backtest)",
+      "collapse": "Comprimi la scheda",
+      "expand": "Espandi la scheda"
+    },
+    "companion": {
+      "mean": "media",
+      "insufficientData": "Dati insufficienti per questo grafico.",
+      "indexBase": "Indice (gennaio = 100)"
+    },
     "title": "Previsione",
     "noAnalysis": "Nessuna analisi in corso",
     "selection": {

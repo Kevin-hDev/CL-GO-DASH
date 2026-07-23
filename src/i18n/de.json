@@ -1178,6 +1178,19 @@
       "resetZoom": "Zoom zurücksetzen",
       "today": "heute"
     },
+    "chartCard": {
+      "main": "Hauptdiagramm",
+      "fan": "Vergrößerter Horizont",
+      "seasonality": "Saisonalität",
+      "reliability": "Zuverlässigkeit (Backtest)",
+      "collapse": "Karte einklappen",
+      "expand": "Karte ausklappen"
+    },
+    "companion": {
+      "mean": "Mittelwert",
+      "insufficientData": "Nicht genügend Daten für dieses Diagramm.",
+      "indexBase": "Index (Januar = 100)"
+    },
     "title": "Prognose",
     "noAnalysis": "Keine laufende Analyse",
     "selection": {

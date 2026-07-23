@@ -2,7 +2,13 @@ import { useCallback, useEffect, useRef } from "react";
 import * as echarts from "echarts/core";
 import type { EChartsType } from "echarts/core";
 import { LineChart, ScatterChart } from "echarts/charts";
-import { DataZoomComponent, GridComponent, TooltipComponent } from "echarts/components";
+import {
+  DataZoomComponent,
+  GridComponent,
+  MarkAreaComponent,
+  MarkLineComponent,
+  TooltipComponent,
+} from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
 import { ArrowsClockwise } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -20,6 +26,7 @@ import {
 import { buildForecastChartPalette } from "./forecast-chart-palette";
 import type { ForecastChartProps } from "./forecast-chart-types";
 import {
+  buildForecastZoomSignature,
   forecastZoomSliderValue,
   FORECAST_CHART_MIN_ZOOM_SPAN,
 } from "./forecast-chart-zoom-utils";
@@ -32,6 +39,8 @@ echarts.use([
   GridComponent,
   TooltipComponent,
   DataZoomComponent,
+  MarkLineComponent,
+  MarkAreaComponent,
 ]);
 
 export function ForecastChart(props: ForecastChartProps) {
@@ -40,7 +49,7 @@ export function ForecastChart(props: ForecastChartProps) {
   const propsRef = useRef(props);
   const zoomWindowRef = useRef({ start: 0, end: 100 });
   const widthBucketRef = useRef(0);
-  const zoomSignature = buildZoomSignature(props);
+  const zoomSignature = buildForecastZoomSignature(props);
   const handleZoomRefChange = useCallback((window: { start: number; end: number }) => {
     zoomWindowRef.current = window;
   }, []);
@@ -181,19 +190,4 @@ export function ForecastChart(props: ForecastChartProps) {
       )}
     </div>
   );
-}
-
-function buildZoomSignature(props: ForecastChartProps): string {
-  const first = props.history[0]?.date ?? props.predictions[0]?.date ?? "";
-  const lastHistory = props.history[props.history.length - 1]?.date ?? "";
-  const lastPrediction = props.predictions[props.predictions.length - 1]?.date ?? "";
-  return [
-    first,
-    lastHistory,
-    lastPrediction,
-    props.history.length,
-    props.predictions.length,
-    props.targetColumn ?? "",
-    props.fallbackName ?? "",
-  ].join(":");
 }

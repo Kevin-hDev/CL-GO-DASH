@@ -1242,6 +1242,19 @@
       "resetZoom": "Réinitialiser le zoom",
       "today": "aujourd'hui"
     },
+    "chartCard": {
+      "main": "Graphe principal",
+      "fan": "Horizon zoomé",
+      "seasonality": "Saisonnalité",
+      "reliability": "Fiabilité (backtest)",
+      "collapse": "Replier la carte",
+      "expand": "Déplier la carte"
+    },
+    "companion": {
+      "mean": "moyenne",
+      "insufficientData": "Pas assez de données pour ce graphique.",
+      "indexBase": "Indice (janvier = 100)"
+    },
     "title": "Forecast",
     "noAnalysis": "Aucune analyse en cours",
     "selection": {

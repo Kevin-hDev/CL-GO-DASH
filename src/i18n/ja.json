@@ -1178,6 +1178,19 @@
       "resetZoom": "ズームをリセット",
       "today": "今日"
     },
+    "chartCard": {
+      "main": "メインチャート",
+      "fan": "予測期間の拡大",
+      "seasonality": "季節性",
+      "reliability": "信頼性（バックテスト）",
+      "collapse": "カードを折りたたむ",
+      "expand": "カードを展開"
+    },
+    "companion": {
+      "mean": "平均",
+      "insufficientData": "このグラフを表示するにはデータが不足しています。",
+      "indexBase": "指数（1 月 = 100）"
+    },
     "title": "予測",
     "noAnalysis": "分析が進行中ではありません",
     "selection": {

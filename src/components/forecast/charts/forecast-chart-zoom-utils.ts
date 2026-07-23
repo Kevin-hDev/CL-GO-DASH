@@ -29,3 +29,23 @@ export function forecastZoomSliderValue(span: number): number {
   if (!Number.isFinite(span)) return 0;
   return Math.max(0, Math.min(max, Math.round(100 - span)));
 }
+
+export function buildForecastZoomSignature(props: {
+  history: { date: string }[];
+  predictions: { date: string }[];
+  targetColumn?: string;
+  fallbackName?: string;
+}): string {
+  const first = props.history[0]?.date ?? props.predictions[0]?.date ?? "";
+  const lastHistory = props.history[props.history.length - 1]?.date ?? "";
+  const lastPrediction = props.predictions[props.predictions.length - 1]?.date ?? "";
+  return [
+    first,
+    lastHistory,
+    lastPrediction,
+    props.history.length,
+    props.predictions.length,
+    props.targetColumn ?? "",
+    props.fallbackName ?? "",
+  ].join(":");
+}

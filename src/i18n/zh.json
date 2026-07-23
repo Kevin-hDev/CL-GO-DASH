@@ -1178,6 +1178,19 @@
       "resetZoom": "重置缩放",
       "today": "今天"
     },
+    "chartCard": {
+      "main": "主图表",
+      "fan": "放大预测区间",
+      "seasonality": "季节性",
+      "reliability": "可靠性（回测）",
+      "collapse": "折叠卡片",
+      "expand": "展开卡片"
+    },
+    "companion": {
+      "mean": "平均值",
+      "insufficientData": "数据不足，无法绘制此图表。",
+      "indexBase": "指数（1 月 = 100）"
+    },
     "title": "预测",
     "noAnalysis": "没有正在进行的分析",
     "selection": {

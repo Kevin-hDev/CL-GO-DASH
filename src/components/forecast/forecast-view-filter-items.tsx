@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { ChevronDown } from "@/components/ui/icons";
 import type { useLocalListNavigation } from "@/hooks/use-local-list-navigation";
+import type { ForecastFilterChip } from "./forecast-filter-chip";
 
 type NavApi = ReturnType<typeof useLocalListNavigation>;
 
@@ -51,6 +52,7 @@ interface FilterItemProps {
   label: string;
   checked: boolean;
   disabled?: boolean;
+  chip?: ForecastFilterChip;
   nav: NavApi;
   onToggle?: () => void;
 }
@@ -60,6 +62,7 @@ export function FilterItem({
   label,
   checked,
   disabled,
+  chip,
   nav,
   onToggle,
 }: FilterItemProps) {
@@ -83,6 +86,13 @@ export function FilterItem({
       <span className="fcf-checkbox" aria-hidden="true">
         {checked ? <span className="fcf-checkbox-mark" /> : null}
       </span>
+      {chip ? (
+        <span
+          className={`fcf-chip ${chip.shape === "band" ? "fcf-chip-band" : ""}`}
+          style={{ background: chip.color }}
+          aria-hidden="true"
+        />
+      ) : null}
       <span className="fcf-item-label">{label}</span>
     </button>
   );
