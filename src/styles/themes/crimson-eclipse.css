@@ -26,8 +26,6 @@
   --switch-focus-ring: var(--pulse-muted);
   --select-bg: rgba(255, 48, 56, 0.10);
   --select-text: #d4d4d8;
-  --signal-idle: #66666f;
-  --signal-live: #ff3038;
   --signal-error: #ff5a63;
   --signal-error-border: rgba(255, 90, 99, 0.34);
   --signal-error-pulse: rgba(255, 90, 99, 0.52);
@@ -94,21 +92,14 @@
   --diff-add-gutter: rgb(18, 52, 36);
   --diff-del-bg: rgba(255, 90, 99, 0.18);
   --diff-del-gutter: rgb(62, 22, 27);
-  --diff-add-line-bg: rgba(53, 200, 120, 0.13);
-  --diff-del-line-bg: rgba(255, 90, 99, 0.12);
   --diff-new: #35c878;
   --diff-old: #ff5a63;
-  --diff-old-bg: rgba(255, 90, 99, 0.16);
-
-  /* Lottie recolor → luminous red */
-  --lottie-orange-filter: brightness(0) saturate(100%) invert(28%) sepia(99%) saturate(4181%) hue-rotate(347deg) brightness(103%) contrast(103%);
 
   --thinking-accent: var(--agent-trace-border);
 
   /* Tool colors */
   --tool-bash: #f25f3a;
   --tool-read: #65a5f5;
-  --tool-write: #35c878;
   --tool-web: #9b82e3;
   --subagent-claudiator: #f25f3a;
   --subagent-geminitor: #65a5f5;
@@ -121,8 +112,6 @@
   --fc-line-predict: var(--pulse);
   --fc-point-predict: #e4e4e7;
   --fc-band-90: rgba(255, 48, 56, 0.06);
-  --fc-band-80: rgba(255, 48, 56, 0.13);
-  --fc-band-50: rgba(255, 48, 56, 0.21);
   --fc-separator: var(--ink-faint);
   --fc-forecast-zone: rgba(255, 48, 56, 0.04);
   --fc-area-history-from: rgba(228, 228, 231, 0.15);
@@ -136,9 +125,5 @@
   --fc-variable-b: #df6e9d;
   --fc-variable-c: #4fb7c5;
   --fc-variable-d: #91b85b;
-  --fc-kpi-bg: rgba(228, 228, 231, 0.05);
-  --fc-kpi-border: rgba(228, 228, 231, 0.09);
   --fc-nav-active: var(--pulse);
-  --fc-progress: var(--pulse);
-  --fc-progress-bg: rgba(255, 48, 56, 0.10);
 }
