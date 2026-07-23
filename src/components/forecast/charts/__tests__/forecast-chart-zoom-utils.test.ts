@@ -12,7 +12,7 @@ describe("forecast chart zoom utils", () => {
   });
 
   it("garde une fenetre trop zoomee dans les bornes du graphe", () => {
-    expect(clampForecastZoomWindow(98, 99)).toEqual({ start: 85, end: 100 });
+    expect(clampForecastZoomWindow(98, 99)).toEqual({ start: 90, end: 100 });
   });
 
   it("conserve le dezoom complet", () => {

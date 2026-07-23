@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { FORECAST_CHART_MIN_ZOOM_SPAN } from "./forecast-chart-zoom-utils";
 import {
   zoomJumpBarCount,
   zoomJumpCurrentIndex,
@@ -28,6 +29,11 @@ describe("zoomJumpBarCount", () => {
     expect(zoomJumpBarCount(11)).toBe(4);
     expect(zoomJumpBarCount(10)).toBe(5);
     expect(zoomJumpBarCount(60)).toBe(0);
+  });
+
+  it("reaches the 5-bar tier at the deepest allowed zoom", () => {
+    expect(FORECAST_CHART_MIN_ZOOM_SPAN).toBeLessThanOrEqual(10);
+    expect(zoomJumpBarCount(FORECAST_CHART_MIN_ZOOM_SPAN)).toBe(5);
   });
 });
 

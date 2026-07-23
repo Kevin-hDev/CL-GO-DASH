@@ -1,4 +1,4 @@
-export const FORECAST_CHART_MIN_ZOOM_SPAN = 15;
+export const FORECAST_CHART_MIN_ZOOM_SPAN = 10;
 
 export interface ForecastZoomWindow {
   start: number;

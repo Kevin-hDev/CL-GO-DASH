@@ -18,6 +18,7 @@
   height: 34px;
   padding: 0 6px 0 12px;
   flex-shrink: 0;
+  position: relative;
 }
 
 .fcrd-title {
@@ -29,6 +30,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* Ellipsize before reaching the absolutely-centered jump bars. */
+  max-width: calc(50% - 40px);
 }
 
 .fcrd-toggle {
@@ -61,15 +64,29 @@
 }
 
 .fcrd-center {
-  flex: 1;
+  /* True center of the title bar, independent of title/chevron width. */
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 0;
 }
 
 .fcrd-card:not(.is-open) .fcrd-center {
   display: none;
+}
+
+/* Never overlap the title or chevron: hide the bars on narrow cards. */
+.fcrd-card {
+  container-type: inline-size;
+}
+
+@container (max-width: 420px) {
+  .fcrd-center {
+    display: none;
+  }
 }
 
 .fcrd-body {

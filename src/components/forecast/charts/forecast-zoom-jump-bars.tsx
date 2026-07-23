@@ -13,8 +13,8 @@ interface ForecastZoomJumpBarsProps {
   onJump: (start: number) => void;
 }
 
-const BASE_HEIGHT = 8;
-const HOVER_HEIGHTS = [16, 12, 10];
+const BASE_HEIGHT = 10;
+const HOVER_HEIGHTS = [20, 15, 12.5];
 
 export function ForecastZoomJumpBars({ window, onJump }: ForecastZoomJumpBarsProps) {
   const { t } = useTranslation();
