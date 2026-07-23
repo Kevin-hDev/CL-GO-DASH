@@ -121,10 +121,10 @@
 
 .ms-badge-vision {
   color: var(--tool-web);
-  background: rgba(139, 92, 246, 0.15);
+  background: color-mix(in srgb, var(--tool-web) 15%, transparent);
 }
 
 .ms-badge-tools {
   color: var(--select-text);
-  background: rgba(234, 88, 12, 0.15);
+  background: color-mix(in srgb, var(--tool-bash) 15%, transparent);
 }

@@ -29,7 +29,7 @@
 }
 
 .context-item.danger {
-  color: #8b2020;
+  color: var(--signal-error);
 }
 
 .context-item.danger:hover {

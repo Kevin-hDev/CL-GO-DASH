@@ -30,7 +30,7 @@
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 0 6px var(--signal-error-pulse);
   animation: ak-pulse 1s ease-in-out infinite;
 }
 
@@ -77,13 +77,13 @@
 .ak-test-result.success {
   background: var(--signal-ok-bg);
   color: var(--signal-ok);
-  border: 1px solid rgba(34, 197, 94, 0.25);
+  border: 1px solid var(--signal-ok-border);
 }
 
 .ak-test-result.error {
   background: var(--signal-error-bg);
   color: var(--signal-error);
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  border: 1px solid var(--signal-error-border);
 }
 
 .ak-test-result.loading {

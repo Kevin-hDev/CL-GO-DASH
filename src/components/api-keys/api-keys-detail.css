@@ -104,7 +104,7 @@
 .ak-icon-btn.danger:hover {
   background: var(--signal-error-bg);
   color: var(--signal-error);
-  border-color: rgba(239, 68, 68, 0.3);
+  border-color: var(--signal-error-border);
 }
 
 .ak-detail-body {

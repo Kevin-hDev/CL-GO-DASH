@@ -47,7 +47,7 @@
   border-radius: var(--radius-sm);
   border: 1px solid var(--edge);
   background: var(--popover-bg, var(--shell-opaque));
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-lg);
   z-index: var(--z-dropdown);
   backdrop-filter: var(--popover-backdrop-filter, none);
   -webkit-backdrop-filter: var(--popover-backdrop-filter, none);

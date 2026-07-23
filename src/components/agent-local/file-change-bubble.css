@@ -164,7 +164,7 @@
 }
 
 [data-theme="light"] .fcb-root {
-  background: rgba(215, 215, 220, 0.40);
+  background: var(--chat-composer-bg);
 }
 
 [data-theme="dark"] .fcb-root {

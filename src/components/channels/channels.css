@@ -24,7 +24,7 @@
 }
 
 [data-theme="light"] .ch-error-bubble {
-  border-color: rgba(0, 0, 0, 0.12);
+  border-color: var(--tooltip-border);
 }
 
 .ch-error-text {

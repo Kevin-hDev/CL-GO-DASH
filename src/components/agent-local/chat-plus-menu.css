@@ -8,7 +8,7 @@
   background: var(--popover-bg, var(--shell));
   border: 1px solid var(--edge);
   border-radius: var(--radius-md);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-lg);
   padding: var(--space-xs);
   z-index: var(--z-dropdown);
   backdrop-filter: var(--popover-backdrop-filter, none);
@@ -81,7 +81,7 @@
   background: var(--popover-bg, var(--shell));
   border: 1px solid var(--edge);
   border-radius: var(--radius-md);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-lg);
   padding: var(--space-xs);
   z-index: calc(var(--z-dropdown) + 1); /* one step above the parent menu */
   backdrop-filter: var(--popover-backdrop-filter, none);

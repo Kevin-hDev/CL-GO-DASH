@@ -169,7 +169,7 @@
   font-size: var(--text-xs);
   padding: var(--space-sm);
   background: var(--signal-error-bg);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid var(--signal-error-border);
   border-radius: var(--radius-sm);
 }
 

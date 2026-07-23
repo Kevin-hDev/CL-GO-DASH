@@ -9,7 +9,7 @@
   letter-spacing: 0.5px;
   cursor: default;
   user-select: none;
-  background: rgba(163, 163, 163, 0.1);
+  background: var(--surface-hover);
   color: var(--ink-muted);
   border: 1px solid var(--edge);
   white-space: nowrap;

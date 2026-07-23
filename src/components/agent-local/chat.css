@@ -176,7 +176,7 @@
 
 [data-theme="light"] .scroll-bottom-btn,
 [data-theme="light"] .scroll-bottom-btn:hover:not(:disabled) {
-  background: rgba(215, 215, 220, 0.40);
+  background: var(--chat-composer-bg);
   border-color: transparent;
 }
 

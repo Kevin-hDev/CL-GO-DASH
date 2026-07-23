@@ -67,7 +67,7 @@
 }
 
 [data-theme="light"] .msg-user-bubble {
-  background: rgba(215, 215, 220, 0.40);
+  background: var(--chat-composer-bg);
   border-color: transparent;
 }
 

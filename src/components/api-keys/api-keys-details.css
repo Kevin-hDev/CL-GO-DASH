@@ -58,7 +58,7 @@
   font-weight: 600;
   color: var(--signal-error);
   background: var(--signal-error-bg);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid var(--signal-error-border);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--ease-smooth);

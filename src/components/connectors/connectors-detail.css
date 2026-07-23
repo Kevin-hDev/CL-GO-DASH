@@ -31,7 +31,7 @@
 .ctd-status-btn.connected {
   background: var(--signal-ok-bg);
   color: var(--signal-ok);
-  border-color: rgba(34, 197, 94, 0.3);
+  border-color: var(--signal-ok-border);
 }
 
 .ctd-status-btn.disconnected {

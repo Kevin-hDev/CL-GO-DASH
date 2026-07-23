@@ -12,7 +12,7 @@
 
 [data-theme="light"] .icp-panel {
   border-color: transparent;
-  background: rgba(215, 215, 220, 0.40);
+  background: var(--chat-composer-bg);
 }
 
 [data-theme="dark"] .icp-panel {

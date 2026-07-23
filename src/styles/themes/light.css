@@ -33,6 +33,7 @@
   --signal-error-pulse: rgba(220, 38, 38, 0.35);
   --signal-error-pulse-fade: rgba(220, 38, 38, 0);
   --signal-ok: #16a34a;
+  --signal-ok-border: rgba(22, 163, 74, 0.24);
   --context-ring-fill: #8f8f99;
   --context-ring-track: rgba(143, 143, 153, 0.22);
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.04);

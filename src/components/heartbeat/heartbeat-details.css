@@ -87,7 +87,7 @@
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 0 4px var(--signal-error-pulse);
   animation: wk-confirm-pulse 1.2s ease-in-out infinite;
 }
 

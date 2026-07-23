@@ -63,7 +63,7 @@ export function EditMessage({ initialContent, onSave, onCancel }: EditMessagePro
       marginRight: expanded ? "auto" : 0,
     }}>
       <div style={{
-        background: "#1e1e22",
+        background: "var(--chat-composer-bg)",
         borderRadius: "18px",
         padding: "var(--space-sm) var(--space-md)",
         overflow: "hidden",
@@ -107,7 +107,7 @@ export function EditMessage({ initialContent, onSave, onCancel }: EditMessagePro
             style={{
               fontSize: "var(--text-xs)", padding: "5px 14px",
               borderRadius: "var(--radius-md)", border: "none",
-              background: "rgba(255, 255, 255, 0.18)", color: "var(--ink)",
+              background: "var(--pulse)", color: "var(--ink-on-pulse)",
               cursor: "pointer",
             }}
           >

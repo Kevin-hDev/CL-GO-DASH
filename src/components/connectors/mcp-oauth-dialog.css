@@ -57,7 +57,7 @@
 
 .mco-retry-link:hover { color: var(--ink); }
 
-.mco-error { color: var(--red, #ef4444); }
+.mco-error { color: var(--red); }
 
 .mco-device-code {
   display: flex;
