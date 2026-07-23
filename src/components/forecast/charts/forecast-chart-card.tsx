@@ -22,6 +22,7 @@ export function ForecastChartCard({
   const { t } = useTranslation();
   const [open, setOpen] = useState(defaultOpen);
   const bodyRef = useRef<HTMLDivElement | null>(null);
+  const wasOpenRef = useRef(defaultOpen);
   const onExpandedRef = useRef(onExpanded);
 
   useEffect(() => {
@@ -29,7 +30,13 @@ export function ForecastChartCard({
   }, [onExpanded]);
 
   useEffect(() => {
-    if (!open) return undefined;
+    if (!open) {
+      wasOpenRef.current = false;
+      return undefined;
+    }
+    // Only a real collapsed -> expanded transition notifies, not the mount.
+    if (wasOpenRef.current) return undefined;
+    wasOpenRef.current = true;
     const body = bodyRef.current;
     let notified = false;
     const notify = () => {

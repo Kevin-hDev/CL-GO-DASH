@@ -9,7 +9,16 @@ import { ForecastChart } from "./forecast-chart";
 const FAN_HISTORY_WINDOW = 18;
 const FAN_LAYERS = { history: true, forecast: true, confidence: true };
 
-export function ForecastFanChart({ analysisId }: { analysisId: string }) {
+interface ForecastFanChartProps {
+  analysisId: string;
+  /** Bumped by the card after an expand transition completes. */
+  resizeSignal?: number;
+}
+
+export function ForecastFanChart({
+  analysisId,
+  resizeSignal = 0,
+}: ForecastFanChartProps) {
   const { t, i18n } = useTranslation();
   const { data, error } = useForecastResult<ForecastViewResult>(
     analysisId,
@@ -36,7 +45,11 @@ export function ForecastFanChart({ analysisId }: { analysisId: string }) {
 
   return (
     <div className="fcwf-companion fcwf-companion-fan">
+      {/* key remount: the canvas can lose its bitmap while the card body is
+          clipped/composited during collapse, so expanding re-initializes the
+          chart at full size. Full (non-compact) mode for the zoom controls. */}
       <ForecastChart
+        key={resizeSignal}
         history={filtered.history.slice(-FAN_HISTORY_WINDOW)}
         predictions={filtered.predictions}
         scenarios={[]}
@@ -52,13 +65,12 @@ export function ForecastFanChart({ analysisId }: { analysisId: string }) {
           history: t("forecast.view.historySeries"),
           forecast: t("forecast.view.forecastSeries"),
           confidence: t("forecast.view.confidenceRange"),
-          today: t("forecast.chart.today"),
+          forecastStart: t("forecast.chart.forecastStart"),
           annotationUser: t("forecast.notes.userSource"),
           annotationLlm: t("forecast.notes.llmSource"),
         }}
         layers={FAN_LAYERS}
         mode="main"
-        compact
       />
     </div>
   );

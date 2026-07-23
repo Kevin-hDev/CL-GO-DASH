@@ -1176,7 +1176,7 @@
   "forecast": {
     "chart": {
       "resetZoom": "重置缩放",
-      "today": "今天"
+      "forecastStart": "预测开始"
     },
     "chartCard": {
       "main": "主图表",
@@ -1189,7 +1189,9 @@
     "companion": {
       "mean": "平均值",
       "insufficientData": "数据不足，无法绘制此图表。",
-      "indexBase": "指数（1 月 = 100）"
+      "indexBase": "指数（1 月 = 100）",
+      "showAll": "全部",
+      "showNone": "无"
     },
     "title": "预测",
     "noAnalysis": "没有正在进行的分析",
@@ -1342,6 +1344,7 @@
     },
     "view": {
       "period": "周期",
+      "detailedPredictions": "详细预测",
       "series": "序列",
       "historySeries": "历史",
       "forecastSeries": "预测",

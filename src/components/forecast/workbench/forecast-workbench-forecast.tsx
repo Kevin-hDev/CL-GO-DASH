@@ -22,6 +22,7 @@ import "./forecast-workbench-forecast.css";
 export function ForecastWorkbenchForecast({ analysisId }: { analysisId: string }) {
   const { t } = useTranslation();
   const [layers, setLayers] = useState<ForecastLayerState>(createInitialLayerState);
+  const [fanResize, setFanResize] = useState(0);
   const [seasonalityResize, setSeasonalityResize] = useState(0);
   const { sources } = useForecastLayerSources(analysisId, setLayers);
   const groups = buildForecastLayerGroups(sources, t);
@@ -43,8 +44,11 @@ export function ForecastWorkbenchForecast({ analysisId }: { analysisId: string }
           <ForecastView analysisId={analysisId} layers={layers} />
         </ForecastChartCard>
         {filtered && filtered.predictions.length > 0 ? (
-          <ForecastChartCard title={t("forecast.chartCard.fan")}>
-            <ForecastFanChart analysisId={analysisId} />
+          <ForecastChartCard
+            title={t("forecast.chartCard.fan")}
+            onExpanded={() => setFanResize((value) => value + 1)}
+          >
+            <ForecastFanChart analysisId={analysisId} resizeSignal={fanResize} />
           </ForecastChartCard>
         ) : null}
         {filtered && filtered.history.length > SEASONALITY_MIN_HISTORY ? (

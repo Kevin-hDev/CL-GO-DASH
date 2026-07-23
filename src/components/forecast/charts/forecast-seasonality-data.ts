@@ -18,7 +18,30 @@ export interface SeasonalityModel {
 export const SEASONALITY_MIN_YEAR_POINTS = 3;
 /** Gate for rendering the seasonality card at all (> 24 history points). */
 export const SEASONALITY_MIN_HISTORY = 24;
+/** Complete years shown by default (plus the current partial year). */
+export const SEASONALITY_DEFAULT_VISIBLE_YEARS = 5;
 const COMPLETE_YEAR_POINTS = 12;
+
+/**
+ * Default visible subset: the last SEASONALITY_DEFAULT_VISIBLE_YEARS
+ * complete years, plus the trailing partial year when there is one.
+ */
+export function defaultVisibleYears(years: SeasonalityYear[]): number[] {
+  const visible = years
+    .filter((entry) => entry.complete)
+    .slice(-SEASONALITY_DEFAULT_VISIBLE_YEARS)
+    .map((entry) => entry.year);
+  const last = years[years.length - 1];
+  if (last && !last.complete && !visible.includes(last.year)) {
+    visible.push(last.year);
+  }
+  return visible;
+}
+
+export function toggleVisibleYear(visible: number[], year: number): number[] {
+  if (visible.includes(year)) return visible.filter((entry) => entry !== year);
+  return [...visible, year].sort((left, right) => left - right);
+}
 
 /**
  * Groups history by calendar year and normalizes each year to its first

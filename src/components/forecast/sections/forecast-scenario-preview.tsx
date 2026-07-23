@@ -98,7 +98,7 @@ export function ForecastScenarioPreview({
               history: t("forecast.view.historySeries"),
               forecast: t("forecast.view.forecastSeries"),
               confidence: t("forecast.view.confidenceRange"),
-              today: t("forecast.chart.today"),
+              forecastStart: t("forecast.chart.forecastStart"),
               annotationUser: t("forecast.notes.userSource"),
               annotationLlm: t("forecast.notes.llmSource"),
             }}

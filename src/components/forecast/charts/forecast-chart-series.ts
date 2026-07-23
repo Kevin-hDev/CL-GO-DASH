@@ -62,7 +62,7 @@ export function buildSeries(
         silent: true,
         label: {
           show: true,
-          formatter: labels.today,
+          formatter: labels.forecastStart,
           position: "insideEndTop" as const,
           rotate: 0,
           distance: 6,

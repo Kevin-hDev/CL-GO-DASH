@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   buildSeasonalityModel,
+  defaultVisibleYears,
   monthNames,
   SEASONALITY_MIN_YEAR_POINTS,
+  toggleVisibleYear,
+  type SeasonalityYear,
 } from "./forecast-seasonality-data";
 
 function point(year: number, month: number, value: number) {
@@ -91,5 +94,39 @@ describe("monthNames", () => {
     expect(monthNames("en")).toHaveLength(12);
     expect(monthNames("en")[0]).toBe("Jan");
     expect(monthNames("fr")[0]).toBe("janv.");
+  });
+});
+
+function year(year: number, complete: boolean): SeasonalityYear {
+  return { year, values: [], complete, emphasized: false };
+}
+
+describe("defaultVisibleYears", () => {
+  it("keeps the last 5 complete years plus the trailing partial year", () => {
+    const years = [
+      year(2018, true), year(2019, true), year(2020, true), year(2021, true),
+      year(2022, true), year(2023, true), year(2024, true), year(2025, false),
+    ];
+    expect(defaultVisibleYears(years)).toEqual([2020, 2021, 2022, 2023, 2024, 2025]);
+  });
+
+  it("keeps all years when there are fewer than 5 complete ones", () => {
+    const years = [year(2022, true), year(2023, true), year(2024, false)];
+    expect(defaultVisibleYears(years)).toEqual([2022, 2023, 2024]);
+  });
+
+  it("does not duplicate the last year when it is complete", () => {
+    const years = [year(2023, true), year(2024, true)];
+    expect(defaultVisibleYears(years)).toEqual([2023, 2024]);
+  });
+});
+
+describe("toggleVisibleYear", () => {
+  it("removes a visible year", () => {
+    expect(toggleVisibleYear([2023, 2024], 2023)).toEqual([2024]);
+  });
+
+  it("adds a hidden year in sorted order", () => {
+    expect(toggleVisibleYear([2024], 2022)).toEqual([2022, 2024]);
   });
 });

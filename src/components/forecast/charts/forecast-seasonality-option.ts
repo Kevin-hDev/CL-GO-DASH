@@ -1,14 +1,35 @@
 import type { EChartsOption } from "echarts";
-import type { SeasonalityModel } from "./forecast-seasonality-data";
+import type { SeasonalityModel, SeasonalityYear } from "./forecast-seasonality-data";
 import type { ForecastChartPalette } from "./forecast-chart-types";
+
+/** Token rotation mirroring the palette scenarios/variables order. */
+const ROTATION_TOKENS = [
+  "var(--fc-scenario-a)",
+  "var(--fc-scenario-b)",
+  "var(--fc-scenario-c)",
+  "var(--fc-variable-a)",
+  "var(--fc-variable-b)",
+  "var(--fc-variable-c)",
+  "var(--fc-variable-d)",
+];
+
+export function seasonalityChipToken(
+  year: SeasonalityYear,
+  years: SeasonalityYear[],
+): string {
+  if (year.emphasized) return "var(--fc-line-predict)";
+  return ROTATION_TOKENS[years.indexOf(year) % ROTATION_TOKENS.length];
+}
 
 export function buildSeasonalityOption(
   model: SeasonalityModel,
+  visibleYears: number[],
   palette: ForecastChartPalette,
   labels: { indexBase: string },
 ): EChartsOption {
   const rotation = [...palette.scenarios, ...palette.variables];
   const fallback = palette.inkMuted;
+  const visible = model.years.filter((year) => visibleYears.includes(year.year));
 
   return {
     animation: false,
@@ -40,7 +61,7 @@ export function buildSeasonalityOption(
       axisTick: { show: false },
       axisLabel: { color: palette.inkMuted, fontSize: 11 },
     },
-    series: model.years.map((year, index) => ({
+    series: visible.map((year, index) => ({
       name: String(year.year),
       type: "line" as const,
       data: year.values,
@@ -53,11 +74,11 @@ export function buildSeasonalityOption(
       lineStyle: {
         color: year.emphasized
           ? palette.linePredict
-          : rotation[index % Math.max(rotation.length, 1)] || fallback,
+          : rotation[model.years.indexOf(year) % Math.max(rotation.length, 1)] || fallback,
         width: year.emphasized ? 2.2 : 1.5,
       },
-      emphasis: { disabled: true },
-      markLine: year.emphasized ? {
+      emphasis: { focus: "series" as const },
+      markLine: index === 0 ? {
         symbol: ["none", "none"],
         silent: true,
         label: { show: false },

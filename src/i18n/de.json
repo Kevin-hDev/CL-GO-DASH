@@ -1176,7 +1176,7 @@
   "forecast": {
     "chart": {
       "resetZoom": "Zoom zurücksetzen",
-      "today": "heute"
+      "forecastStart": "Prognosebeginn"
     },
     "chartCard": {
       "main": "Hauptdiagramm",
@@ -1189,7 +1189,9 @@
     "companion": {
       "mean": "Mittelwert",
       "insufficientData": "Nicht genügend Daten für dieses Diagramm.",
-      "indexBase": "Index (Januar = 100)"
+      "indexBase": "Index (Januar = 100)",
+      "showAll": "Alle",
+      "showNone": "Keine"
     },
     "title": "Prognose",
     "noAnalysis": "Keine laufende Analyse",
@@ -1342,6 +1344,7 @@
     },
     "view": {
       "period": "Zeitraum",
+      "detailedPredictions": "Detaillierte Prognosen",
       "series": "Serie",
       "historySeries": "Verlauf",
       "forecastSeries": "Prognose",

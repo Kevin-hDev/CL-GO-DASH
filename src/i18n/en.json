@@ -1192,7 +1192,7 @@
   "forecast": {
     "chart": {
       "resetZoom": "Reset zoom",
-      "today": "today"
+      "forecastStart": "Forecast start"
     },
     "chartCard": {
       "main": "Main chart",
@@ -1205,7 +1205,9 @@
     "companion": {
       "mean": "mean",
       "insufficientData": "Not enough data for this chart.",
-      "indexBase": "Index (January = 100)"
+      "indexBase": "Index (January = 100)",
+      "showAll": "All",
+      "showNone": "None"
     },
     "title": "Forecast",
     "noAnalysis": "No analysis in progress",
@@ -1369,6 +1371,7 @@
     },
     "view": {
       "period": "Period",
+      "detailedPredictions": "Detailed predictions",
       "series": "Series",
       "historySeries": "History",
       "forecastSeries": "Forecast",

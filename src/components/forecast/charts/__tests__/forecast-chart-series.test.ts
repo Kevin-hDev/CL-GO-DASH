@@ -61,7 +61,7 @@ describe("forecast chart line series", () => {
         history: "History",
         forecast: "Forecast",
         confidence: "Confidence",
-        today: "Today",
+        forecastStart: "Forecast start",
         annotationUser: "User",
         annotationLlm: "LLM",
       },
@@ -93,7 +93,7 @@ describe("forecast chart line series", () => {
       history: "History",
       forecast: "Forecast",
       confidence: "Confidence",
-      today: "Today",
+      forecastStart: "Forecast start",
       annotationUser: "User",
       annotationLlm: "LLM",
     };
@@ -125,7 +125,7 @@ describe("forecast chart line series", () => {
       history: "History",
       forecast: "Forecast",
       confidence: "Confidence",
-      today: "Today",
+      forecastStart: "Forecast start",
       annotationUser: "User",
       annotationLlm: "LLM",
     };
@@ -147,7 +147,7 @@ describe("forecast chart line series", () => {
       | undefined;
 
     expect(forecast?.lineStyle?.type).toEqual([5, 4]);
-    expect(forecast?.markLine?.label?.formatter).toBe("Today");
+    expect(forecast?.markLine?.label?.formatter).toBe("Forecast start");
     expect(forecast?.markArea?.itemStyle?.color).toBe("zone");
     expect(history?.areaStyle?.color?.colorStops).toEqual([
       { offset: 0, color: "area-from" },
@@ -161,7 +161,7 @@ describe("forecast chart line series", () => {
       history: "History",
       forecast: "Forecast",
       confidence: "Confidence",
-      today: "Today",
+      forecastStart: "Forecast start",
       annotationUser: "User",
       annotationLlm: "LLM",
     };

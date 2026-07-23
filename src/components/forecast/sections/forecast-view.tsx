@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ChevronDown } from "@/components/ui/icons";
 import type { ForecastLayerState } from "../forecast-layer-matrix";
 import { formatForecastValue, inferMetricMeta } from "../forecast-view-format";
 import { ForecastChart } from "../charts/forecast-chart";
@@ -25,6 +26,7 @@ export function ForecastView({ analysisId, layers }: ForecastViewProps) {
   const { t, i18n } = useTranslation();
   const { data, error } = useForecastResult<ForecastViewResult>(analysisId, t("forecast.noAnalysis"));
   const [selectedSeries, setSelectedSeries] = useState("");
+  const [tableOpen, setTableOpen] = useState(false);
   const chart = useForecastChartResize();
 
   if (error) return <div className="fc-error">{error}</div>;
@@ -98,7 +100,7 @@ export function ForecastView({ analysisId, layers }: ForecastViewProps) {
               history: t("forecast.view.historySeries"),
               forecast: t("forecast.view.forecastSeries"),
               confidence: t("forecast.view.confidenceRange"),
-              today: t("forecast.chart.today"),
+              forecastStart: t("forecast.chart.forecastStart"),
               annotationUser: t("forecast.notes.userSource"),
               annotationLlm: t("forecast.notes.llmSource"),
             }}
@@ -112,27 +114,46 @@ export function ForecastView({ analysisId, layers }: ForecastViewProps) {
         onPointerDown={chart.startResize}
         onDoubleClick={chart.resetHeight}
       />
-      <div className="fc-predictions-table">
-        <div className="fc-table-head">
-          <span>{t("forecast.view.period")}</span>
-          <span>{metric.columnTitle}</span>
-        </div>
-        <div className="fc-table-body">
-          {filtered.predictions.map((p, i) => (
-            <div key={i} className="fc-table-row">
-              <PeriodCell
-                index={i}
-                rawDate={p.date}
-                endDate={data.input_summary.end}
-                frequency={data.frequency}
-                locale={i18n.language}
-              />
-              <ValueCell
-                unitLabel={metric.unitLabel}
-                formattedValue={formatForecastValue(p.value, i18n.language, metric)}
-              />
+      <button
+        type="button"
+        className="fc-table-toggle"
+        aria-expanded={tableOpen}
+        onClick={() => setTableOpen((current) => !current)}
+      >
+        <span className="fc-table-toggle-title">
+          {t("forecast.view.detailedPredictions")}
+        </span>
+        <span className="fc-table-toggle-count">{filtered.predictions.length}</span>
+        <ChevronDown
+          size="var(--icon-sm)"
+          className={`fc-table-toggle-chevron ${tableOpen ? "is-open" : ""}`}
+        />
+      </button>
+      <div className={`fc-table-collapse ${tableOpen ? "is-open" : ""}`}>
+        <div className="fc-table-collapse-inner">
+          <div className="fc-predictions-table">
+            <div className="fc-table-head">
+              <span>{t("forecast.view.period")}</span>
+              <span>{metric.columnTitle}</span>
             </div>
-          ))}
+            <div className="fc-table-body">
+              {filtered.predictions.map((p, i) => (
+                <div key={i} className="fc-table-row">
+                  <PeriodCell
+                    index={i}
+                    rawDate={p.date}
+                    endDate={data.input_summary.end}
+                    frequency={data.frequency}
+                    locale={i18n.language}
+                  />
+                  <ValueCell
+                    unitLabel={metric.unitLabel}
+                    formattedValue={formatForecastValue(p.value, i18n.language, metric)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

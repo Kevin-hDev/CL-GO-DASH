@@ -83,7 +83,7 @@ export interface ForecastChartOptionArgs {
     history: string;
     forecast: string;
     confidence: string;
-    today: string;
+    forecastStart: string;
     annotationUser: string;
     annotationLlm: string;
   };

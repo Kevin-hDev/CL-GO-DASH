@@ -31,13 +31,16 @@
 
 .fcwf-companion {
   position: relative;
+  display: flex;
+  flex-direction: column;
   height: 280px;
   padding: 4px 8px 8px;
 }
 
 .fcwf-companion-chart {
+  flex: 1;
+  min-height: 0;
   width: 100%;
-  height: 100%;
 }
 
 .fcwf-companion-empty {

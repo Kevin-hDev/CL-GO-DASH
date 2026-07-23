@@ -10,6 +10,8 @@ export interface ForecastPeriodMeta {
 }
 
 const DATE_FREQUENCIES = new Set(["S", "T", "MIN", "H", "D", "B", "W", "M", "Q", "Y"]);
+/** Monthly or coarser: any time component is a timezone artifact, not data. */
+const TIMELESS_FREQUENCIES = new Set(["M", "Q", "Y"]);
 
 export function inferMetricMeta(
   locale: string,
@@ -72,7 +74,7 @@ export function buildPeriodMeta(
   }
   return {
     stepLabel,
-    secondaryLabel: formatResolvedDate(resolvedDate, locale),
+    secondaryLabel: formatResolvedDate(resolvedDate, frequency, locale),
   };
 }
 
@@ -132,8 +134,9 @@ function parseDate(value: string): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
-function formatResolvedDate(date: Date, locale: string): string {
-  const hasTime = date.getHours() !== 0 || date.getMinutes() !== 0 || date.getSeconds() !== 0;
+function formatResolvedDate(date: Date, frequency: string, locale: string): string {
+  const hasTime = !TIMELESS_FREQUENCIES.has(frequency.trim().toUpperCase())
+    && (date.getHours() !== 0 || date.getMinutes() !== 0 || date.getSeconds() !== 0);
   const weekday = new Intl.DateTimeFormat(locale, { weekday: "long" }).format(date);
   const day = new Intl.DateTimeFormat(locale, {
     year: "numeric",

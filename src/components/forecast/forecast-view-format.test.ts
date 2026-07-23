@@ -139,4 +139,15 @@ describe("buildPeriodMeta", () => {
     const meta = buildPeriodMeta(0, "garbage", "2026-01-10", "D", "fr-FR");
     expect(meta.secondaryLabel).toBe("garbage");
   });
+
+  it("masque l'heure pour une fréquence mensuelle (artefact de fuseau)", () => {
+    const meta = buildPeriodMeta(0, "2026-07-01T02:00:00", "2026-06-01", "M", "fr-FR");
+    expect(meta.secondaryLabel).not.toContain("02:00");
+    expect(meta.secondaryLabel).toContain("01/07/2026");
+  });
+
+  it("conserve l'heure pour une fréquence journalière", () => {
+    const meta = buildPeriodMeta(0, "2026-07-01T02:00:00", "2026-06-30", "D", "fr-FR");
+    expect(meta.secondaryLabel).toContain("02:00");
+  });
 });
