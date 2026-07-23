@@ -48,6 +48,9 @@ export interface ForecastChartPalette {
   pointPredict: string;
   band90: string;
   separator: string;
+  forecastZone: string;
+  areaHistoryFrom: string;
+  areaHistoryTo: string;
   annotationUser: string;
   annotationLlm: string;
   edge: string;
@@ -80,6 +83,7 @@ export interface ForecastChartOptionArgs {
     history: string;
     forecast: string;
     confidence: string;
+    forecastStart: string;
     annotationUser: string;
     annotationLlm: string;
   };
@@ -103,4 +107,6 @@ export interface ForecastChartProps {
   fallbackName?: string;
   labels: ForecastChartOptionArgs["labels"];
   layers: ForecastLayerState;
+  onZoomWindowChange?: (window: { start: number; end: number }) => void;
+  zoomJump?: { start: number; seq: number } | null;
 }

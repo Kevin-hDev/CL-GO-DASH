@@ -19,7 +19,38 @@
   border-bottom: 1px solid var(--edge);
 }
 
-.fcwf-view {
+.fcwf-stack {
   min-height: 0;
   flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+}
+
+.fcwf-companion {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 280px;
+  padding: 4px 8px 8px;
+}
+
+.fcwf-companion-chart {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.fcwf-companion-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+  color: var(--ink-faint);
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
 }

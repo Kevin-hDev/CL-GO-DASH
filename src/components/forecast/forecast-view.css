@@ -73,9 +73,9 @@
 }
 
 .fc-chart-area {
-  flex: 0 0 270px;
-  min-height: 270px;
-  max-height: 270px;
+  flex: 0 0 400px;
+  min-height: 400px;
+  max-height: 400px;
   padding: 12px 14px;
   display: flex;
   align-items: center;

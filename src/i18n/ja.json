@@ -1175,7 +1175,28 @@
   },
   "forecast": {
     "chart": {
-      "resetZoom": "ズームをリセット"
+      "resetZoom": "ズームをリセット",
+      "forecastStart": "予測開始"
+    },
+    "chartCard": {
+      "main": "メインチャート",
+      "fan": "予測期間の拡大",
+      "seasonality": "季節性",
+      "reliability": "バックテスト誤差（sMAPE）",
+      "withSeries": "{{title}} — {{series}}",
+      "collapse": "カードを折りたたむ",
+      "expand": "カードを展開"
+    },
+    "companion": {
+      "mean": "平均",
+      "insufficientData": "このグラフを表示するにはデータが不足しています。",
+      "indexBase": "指数（最初の月 = 100）",
+      "showAll": "すべて",
+      "showNone": "なし"
+    },
+    "zoomJump": {
+      "goTo": "{{count}} 個中 {{index}} 番目へ移動",
+      "label": "ズームジャンプ"
     },
     "title": "予測",
     "noAnalysis": "分析が進行中ではありません",
@@ -1328,6 +1349,7 @@
     },
     "view": {
       "period": "期間",
+      "detailedPredictions": "詳細な予測",
       "series": "系列",
       "historySeries": "履歴",
       "forecastSeries": "予測",

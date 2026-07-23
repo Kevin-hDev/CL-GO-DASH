@@ -15,7 +15,7 @@ describe("useForecastChartResize", () => {
       } as unknown as ReactPointerEvent);
       window.dispatchEvent(new MouseEvent("pointermove", { clientY: 150 }));
     });
-    expect(result.current.chartHeight).toBe(320);
+    expect(result.current.chartHeight).toBe(450);
     expect(result.current.isResizing).toBe(true);
 
     act(() => {
@@ -26,7 +26,7 @@ describe("useForecastChartResize", () => {
     act(() => {
       window.dispatchEvent(new MouseEvent("pointermove", { clientY: 200 }));
     });
-    expect(result.current.chartHeight).toBe(320);
+    expect(result.current.chartHeight).toBe(450);
     expect(preventDefault).toHaveBeenCalledOnce();
   });
 

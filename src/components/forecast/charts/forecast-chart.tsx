@@ -2,17 +2,18 @@ import { useCallback, useEffect, useRef } from "react";
 import * as echarts from "echarts/core";
 import type { EChartsType } from "echarts/core";
 import { LineChart, ScatterChart } from "echarts/charts";
-import { DataZoomComponent, GridComponent, TooltipComponent } from "echarts/components";
+import {
+  DataZoomComponent,
+  GridComponent,
+  MarkAreaComponent,
+  MarkLineComponent,
+  TooltipComponent,
+} from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
 import { ArrowsClockwise } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
 import i18n from "@/i18n";
-import {
-  dateKey,
-  readDataIndex,
-  readFirstAnnotationId,
-  readSeriesId,
-} from "./forecast-chart-events";
+import { dateKey, readDataIndex, readFirstAnnotationId, readSeriesId } from "./forecast-chart-events";
 import {
   buildForecastChartOption,
   forecastXAxisSplitNumber,
@@ -20,10 +21,14 @@ import {
 import { buildForecastChartPalette } from "./forecast-chart-palette";
 import type { ForecastChartProps } from "./forecast-chart-types";
 import {
+  buildForecastZoomSignature,
   forecastZoomSliderValue,
+  sameForecastZoomWindow,
   FORECAST_CHART_MIN_ZOOM_SPAN,
 } from "./forecast-chart-zoom-utils";
 import { useForecastChartZoom } from "./use-forecast-chart-zoom";
+import { useForecastChartOptionInput } from "./use-forecast-chart-option-input";
+import { useForecastThemeRevision } from "./use-forecast-theme-revision";
 import "./forecast-chart.css";
 echarts.use([
   CanvasRenderer,
@@ -32,6 +37,8 @@ echarts.use([
   GridComponent,
   TooltipComponent,
   DataZoomComponent,
+  MarkLineComponent,
+  MarkAreaComponent,
 ]);
 
 export function ForecastChart(props: ForecastChartProps) {
@@ -40,9 +47,13 @@ export function ForecastChart(props: ForecastChartProps) {
   const propsRef = useRef(props);
   const zoomWindowRef = useRef({ start: 0, end: 100 });
   const widthBucketRef = useRef(0);
-  const zoomSignature = buildZoomSignature(props);
+  const zoomSignature = buildForecastZoomSignature(props);
   const handleZoomRefChange = useCallback((window: { start: number; end: number }) => {
+    const previous = zoomWindowRef.current;
     zoomWindowRef.current = window;
+    if (!sameForecastZoomWindow(previous, window)) {
+      propsRef.current.onZoomWindowChange?.(window);
+    }
   }, []);
   const {
     shellRef,
@@ -58,6 +69,7 @@ export function ForecastChart(props: ForecastChartProps) {
     signature: zoomSignature,
     chartRef,
     onZoomChange: handleZoomRefChange,
+    jump: props.zoomJump,
   });
   const sliderValue = forecastZoomSliderValue(zoomSpan);
 
@@ -93,10 +105,11 @@ export function ForecastChart(props: ForecastChartProps) {
       const nextBucket = forecastXAxisSplitNumber(container.clientWidth);
       if (nextBucket === widthBucketRef.current) return;
       widthBucketRef.current = nextBucket;
-      applyOptions();
+      // Merge on resize: only the tick density changed, keep series/zoom intact.
+      applyOptions(false);
     });
 
-    const applyOptions = () => {
+    const applyOptions = (notMerge: boolean) => {
       if (!chartRef.current || !containerRef.current) return;
       const root = getComputedStyle(containerRef.current);
       widthBucketRef.current = forecastXAxisSplitNumber(containerRef.current.clientWidth);
@@ -107,7 +120,7 @@ export function ForecastChart(props: ForecastChartProps) {
         compact: Boolean(propsRef.current.compact),
         chartWidth: containerRef.current.clientWidth,
         zoomWindow: zoomWindowRef.current,
-      }), true);
+      }), notMerge);
     };
 
     const ensureChart = () => {
@@ -119,7 +132,7 @@ export function ForecastChart(props: ForecastChartProps) {
       chartRef.current = echarts.init(containerRef.current, undefined, { renderer: "canvas" });
       chartRef.current.on("datazoom", handleDataZoom);
       chartRef.current.on("click", handleChartClick);
-      applyOptions();
+      applyOptions(true);
       chartRef.current.resize();
     };
 
@@ -137,19 +150,20 @@ export function ForecastChart(props: ForecastChartProps) {
     };
   }, [handleChartClick, handleDataZoom]);
 
+  const optionInput = useForecastChartOptionInput(props);
+  const themeRevision = useForecastThemeRevision();
   useEffect(() => {
     if (!chartRef.current || !containerRef.current) return;
     const root = getComputedStyle(containerRef.current);
     chartRef.current.setOption(buildForecastChartOption({
-      ...props,
+      ...optionInput,
       palette: buildForecastChartPalette(root),
-      annotations: props.annotations ?? [],
-      compact: Boolean(props.compact),
+      annotations: optionInput.annotations ?? [],
+      compact: Boolean(optionInput.compact),
       chartWidth: containerRef.current.clientWidth,
       zoomWindow: zoomWindowRef.current,
-    }), true);
-    chartRef.current.resize();
-  }, [props]);
+    }), true); // resize() is handled by the ResizeObserver above
+  }, [optionInput, themeRevision]);
 
   return (
     <div
@@ -157,8 +171,7 @@ export function ForecastChart(props: ForecastChartProps) {
       className={`fcc-chart-shell fcc-chart-${props.mode ?? "main"} ${props.compact ? "is-compact" : ""} ${zoomSpan < 100 ? "is-draggable" : ""}`}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
-      onPointerUp={stopDrag}
-      onPointerLeave={stopDrag}
+      onPointerUp={stopDrag} onPointerLeave={stopDrag} onPointerCancel={stopDrag}
     >
       <div ref={containerRef} className="fcc-chart-root" />
       {!props.compact && (
@@ -181,19 +194,4 @@ export function ForecastChart(props: ForecastChartProps) {
       )}
     </div>
   );
-}
-
-function buildZoomSignature(props: ForecastChartProps): string {
-  const first = props.history[0]?.date ?? props.predictions[0]?.date ?? "";
-  const lastHistory = props.history[props.history.length - 1]?.date ?? "";
-  const lastPrediction = props.predictions[props.predictions.length - 1]?.date ?? "";
-  return [
-    first,
-    lastHistory,
-    lastPrediction,
-    props.history.length,
-    props.predictions.length,
-    props.targetColumn ?? "",
-    props.fallbackName ?? "",
-  ].join(":");
 }

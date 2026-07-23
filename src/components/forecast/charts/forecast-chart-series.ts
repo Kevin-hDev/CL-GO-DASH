@@ -30,34 +30,58 @@ export function buildSeries(
       ? entry.upperValue - entry.lowerValue
       : null,
   );
+  const forecastZoneEnd = forecastZoneEndTimestamp(timeline);
+  const forecastSeparator = layers.forecast ? separatorTimestamp : null;
 
   return [
     seriesLine(labels.confidence, lower, { opacity: 0 }, undefined, "confidence-90", false),
     { ...seriesLine(labels.confidence, band, { opacity: 0 }, palette.band90, "confidence-90", false), areaStyle: { color: palette.band90 } },
-    seriesLine(
-      labels.history,
-      pointData(timeline, (entry) => (layers.history ? entry.historyValue : null)),
-      { color: palette.lineHistory, width: 2 },
-      undefined,
-      undefined,
-      false
-    ),
+    {
+      ...seriesLine(
+        labels.history,
+        pointData(timeline, (entry) => (layers.history ? entry.historyValue : null)),
+        { color: palette.lineHistory, width: 2 },
+        undefined,
+        undefined,
+        false
+      ),
+      areaStyle: { color: historyAreaGradient(palette) },
+    },
     {
       ...seriesLine(
         labels.forecast,
         pointData(timeline, (entry) => (layers.forecast ? entry.forecastValue : null)),
-        { color: palette.linePredict, width: 1.8 },
+        { color: palette.linePredict, width: 2, type: [5, 4] },
         undefined,
         undefined,
         true
       ),
       itemStyle: { color: palette.pointPredict, borderColor: palette.linePredict, borderWidth: 2 },
-      markLine: separatorTimestamp != null && layers.forecast ? {
+      markLine: forecastSeparator != null ? {
         symbol: ["none", "none"],
         silent: true,
-        label: { show: false },
+        label: {
+          show: true,
+          formatter: labels.forecastStart,
+          position: "insideEndTop" as const,
+          rotate: 0,
+          distance: 6,
+          color: palette.inkMuted,
+          fontSize: 11,
+        },
         lineStyle: { color: palette.separator, type: "dashed" as const, width: 1 },
-        data: [{ xAxis: separatorTimestamp }],
+        data: [{ xAxis: forecastSeparator }],
+      } : undefined,
+      markArea: forecastSeparator != null && forecastZoneEnd != null ? {
+        silent: true,
+        label: { show: false },
+        itemStyle: { color: palette.forecastZone },
+        data: [
+          [{ xAxis: forecastSeparator }, { xAxis: forecastZoneEnd }] as [
+            { xAxis: number },
+            { xAxis: number },
+          ],
+        ],
       } : undefined,
     },
     ...scenarios.map((scenario, index) =>
@@ -141,4 +165,26 @@ function scenarioColor(palette: ForecastChartPalette, index: number): string {
 
 function variableColor(palette: ForecastChartPalette, index: number): string {
   return palette.variables[index % Math.max(palette.variables.length, 1)] || palette.inkMuted;
+}
+
+/** Matches the 2% right boundaryGap so the zone tint covers the padded edge. */
+function forecastZoneEndTimestamp(timeline: TimelineEntry[]): number | null {
+  const first = timeline[0]?.timestamp;
+  const last = timeline[timeline.length - 1]?.timestamp;
+  if (first == null || last == null || last <= first) return last ?? null;
+  return last + (last - first) * 0.02;
+}
+
+function historyAreaGradient(palette: ForecastChartPalette) {
+  return {
+    type: "linear" as const,
+    x: 0,
+    y: 0,
+    x2: 0,
+    y2: 1,
+    colorStops: [
+      { offset: 0, color: palette.areaHistoryFrom },
+      { offset: 1, color: palette.areaHistoryTo },
+    ],
+  };
 }

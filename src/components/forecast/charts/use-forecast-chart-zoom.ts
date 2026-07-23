@@ -1,26 +1,33 @@
 import type { EChartsType } from "echarts/core";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   clampForecastZoomWindow,
   FORECAST_CHART_MIN_ZOOM_SPAN,
   sameForecastZoomWindow,
   type ForecastZoomWindow,
 } from "./forecast-chart-zoom-utils";
+import { useForecastWheelZoom } from "./use-forecast-wheel-zoom";
 
 interface UseForecastChartZoomArgs {
   signature: string;
   chartRef: React.RefObject<EChartsType | null>;
   onZoomChange: (window: ForecastZoomWindow) => void;
+  jump?: { start: number; seq: number } | null;
 }
 
 export function useForecastChartZoom({
   signature,
   chartRef,
   onZoomChange,
+  jump,
 }: UseForecastChartZoomArgs) {
   const shellRef = useRef<HTMLDivElement | null>(null);
   const controlsRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef({ active: false, x: 0, start: 0, end: 100 });
+  // Latest window synced to React state, updated synchronously so event
+  // handlers (wheel, slider) always read the current window without
+  // waiting for a re-render.
+  const syncedRef = useRef({ signature, start: 0, end: 100 });
   const [zoomState, setZoomState] = useState({
     signature,
     start: 0,
@@ -47,6 +54,7 @@ export function useForecastChartZoom({
 
   const syncZoomState = useCallback((nextWindow: ForecastZoomWindow) => {
     const next = clampForecastZoomWindow(nextWindow.start, nextWindow.end);
+    syncedRef.current = { signature, ...next };
     setZoomState((current) =>
       current.signature === signature &&
       current.start === next.start &&
@@ -56,6 +64,16 @@ export function useForecastChartZoom({
     );
     onZoomChange(next);
   }, [onZoomChange, signature]);
+
+  const lastJumpSeqRef = useRef(0);
+  useEffect(() => {
+    if (!jump || jump.seq === lastJumpSeqRef.current) return;
+    lastJumpSeqRef.current = jump.seq;
+    const span = zoomWindow.end - zoomWindow.start;
+    const next = clampForecastZoomWindow(jump.start, jump.start + span);
+    chartRef.current?.dispatchAction({ type: "dataZoom", ...next });
+    syncZoomState(next);
+  }, [jump, zoomWindow, chartRef, syncZoomState]);
 
   const handleDataZoom = useCallback(() => {
     if (dragRef.current.active) return;
@@ -74,16 +92,14 @@ export function useForecastChartZoom({
   }, [chartRef, syncZoomState]);
 
   const handleZoomSlider = useCallback((nextSpan: number) => {
-    setZoomState((current) => {
-      const center =
-        current.signature === signature ? (current.start + current.end) / 2 : 50;
-      const span = Math.max(FORECAST_CHART_MIN_ZOOM_SPAN, Math.min(100, nextSpan));
-      const next = clampForecastZoomWindow(center - span / 2, center + span / 2);
-      chartRef.current?.dispatchAction({ type: "dataZoom", ...next });
-      onZoomChange(next);
-      return { signature, ...next };
-    });
-  }, [chartRef, onZoomChange, signature]);
+    const synced = syncedRef.current;
+    const center =
+      synced.signature === signature ? (synced.start + synced.end) / 2 : 50;
+    const span = Math.max(FORECAST_CHART_MIN_ZOOM_SPAN, Math.min(100, nextSpan));
+    const next = clampForecastZoomWindow(center - span / 2, center + span / 2);
+    chartRef.current?.dispatchAction({ type: "dataZoom", ...next });
+    syncZoomState(next);
+  }, [chartRef, signature, syncZoomState]);
 
   const handlePointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     if (zoomSpan >= 100 || controlsRef.current?.contains(event.target as Node)) return;
@@ -116,6 +132,8 @@ export function useForecastChartZoom({
     if (raw) syncZoomState(raw);
     dragRef.current.active = false;
   }, [readChartZoom, syncZoomState]);
+
+  useForecastWheelZoom({ shellRef, chartRef, signature, syncedRef, syncZoomState });
 
   return {
     shellRef,

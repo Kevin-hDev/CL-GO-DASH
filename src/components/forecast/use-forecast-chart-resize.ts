@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const DEFAULT_CHART_HEIGHT = 270;
+const DEFAULT_CHART_HEIGHT = 400;
 const MIN_CHART_HEIGHT = 200;
 
 interface ResizeOptions {

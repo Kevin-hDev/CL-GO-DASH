@@ -15,6 +15,9 @@ const palette: ForecastChartPalette = {
   pointPredict: "point",
   band90: "band",
   separator: "separator",
+  forecastZone: "zone",
+  areaHistoryFrom: "area-from",
+  areaHistoryTo: "area-to",
   annotationUser: "user",
   annotationLlm: "llm",
   edge: "edge",
@@ -39,6 +42,13 @@ const timeline: TimelineEntry[] = [0, 1, 2].map((index) => ({
   upperValue: index + 2,
 }));
 
+interface DecoratedLine {
+  lineStyle?: { type?: unknown };
+  areaStyle?: { color?: { colorStops?: { offset: number; color: string }[] } };
+  markLine?: { label?: { formatter?: string } };
+  markArea?: { itemStyle?: { color?: string } };
+}
+
 describe("forecast chart line series", () => {
   it("smooths every line along time without connecting missing values", () => {
     const series = buildSeries(
@@ -51,6 +61,7 @@ describe("forecast chart line series", () => {
         history: "History",
         forecast: "Forecast",
         confidence: "Confidence",
+        forecastStart: "Forecast start",
         annotationUser: "User",
         annotationLlm: "LLM",
       },
@@ -82,6 +93,7 @@ describe("forecast chart line series", () => {
       history: "History",
       forecast: "Forecast",
       confidence: "Confidence",
+      forecastStart: "Forecast start",
       annotationUser: "User",
       annotationLlm: "LLM",
     };
@@ -106,5 +118,68 @@ describe("forecast chart line series", () => {
 
     expect(hiddenAnnotation?.data[0]).toBeNull();
     expect(visibleAnnotation?.data[0]).not.toBeNull();
+  });
+
+  it("renders the forecast dashed with a tinted zone and a labeled separator", () => {
+    const labels = {
+      history: "History",
+      forecast: "Forecast",
+      confidence: "Confidence",
+      forecastStart: "Forecast start",
+      annotationUser: "User",
+      annotationLlm: "LLM",
+    };
+    const series = buildSeries(
+      timeline,
+      1,
+      palette,
+      [],
+      [],
+      labels,
+      { history: true, forecast: true, confidence: true },
+      null,
+    );
+    const forecast = series.find((item) => item.name === "Forecast") as
+      | DecoratedLine
+      | undefined;
+    const history = series.find((item) => item.name === "History") as
+      | DecoratedLine
+      | undefined;
+
+    expect(forecast?.lineStyle?.type).toEqual([5, 4]);
+    expect(forecast?.markLine?.label?.formatter).toBe("Forecast start");
+    expect(forecast?.markArea?.itemStyle?.color).toBe("zone");
+    expect(history?.areaStyle?.color?.colorStops).toEqual([
+      { offset: 0, color: "area-from" },
+      { offset: 1, color: "area-to" },
+    ]);
+    expect(history?.lineStyle?.type).toBeUndefined();
+  });
+
+  it("omits the forecast zone and separator without a separator timestamp", () => {
+    const labels = {
+      history: "History",
+      forecast: "Forecast",
+      confidence: "Confidence",
+      forecastStart: "Forecast start",
+      annotationUser: "User",
+      annotationLlm: "LLM",
+    };
+    const series = buildSeries(
+      timeline,
+      null,
+      palette,
+      [],
+      [],
+      labels,
+      { history: true, forecast: true, confidence: true },
+      null,
+    );
+    const forecast = series.find((item) => item.name === "Forecast") as
+      | DecoratedLine
+      | undefined;
+
+    expect(forecast?.markLine).toBeUndefined();
+    expect(forecast?.markArea).toBeUndefined();
   });
 });

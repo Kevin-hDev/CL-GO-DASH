@@ -1,5 +1,10 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ForecastChartCard } from "../charts/forecast-chart-card";
 import { ForecastEvaluationTable } from "./forecast-evaluation-table";
+import { ForecastReliabilityChart } from "./forecast-reliability-chart";
+import { buildReliabilityBars } from "./forecast-reliability-data";
+import { baselineTranslationKey } from "./forecast-evaluation-utils";
 import { useForecastEvaluation } from "./use-forecast-evaluation";
 import "./forecast-evaluation.css";
 
@@ -15,9 +20,13 @@ export function ForecastEvaluationView({ analysisId, mode }: ForecastEvaluationV
     ensembleRunning, ensembleFailed, createEnsemble,
   } =
     useForecastEvaluation(analysisId);
+  const [reliabilityResize, setReliabilityResize] = useState(0);
   const evaluation = analysis?.evaluation;
   const successfulModels = evaluation?.results.filter((result) =>
     result.kind === "model" && result.metrics !== null) ?? [];
+  const reliabilityBars = evaluation && analysis
+    ? buildReliabilityBars(evaluation.results, analysis.model)
+    : [];
 
   if (loading) {
     return <div className="fcwe-state">{t("forecast.workbench.evaluation.loading")}</div>;
@@ -85,6 +94,22 @@ export function ForecastEvaluationView({ analysisId, mode }: ForecastEvaluationV
             defaultValue: t("forecast.workbench.evaluation.planWarnings.unavailable"),
           })}
         </p>
+      ) : null}
+      {reliabilityBars.length ? (
+        <ForecastChartCard
+          title={t("forecast.chartCard.reliability")}
+          onExpanded={() => setReliabilityResize((value) => value + 1)}
+        >
+          <ForecastReliabilityChart
+            results={evaluation?.results ?? []}
+            currentModel={analysis.model}
+            resolveModel={(modelId) => {
+              const key = baselineTranslationKey(modelId);
+              return key ? t(key) : modelId;
+            }}
+            resizeSignal={reliabilityResize}
+          />
+        </ForecastChartCard>
       ) : null}
       {evaluation?.results.length ? (
         <ForecastEvaluationTable

@@ -12,6 +12,7 @@ import type {
   ForecastLayerState,
 } from "./forecast-layer-matrix";
 import { FilterGroup, FilterItem } from "./forecast-view-filter-items";
+import { buildForecastFilterChips } from "./forecast-filter-chip";
 import "./forecast-view-filters.css";
 
 interface ForecastViewFiltersProps {
@@ -95,6 +96,8 @@ export function ForecastViewFilters({
     },
   });
 
+  const chips = useMemo(() => buildForecastFilterChips(groups), [groups]);
+
   useEffect(() => {
     if (open) focusLocalListItem(floatingRef.current, pendingFocusDirection.current);
   }, [floatingRef, open]);
@@ -126,6 +129,7 @@ export function ForecastViewFilters({
                 label={item.label}
                 checked={Boolean(layers[item.id])}
                 disabled={!item.interactive}
+                chip={item.interactive ? chips.get(item.id) : undefined}
                 nav={nav}
                 onToggle={() =>
                   item.interactive

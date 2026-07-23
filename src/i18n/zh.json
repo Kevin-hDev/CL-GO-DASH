@@ -1175,7 +1175,28 @@
   },
   "forecast": {
     "chart": {
-      "resetZoom": "重置缩放"
+      "resetZoom": "重置缩放",
+      "forecastStart": "预测开始"
+    },
+    "chartCard": {
+      "main": "主图表",
+      "fan": "放大预测区间",
+      "seasonality": "季节性",
+      "reliability": "回测误差（sMAPE）",
+      "withSeries": "{{title}} — {{series}}",
+      "collapse": "折叠卡片",
+      "expand": "展开卡片"
+    },
+    "companion": {
+      "mean": "平均值",
+      "insufficientData": "数据不足，无法绘制此图表。",
+      "indexBase": "指数（首月 = 100）",
+      "showAll": "全部",
+      "showNone": "无"
+    },
+    "zoomJump": {
+      "goTo": "跳转到第 {{index}}/{{count}} 个位置",
+      "label": "缩放跳转"
     },
     "title": "预测",
     "noAnalysis": "没有正在进行的分析",
@@ -1328,6 +1349,7 @@
     },
     "view": {
       "period": "周期",
+      "detailedPredictions": "详细预测",
       "series": "序列",
       "historySeries": "历史",
       "forecastSeries": "预测",

@@ -1,10 +1,79 @@
 .fc-predictions-table {
   flex: 1 1 auto;
   min-height: 0;
+  /* Cap long horizons: the body scrolls instead of stretching the card. */
+  max-height: var(--forecast-predictions-table-max-height);
   overflow: auto;
   border-top: 1px solid var(--edge);
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+.fc-table-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 14px;
+  border: none;
+  border-top: 1px solid var(--edge);
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: var(--text-xs);
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color var(--ease-smooth), background var(--ease-smooth);
+}
+
+.fc-table-toggle:hover {
+  color: var(--ink);
+  background: var(--surface-hover);
+}
+
+.fc-table-toggle-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fc-table-toggle-count {
+  padding: 1px 6px;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-xs);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+.fc-table-toggle-chevron {
+  margin-left: auto;
+  color: var(--ink-faint);
+  transition: transform 350ms ease;
+}
+
+.fc-table-toggle-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.fc-table-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 350ms ease, opacity 350ms ease;
+}
+
+.fc-table-collapse.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.fc-table-collapse-inner {
+  overflow: hidden;
+  min-height: 0;
 }
 
 .fc-table-head {

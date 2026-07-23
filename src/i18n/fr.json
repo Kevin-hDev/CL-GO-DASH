@@ -1239,7 +1239,28 @@
   },
   "forecast": {
     "chart": {
-      "resetZoom": "Réinitialiser le zoom"
+      "resetZoom": "Réinitialiser le zoom",
+      "forecastStart": "Début prévision"
+    },
+    "chartCard": {
+      "main": "Graphe principal",
+      "fan": "Horizon zoomé",
+      "seasonality": "Saisonnalité",
+      "reliability": "Erreur du backtest (sMAPE)",
+      "withSeries": "{{title}} — {{series}}",
+      "collapse": "Replier la carte",
+      "expand": "Déplier la carte"
+    },
+    "companion": {
+      "mean": "moyenne",
+      "insufficientData": "Pas assez de données pour ce graphique.",
+      "indexBase": "Indice (premier mois = 100)",
+      "showAll": "Tout",
+      "showNone": "Rien"
+    },
+    "zoomJump": {
+      "goTo": "Aller à la position {{index}} sur {{count}}",
+      "label": "Raccourcis de zoom"
     },
     "title": "Forecast",
     "noAnalysis": "Aucune analyse en cours",
@@ -1403,6 +1424,7 @@
     },
     "view": {
       "period": "Période",
+      "detailedPredictions": "Prévisions détaillées",
       "series": "Série",
       "historySeries": "Historique",
       "forecastSeries": "Prévision",

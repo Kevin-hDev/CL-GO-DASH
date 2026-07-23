@@ -86,6 +86,7 @@
   --forecast-note-type-width: 8rem;
   --forecast-series-menu-width: 10rem;
   --forecast-evaluation-table-min-width: 48rem;
+  --forecast-predictions-table-max-height: 18.8889rem;
 
   --settings-content-max-width: 37.5rem;
   --settings-editor-min-height: 20rem;
