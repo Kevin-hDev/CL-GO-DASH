@@ -11,7 +11,7 @@ import { useCollapsiblePresence } from "./use-collapsible-presence";
 const RESULT_PREVIEW_TOOLS = new Set([
   "bash", "grep", "glob", "read_file", "list_dir",
   "read_spreadsheet", "read_document", "read_image",
-  "web_search", "web_fetch", "forecast", "forecast_read",
+  "web_search", "web_fetch", "forecast_data_audit", "forecast", "forecast_read",
 ]);
 
 // Outils dont le résultat texte est rendu en Markdown (style bulle, sans

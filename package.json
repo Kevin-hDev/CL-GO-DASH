@@ -15,6 +15,7 @@
     "test:coverage": "vitest run --coverage",
     "test:install": "bash scripts/test-install-sh.sh",
     "test:provider-usage": "node scripts/check-provider-usage.mjs",
+    "forecast:lock-runtimes": "bash scripts/forecast/lock-runtimes.sh",
     "test:watch": "vitest"
   },
   "dependencies": {

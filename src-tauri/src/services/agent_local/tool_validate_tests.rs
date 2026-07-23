@@ -130,17 +130,65 @@ mod tests {
     }
 
     #[test]
-    fn forecast_model_arg_is_ignored() {
-        let args = json!({
-            "target_column": "sales",
-            "date_column": "date",
-            "horizon": 7,
-            "frequency": "D",
-            "model": "chronos-bolt-small"
-        });
-        let cleaned = validate("forecast", &args).unwrap();
+    fn forecast_keeps_reusable_profile_and_read_pagination() {
+        let cleaned = validate(
+            "forecast",
+            &json!({
+                "data_profile_id": "profile-1",
+                "target_column": "sales",
+                "date_column": "date",
+                "horizon": 7,
+                "frequency": "D",
+                "confidence_level": 0.8
+            }),
+        )
+        .unwrap();
+        assert_eq!(cleaned["data_profile_id"], "profile-1");
 
-        assert!(cleaned.get("model").is_none());
+        let read = validate(
+            "forecast_read",
+            &json!({"analysis_id": "analysis-1", "offset": 200, "limit": 100}),
+        )
+        .unwrap();
+        assert_eq!(read["offset"], 200);
+        assert_eq!(read["limit"], 100);
+    }
+
+    #[test]
+    fn forecast_tools_enforce_declared_bounds() {
+        assert!(validate("forecast_read", &json!({"offset": -1})).is_err());
+        assert!(validate("forecast_read", &json!({"limit": 0})).is_err());
+        assert!(validate("forecast_read", &json!({"limit": 201})).is_err());
+        assert!(validate(
+            "forecast_data_audit",
+            &json!({
+                "data": "[]",
+                "target_column": "x".repeat(81),
+                "date_column": "date",
+                "horizon": 1,
+                "frequency": "D"
+            })
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn forecast_audit_rejects_existing_profile_ids() {
+        let cleaned = validate(
+            "forecast_data_audit",
+            &json!({
+                "data": "[]",
+                "data_profile_id": "profile-1",
+                "target_column": "sales",
+                "date_column": "date",
+                "horizon": 7,
+                "frequency": "D",
+                "confidence_level": 0.8
+            }),
+        )
+        .unwrap();
+
+        assert!(cleaned.get("data_profile_id").is_none());
     }
 
     #[test]

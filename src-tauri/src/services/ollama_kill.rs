@@ -1,8 +1,6 @@
 use std::path::PathBuf;
 use std::process::{Child, Command};
 use std::time::Duration;
-#[cfg(unix)]
-use sysinfo::{Pid, System};
 
 fn pid_file_path() -> PathBuf {
     crate::services::paths::data_dir().join("ollama-sidecar.pid")
@@ -48,7 +46,7 @@ pub fn kill_orphan_sidecar() {
         return;
     }
     eprintln!("[ollama] orphelin détecté pid={pid}, kill");
-    tree_kill(pid);
+    crate::services::process_tree::kill(pid, crate::services::process_tree::ProcessKind::Ollama);
 }
 
 fn is_ollama_process(pid: u32) -> bool {
@@ -76,91 +74,10 @@ fn is_ollama_process(pid: u32) -> bool {
     }
 }
 
-pub fn tree_kill(pid: u32) {
-    #[cfg(windows)]
-    {
-        let _ = Command::new("taskkill")
-            .args(["/PID", &pid.to_string(), "/F", "/T"])
-            .output();
-        eprintln!("[ollama] tree-kill Windows pid={pid}");
-    }
-
-    #[cfg(unix)]
-    {
-        let mut sys = System::new();
-        sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
-
-        let children = collect_children(&sys, Pid::from_u32(pid));
-        for &child_pid in children.iter().rev() {
-            let raw = child_pid.as_u32() as i32;
-            eprintln!("[ollama] kill child pid={raw}");
-            // SAFETY: `raw` is only passed as an OS pid; libc::kill touches no Rust memory.
-            unsafe {
-                libc::kill(raw, libc::SIGTERM);
-            }
-        }
-
-        // SAFETY: `pid` is only passed as an OS pid; libc::kill touches no Rust memory.
-        unsafe {
-            libc::kill(pid as i32, libc::SIGTERM);
-        }
-
-        let start = std::time::Instant::now();
-        while start.elapsed() < Duration::from_secs(3) {
-            // SAFETY: signal 0 checks process existence and does not touch memory.
-            if unsafe { libc::kill(pid as i32, 0) != 0 } {
-                eprintln!("[ollama] arbre pid={pid} arrêté");
-                return;
-            }
-            std::thread::sleep(Duration::from_millis(100));
-        }
-
-        for &child_pid in children.iter().rev() {
-            // SAFETY: child pids are only passed as OS pids; libc::kill touches no Rust memory.
-            unsafe {
-                libc::kill(child_pid.as_u32() as i32, libc::SIGKILL);
-            }
-        }
-        // SAFETY: `pid` is only passed as an OS pid; libc::kill touches no Rust memory.
-        unsafe {
-            libc::kill(pid as i32, libc::SIGKILL);
-        }
-        eprintln!("[ollama] SIGKILL arbre pid={pid}");
-    }
-}
-
-#[cfg(unix)]
-const MAX_CHILDREN: usize = 256;
-#[cfg(unix)]
-const MAX_DEPTH: u32 = 10;
-
-#[cfg(unix)]
-fn collect_children(sys: &System, parent: Pid) -> Vec<Pid> {
-    let mut result = Vec::new();
-    collect_children_inner(sys, parent, &mut result, 0);
-    result
-}
-
-#[cfg(unix)]
-fn collect_children_inner(sys: &System, parent: Pid, result: &mut Vec<Pid>, depth: u32) {
-    if depth >= MAX_DEPTH || result.len() >= MAX_CHILDREN {
-        return;
-    }
-    for (pid, proc) in sys.processes() {
-        if result.len() >= MAX_CHILDREN {
-            return;
-        }
-        if proc.parent() == Some(parent) {
-            result.push(*pid);
-            collect_children_inner(sys, *pid, result, depth + 1);
-        }
-    }
-}
-
 pub fn kill_process(child: &mut Child) {
     let pid = child.id();
     eprintln!("[ollama] kill sidecar pid={pid}");
-    tree_kill(pid);
+    crate::services::process_tree::kill(pid, crate::services::process_tree::ProcessKind::Ollama);
 
     let start = std::time::Instant::now();
     while start.elapsed() < Duration::from_secs(3) {

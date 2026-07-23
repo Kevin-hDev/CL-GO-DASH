@@ -13,19 +13,24 @@ const MAX_RETRIES: usize = 5;
 const RETRY_BASE_MS: u64 = 2000;
 
 fn is_retryable_error(error: &str) -> bool {
-    error.contains("429")
-        || error.contains("rate limit")
-        || error.contains("Rate limit")
-        || error.contains("503")
-        || error.contains("502")
-        || error.contains("timeout")
-        || error.contains("Timeout")
-        || error.contains("ETIMEDOUT")
-        || error.contains("ECONNRESET")
-        || error.contains("Transport error")
-        || error.contains("decoding response body")
-        || error.contains("connection closed")
-        || error.contains("SSE:")
+    let lower = error.to_ascii_lowercase();
+    [
+        "429",
+        "rate limit",
+        "503",
+        "502",
+        "timeout",
+        "etimedout",
+        "econnreset",
+        "transport error",
+        "decoding response body",
+        "connection closed",
+        "sse:",
+        "overloaded",
+        "temporarily unavailable",
+    ]
+    .iter()
+    .any(|marker| lower.contains(marker))
 }
 
 pub async fn retry_stream(
@@ -83,4 +88,21 @@ pub async fn retry_stream(
         }
     }
     Err(last_error)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_retryable_error;
+
+    #[test]
+    fn codex_overload_is_retryable() {
+        assert!(is_retryable_error(
+            "Codex: Our servers are currently overloaded. Please try again later."
+        ));
+    }
+
+    #[test]
+    fn permanent_request_errors_are_not_retried() {
+        assert!(!is_retryable_error("Codex: Invalid request."));
+    }
 }

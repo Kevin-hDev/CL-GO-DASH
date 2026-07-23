@@ -1,14 +1,13 @@
+use super::data_quality::{audit_request_data, DataProfile};
 use super::input_parse_utils::{
-    build_known_or_relative_dates, build_summary_bounds, collect_columns, read_target_value,
-    validate_columns, validate_multiseries_future_rows,
+    build_known_or_relative_dates, collect_columns, read_target_value, validate_columns,
+    validate_multiseries_future_rows,
 };
 use super::input_series::read_series_id;
 use super::types::{ForecastRequest, InputSummary, Prediction};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{BTreeSet, HashSet};
-
-const MAX_INPUT_ROWS: usize = 5_000;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct InputSnapshot {
@@ -36,17 +35,13 @@ pub struct ParsedInput {
     pub snapshot: InputSnapshot,
     pub history_rows: Vec<Value>,
     pub future_rows: Vec<Value>,
+    pub data_profile: DataProfile,
 }
 
 pub fn parse_request_input(request: &ForecastRequest) -> Result<ParsedInput, String> {
-    let json_str = request.data.as_ref().ok_or("Données JSON requises")?;
-    let rows: Vec<Value> =
-        serde_json::from_str(json_str).map_err(|_| "Données JSON invalides".to_string())?;
-    if rows.is_empty() {
-        return Err("Aucun point de données".into());
-    }
-    if rows.len() > MAX_INPUT_ROWS {
-        return Err("Jeu de données trop volumineux".into());
+    let (rows, data_profile) = audit_request_data(request)?;
+    if let Some(error) = data_profile.blocking_error() {
+        return Err(error);
     }
 
     let mut columns = Vec::new();
@@ -106,7 +101,8 @@ pub fn parse_request_input(request: &ForecastRequest) -> Result<ParsedInput, Str
 
     let future_dates = build_known_or_relative_dates(&history, &future_rows, request)?;
     validate_multiseries_future_rows(&future_rows, &history_series_ids, request)?;
-    let (start, end) = build_summary_bounds(&history);
+    let start = data_profile.start.clone();
+    let end = data_profile.end.clone();
 
     Ok(ParsedInput {
         values,
@@ -127,5 +123,6 @@ pub fn parse_request_input(request: &ForecastRequest) -> Result<ParsedInput, Str
         },
         history_rows,
         future_rows,
+        data_profile,
     })
 }

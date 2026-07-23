@@ -1,6 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
+import { useLatestRequest } from "@/hooks/use-latest-request";
+import {
+  FORECAST_ANALYSIS_CREATED,
+  FORECAST_ANALYSIS_DELETED,
+  FORECAST_ANALYSIS_UPDATED,
+  listenForecastAnalysisEvents,
+} from "@/lib/forecast-analysis-events";
 import { ForecastChart } from "../charts/forecast-chart";
 import { formatForecastValue, inferMetricMeta } from "../forecast-view-format";
 import { useForecastChartResize } from "../use-forecast-chart-resize";
@@ -20,8 +27,8 @@ import type {
 } from "./forecast-comparison-types";
 import "../forecast-view.css";
 import "./forecast-comparisons.css";
+import { MAX_FORECAST_COMPARISON_ANALYSES } from "../forecast-limits";
 
-const MAX_COMPARISON_ANALYSES = 80;
 
 interface ForecastComparisonsProps {
   analysisId: string;
@@ -34,25 +41,37 @@ export function ForecastComparisons({ analysisId }: ForecastComparisonsProps) {
   const [selectedId, setSelectedId] = useState("");
   const [selectedSeries, setSelectedSeries] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const runLatest = useLatestRequest();
   const chart = useForecastChartResize();
 
+  const load = useCallback(async () => {
+    try {
+      const data = await runLatest(() => loadComparisonData(analysisId));
+      if (data === undefined) return;
+      setCurrent(data.current);
+      setAnalyses(data.analyses);
+      setSelectedSeries(data.current.input_data.series_ids?.[0] ?? "");
+      setError(null);
+    } catch {
+      setError(t("forecast.comparisons.loadFailed"));
+    }
+  }, [analysisId, runLatest, t]);
+
   useEffect(() => {
-    let active = true;
-    void loadComparisonData(analysisId)
-      .then((data) => {
-        if (!active) return;
-        setCurrent(data.current);
-        setAnalyses(data.analyses);
-        setSelectedSeries(data.current.input_data.series_ids?.[0] ?? "");
-        setError(null);
-      })
-      .catch(() => {
-        if (active) setError(t("forecast.comparisons.loadFailed"));
-      });
+    const timer = window.setTimeout(() => void load(), 0);
+    const cleanup = listenForecastAnalysisEvents(
+      [
+        FORECAST_ANALYSIS_CREATED,
+        FORECAST_ANALYSIS_UPDATED,
+        FORECAST_ANALYSIS_DELETED,
+      ],
+      () => void load(),
+    );
     return () => {
-      active = false;
+      window.clearTimeout(timer);
+      cleanup();
     };
-  }, [analysisId, t]);
+  }, [load]);
 
   const seriesIds = current?.input_data.series_ids ?? [];
   const options = useMemo(
@@ -143,7 +162,7 @@ export function ForecastComparisons({ analysisId }: ForecastComparisonsProps) {
 async function loadComparisonData(analysisId: string) {
   const current = await invoke<ForecastComparisonAnalysis>("get_forecast_analysis", { id: analysisId });
   const metas = await invoke<ForecastComparisonMeta[]>("list_forecast_analyses");
-  const safeMetas = metas.slice(0, MAX_COMPARISON_ANALYSES);
+  const safeMetas = metas.slice(-MAX_FORECAST_COMPARISON_ANALYSES);
   const loaded = await Promise.allSettled(
     safeMetas.map((meta) => invoke<ForecastComparisonAnalysis>("get_forecast_analysis", { id: meta.id })),
   );

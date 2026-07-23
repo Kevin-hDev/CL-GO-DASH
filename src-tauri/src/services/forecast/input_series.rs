@@ -12,7 +12,7 @@ pub fn read_series_id(
     normalize_series_value(value)
 }
 
-fn normalize_series_value(value: &Value) -> Result<Option<String>, String> {
+pub fn normalize_series_value(value: &Value) -> Result<Option<String>, String> {
     match value {
         Value::String(raw) => {
             let trimmed = raw.trim();

@@ -13,7 +13,10 @@ import {
   readFirstAnnotationId,
   readSeriesId,
 } from "./forecast-chart-events";
-import { buildForecastChartOption } from "./forecast-chart-option";
+import {
+  buildForecastChartOption,
+  forecastXAxisSplitNumber,
+} from "./forecast-chart-option";
 import { buildForecastChartPalette } from "./forecast-chart-palette";
 import type { ForecastChartProps } from "./forecast-chart-types";
 import {
@@ -22,7 +25,6 @@ import {
 } from "./forecast-chart-zoom-utils";
 import { useForecastChartZoom } from "./use-forecast-chart-zoom";
 import "./forecast-chart.css";
-
 echarts.use([
   CanvasRenderer,
   LineChart,
@@ -37,6 +39,7 @@ export function ForecastChart(props: ForecastChartProps) {
   const chartRef = useRef<EChartsType | null>(null);
   const propsRef = useRef(props);
   const zoomWindowRef = useRef({ start: 0, end: 100 });
+  const widthBucketRef = useRef(0);
   const zoomSignature = buildZoomSignature(props);
   const handleZoomRefChange = useCallback((window: { start: number; end: number }) => {
     zoomWindowRef.current = window;
@@ -85,17 +88,18 @@ export function ForecastChart(props: ForecastChartProps) {
     let disposed = false;
     let frameId = 0;
     const observer = new ResizeObserver(() => {
-      if (chartRef.current) {
-        chartRef.current.resize();
-        applyOptions();
-        return;
-      }
-      ensureChart();
+      if (!chartRef.current) return ensureChart();
+      chartRef.current.resize();
+      const nextBucket = forecastXAxisSplitNumber(container.clientWidth);
+      if (nextBucket === widthBucketRef.current) return;
+      widthBucketRef.current = nextBucket;
+      applyOptions();
     });
 
     const applyOptions = () => {
       if (!chartRef.current || !containerRef.current) return;
       const root = getComputedStyle(containerRef.current);
+      widthBucketRef.current = forecastXAxisSplitNumber(containerRef.current.clientWidth);
       chartRef.current.setOption(buildForecastChartOption({
         ...propsRef.current,
         palette: buildForecastChartPalette(root),

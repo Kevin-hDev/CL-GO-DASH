@@ -3,16 +3,11 @@ import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { Tooltip } from "@/components/ui/tooltip";
+import {
+  newestForecastAnalyses,
+  type ForecastAnalysisMeta,
+} from "./forecast-empty-recent";
 import "./forecast-empty.css";
-
-interface ForecastAnalysisMeta {
-  id: string;
-  name: string;
-  created_at: string;
-  model: string;
-  horizon: number;
-  mape: number | null;
-}
 
 interface ForecastEmptyProps {
   onLoadAnalysis: (id: string) => void;
@@ -74,7 +69,7 @@ export function ForecastEmpty({ onLoadAnalysis, onImportFile, error }: ForecastE
       {recent.length > 0 && (
         <div className="fc-recent">
           <p className="fc-recent-title">{t("forecast.recentAnalyses")}</p>
-          {recent.slice(0, 5).map((a) => (
+          {newestForecastAnalyses(recent).map((a) => (
             <button key={a.id} className="fc-recent-item" onClick={() => onLoadAnalysis(a.id)}>
               <span className="fc-recent-name">{a.name}</span>
               <span className="fc-recent-meta">

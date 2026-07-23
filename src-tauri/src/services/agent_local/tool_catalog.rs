@@ -11,7 +11,7 @@ pub struct ToolCatalogEntry {
     pub group: &'static str,
 }
 
-pub const MAX_OPTIONAL_TOOLS: usize = 31;
+pub const MAX_OPTIONAL_TOOLS: usize = 34;
 pub const SUBAGENT_TOOLS: &[&str] = &[
     "delegate_task",
     "list_subagents",
@@ -59,10 +59,13 @@ const OPTIONAL_TOOLS: &[ToolCatalogEntry] = &[
     optional_off("agent_diagnostics", "todo"),
     optional_off("create_branch", "git"),
     optional_off("checkout_branch", "git"),
+    optional_off("forecast_data_audit", "forecast"),
     optional_off("forecast", "forecast"),
     optional_off("forecast_models", "forecast"),
     optional_off("forecast_analyze", "forecast"),
     optional_off("forecast_read", "forecast"),
+    optional_off("forecast_backtest", "forecast"),
+    optional_off("forecast_compare_models", "forecast"),
     optional_off("read_spreadsheet", "office"),
     optional_off("write_spreadsheet", "office"),
     optional_off("read_document", "office"),

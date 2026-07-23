@@ -6,14 +6,18 @@ fn request() -> ForecastRequest {
     ForecastRequest {
         data: Some(r#"[{"date":"2026-05-01","sales":100}]"#.to_string()),
         file_path: Some("  ".into()),
+        data_profile_id: None,
         target_column: " sales ".into(),
         date_column: " date ".into(),
         series_column: Some("  ".into()),
         covariate_columns: vec![" ".into(), " temp ".into()],
         horizon: 3,
         frequency: " D ".into(),
-        model: Some(" kairos-10m ".into()),
-        confidence_level: 0.9,
+        model: Some(" tirex-35m ".into()),
+        confidence_level: 0.8,
+        selection_id: None,
+        selection_source: None,
+        selection_reason_codes: Vec::new(),
     }
 }
 
@@ -25,7 +29,7 @@ fn drops_blank_optional_fields() {
 
     assert_eq!(request.file_path, None);
     assert_eq!(request.series_column, None);
-    assert_eq!(request.model.as_deref(), Some("kairos-10m"));
+    assert_eq!(request.model.as_deref(), Some("tirex-35m"));
 }
 
 #[test]

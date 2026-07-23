@@ -6,6 +6,7 @@ fn make_request(path: &str) -> ForecastRequest {
     ForecastRequest {
         data: None,
         file_path: Some(path.to_string()),
+        data_profile_id: None,
         target_column: "sales".into(),
         date_column: "date".into(),
         series_column: None,
@@ -14,6 +15,9 @@ fn make_request(path: &str) -> ForecastRequest {
         frequency: "D".into(),
         model: Some("chronos-bolt-small".into()),
         confidence_level: 0.9,
+        selection_id: None,
+        selection_source: None,
+        selection_reason_codes: Vec::new(),
     }
 }
 

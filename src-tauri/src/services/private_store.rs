@@ -31,6 +31,12 @@ pub async fn atomic_write_async(path: PathBuf, bytes: Vec<u8>) -> Result<(), Str
         .map_err(|_| "stockage privé indisponible".to_string())?
 }
 
+pub async fn ensure_private_dir_async(path: PathBuf) -> Result<(), String> {
+    tokio::task::spawn_blocking(move || create_private_dirs(&path))
+        .await
+        .map_err(|_| "stockage privé indisponible".to_string())?
+}
+
 pub fn repair_path(path: &Path) -> Result<(), String> {
     if !path.exists() {
         return Ok(());
@@ -41,7 +47,11 @@ pub fn repair_path(path: &Path) -> Result<(), String> {
 pub fn repair_app_storage() -> Result<(), String> {
     let root = crate::services::paths::data_dir();
     create_private_dirs(&root)?;
-    for directory in [root.join("agent-sessions"), root.join("logs")] {
+    for directory in [
+        root.join("agent-sessions"),
+        root.join("forecast-notes"),
+        root.join("logs"),
+    ] {
         create_private_dirs(&directory)?;
     }
     for file in [

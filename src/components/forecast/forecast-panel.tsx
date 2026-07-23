@@ -1,8 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
-import { PanelRightOpen, PanelRightClose } from "@/components/ui/icons";
-import { Tooltip } from "@/components/ui/tooltip";
 import type { ForecastSection } from "@/hooks/use-forecast-panel";
 import { ForecastHeader } from "./forecast-header";
 import { ForecastEmpty } from "./forecast-empty";
@@ -22,26 +20,23 @@ import { useForecastLayerSources } from "./use-forecast-layer-sources";
 import { ForecastSectionRouter } from "./forecast-section-router";
 import { useCurrentForecastAnalysisName } from "./use-current-forecast-analysis-name";
 import { useForecastExport } from "./use-forecast-export";
-import { useSelectedForecastModel } from "./use-selected-forecast-model";
+import { useForecastSelectionPolicy } from "./model-selection/use-forecast-selection-policy";
 import "./forecast-panel.css";
 
 interface ForecastPanelProps {
   activeSection: ForecastSection;
   navOpen: boolean;
   currentAnalysisId: string | null;
-  fullscreen: boolean;
   onSectionChange: (section: ForecastSection) => void;
   onToggleNav: () => void;
   onLoadAnalysis: (id: string) => void;
-  onFocusAnalysis: (id: string) => void;
-  onPanelExtraWidthChange: (width: number) => void;
   onCloseAnalysis: () => void;
-  onFullscreenChange: (fs: boolean) => void;
+  onOpenWorkbench: () => void;
 }
 
 export function ForecastPanel({
-  activeSection, navOpen, currentAnalysisId, fullscreen,
-  onSectionChange, onToggleNav, onLoadAnalysis, onFocusAnalysis, onPanelExtraWidthChange, onCloseAnalysis, onFullscreenChange,
+  activeSection, navOpen, currentAnalysisId,
+  onSectionChange, onToggleNav, onLoadAnalysis, onCloseAnalysis, onOpenWorkbench,
 }: ForecastPanelProps) {
   const { t } = useTranslation();
   const hasAnalysis = currentAnalysisId !== null;
@@ -49,9 +44,15 @@ export function ForecastPanel({
   const [launching, setLaunching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [layers, setLayers] = useState<ForecastLayerState>(createInitialLayerState);
-  const [scenarioPickerOpen, setScenarioPickerOpen] = useState(false);
   const handleExport = useForecastExport();
-  const { selectedModelId, selectModel, ready: selectedModelReady } = useSelectedForecastModel();
+  const {
+    policy,
+    selectedModelId,
+    selectModel,
+    setMode,
+    setCloudAllowed,
+    ready: selectedModelReady,
+  } = useForecastSelectionPolicy();
   const currentAnalysisName = useCurrentForecastAnalysisName(currentAnalysisId);
   const layerSources = useForecastLayerSources(currentAnalysisId, setLayers);
   const filterGroups = buildForecastLayerGroups(
@@ -100,21 +101,15 @@ export function ForecastPanel({
     }
   };
 
-  useEffect(() => {
-    const nextWidth = activeSection === "scenarios" && scenarioPickerOpen ? 320 : 0;
-    onPanelExtraWidthChange(nextWidth);
-  }, [activeSection, scenarioPickerOpen, onPanelExtraWidthChange]);
-
   return (
     <div className="fc-panel">
       <ForecastHeader
         activeSection={activeSection}
         navOpen={navOpen}
         hasAnalysis={hasAnalysis}
-        fullscreen={fullscreen}
-        contextLabel={activeSection === "scenarios" || activeSection === "comparisons" ? currentAnalysisName : null}
+        contextLabel={activeSection === "comparisons" ? currentAnalysisName : null}
         filterSlot={
-          hasAnalysis ? (
+          hasAnalysis && activeSection === "view" ? (
             <ForecastViewFilters
               groups={filterGroups}
               layers={layers}
@@ -122,22 +117,11 @@ export function ForecastPanel({
             />
           ) : null
         }
-        rightSlot={
-          activeSection === "scenarios" && hasAnalysis ? (
-            <Tooltip label={t("forecast.scenarios.togglePredictions")} align="right">
-              <button
-                className={`icon-btn fp-icon-btn ${scenarioPickerOpen ? "fp-icon-btn-active" : ""}`}
-                onClick={() => setScenarioPickerOpen((open) => !open)}
-              >
-                {scenarioPickerOpen ? <PanelRightClose size="var(--icon-md)" /> : <PanelRightOpen size="var(--icon-md)" />}
-              </button>
-            </Tooltip>
-          ) : null
-        }
+        rightSlot={null}
         onToggleNav={onToggleNav}
         onSectionChange={onSectionChange}
         onCloseAnalysis={onCloseAnalysis}
-        onFullscreenChange={onFullscreenChange}
+        onOpenWorkbench={onOpenWorkbench}
       />
       <div className="fc-body">
         {draft ? (
@@ -145,7 +129,8 @@ export function ForecastPanel({
             draft={draft}
             launching={launching}
             error={error}
-            defaultModelId={selectedModelId}
+            defaultModelId={policy.mode === "manual" ? selectedModelId : ""}
+            selectFallbackModel={policy.mode === "manual"}
             onModelChange={handleSelectModel}
             onLaunch={(config) => void handleLaunch(config)}
             onBack={() => setDraft(null)}
@@ -162,9 +147,6 @@ export function ForecastPanel({
             analysisId={currentAnalysisId}
             layers={layers}
             onLoadAnalysis={onLoadAnalysis}
-            onFocusAnalysis={onFocusAnalysis}
-            onAnalysisChanged={() => void layerSources.refresh()}
-            scenarioPickerOpen={scenarioPickerOpen}
           />
         )}
       </div>
@@ -173,8 +155,12 @@ export function ForecastPanel({
           {activeSection === "view" && (
             <ForecastModelSelector
               selectedModelId={selectedModelId}
+              selectionMode={policy.mode}
+              allowCloudInAuto={policy.allow_cloud_in_auto}
               selectionReady={selectedModelReady}
               onSelectModel={handleSelectModel}
+              onModeChange={setMode}
+              onCloudAllowedChange={setCloudAllowed}
             />
           )}
           <ExportDropdown

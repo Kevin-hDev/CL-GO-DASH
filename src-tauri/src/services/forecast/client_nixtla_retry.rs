@@ -5,8 +5,8 @@ use zeroize::Zeroizing;
 
 use crate::services::secure_http::{AuthenticatedClient, SecureHttpError};
 
-const REQUEST_TIMEOUT: Duration = Duration::from_secs(120);
-const RETRY_DELAYS_SECS: [u64; 5] = [2, 4, 8, 16, 32];
+const REQUEST_TIMEOUT: Duration = Duration::from_secs(60);
+const RETRY_DELAYS_SECS: [u64; 2] = [2, 4];
 
 pub async fn post_json_with_retry(
     client: &AuthenticatedClient,

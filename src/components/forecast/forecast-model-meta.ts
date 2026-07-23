@@ -21,15 +21,23 @@ export interface ForecastModelEntry {
   frequencies: string;
   is_cloud: boolean;
   installed: boolean;
+  runtime_ready: boolean;
   installable?: boolean;
   runnable?: boolean;
   size_on_disk?: number;
   provider_configured?: boolean;
   engine_kind?: string;
   config_params?: string[];
+  interval_support?: "continuous" | "central_60_or_80";
+  interval_capability?: {
+    mode: "continuous" | "fixed_grid";
+    supported_confidence_levels: number[];
+    confidence_step: number | null;
+  };
   capabilities?: {
     past_covariates: boolean;
     future_covariates: boolean;
+    multi_series: boolean;
     multivariate: boolean;
     probabilistic: boolean;
     backtesting_ready: boolean;
@@ -41,6 +49,7 @@ export interface ForecastModelEntry {
 export interface ForecastCapabilitySet {
   context: boolean;
   futureContext: boolean;
+  multiSeries: boolean;
   multivariate: boolean;
   probabilistic: boolean;
   backtesting: boolean;
@@ -119,7 +128,14 @@ export function listForecastFamilies(models: ForecastModelEntry[]): ForecastMode
 
 export function isForecastModelSelectable(model: ForecastModelEntry): boolean {
   if (!model.runnable) return false;
-  return model.is_cloud ? Boolean(model.provider_configured) : model.installed;
+  return model.is_cloud
+    ? Boolean(model.provider_configured)
+    : model.installed && model.runtime_ready === true;
+}
+
+export function isForecastModelConfigurable(model: ForecastModelEntry): boolean {
+  if (model.is_cloud) return Boolean(model.provider_configured && model.runnable);
+  return model.installed && model.installable !== false;
 }
 
 export function getForecastModelSummaryKey(modelId: string): string {
@@ -138,6 +154,7 @@ export function getModelCapabilities(model: ForecastModelEntry): ForecastCapabil
   return {
     context: Boolean(caps?.past_covariates),
     futureContext: Boolean(caps?.future_covariates),
+    multiSeries: Boolean(caps?.multi_series),
     multivariate: Boolean(caps?.multivariate),
     probabilistic: Boolean(caps?.probabilistic),
     backtesting: Boolean(caps?.backtesting_ready),

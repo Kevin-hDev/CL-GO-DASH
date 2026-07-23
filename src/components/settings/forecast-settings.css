@@ -39,6 +39,14 @@
   margin-bottom: 16px;
 }
 
+.fs-delete-model {
+  margin-right: auto;
+}
+
+.fs-delete-model[data-confirming="true"] {
+  background: var(--surface-hover);
+}
+
 .fs-back {
   background: none;
   border: none;

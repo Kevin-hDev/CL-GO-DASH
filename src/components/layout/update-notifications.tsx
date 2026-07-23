@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import type { AppUpdate, OllamaModelUpdate, OllamaBinaryUpdate, PullingState } from "@/hooks/use-update-checker";
+import type { ForecastDevUpdate } from "@/hooks/use-forecast-dev-updates";
 import { BubbleItem, type ItemData } from "./bubble-item";
 import "./update-notifications.css";
 import "./update-notifications-controls.css";
@@ -11,6 +12,7 @@ interface UpdateNotificationsProps {
   appUpdate: AppUpdate | null;
   ollamaBinaryUpdate: OllamaBinaryUpdate | null;
   ollamaUpdates: OllamaModelUpdate[];
+  forecastDevUpdates: ForecastDevUpdate[];
   pulling: PullingState | null;
   ollamaBinaryUpdating: boolean;
   ollamaBinaryPercent: number;
@@ -24,7 +26,7 @@ interface UpdateNotificationsProps {
 
 export function UpdateNotifications({
   isOpen, onClose,
-  appUpdate, ollamaBinaryUpdate, ollamaUpdates,
+  appUpdate, ollamaBinaryUpdate, ollamaUpdates, forecastDevUpdates,
   pulling, ollamaBinaryUpdating, ollamaBinaryPercent,
   appDownloading, appPercent,
   onPullModel, onDownloadApp, onUpdateOllamaBinary,
@@ -34,7 +36,9 @@ export function UpdateNotifications({
   const [closing, setClosing] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
-  const items = buildItems(t, i18n.language, appUpdate, ollamaBinaryUpdate, ollamaUpdates);
+  const items = buildItems(
+    t, i18n.language, appUpdate, ollamaBinaryUpdate, ollamaUpdates, forecastDevUpdates,
+  );
   const maxDelay = items.length * 80;
   const closeDelay = maxDelay + 400;
 
@@ -90,6 +94,7 @@ function buildItems(
   app: AppUpdate | null,
   binary: OllamaBinaryUpdate | null,
   models: OllamaModelUpdate[],
+  forecastUpdates: ForecastDevUpdate[],
 ): ItemData[] {
   const items: ItemData[] = [];
   if (app) {
@@ -123,5 +128,20 @@ function buildItems(
       fullName: m.fullName,
     });
   }
+  for (const update of forecastUpdates) {
+    const current = shortVersion(update.current);
+    const latest = shortVersion(update.latest);
+    items.push({
+      id: `forecast-dev-${update.id}`,
+      type: "forecast-dev",
+      name: update.displayName,
+      sub: `${t(`updates.forecastDev${update.kind === "model" ? "Model" : "Runtime"}`)} · ${current} → ${latest}`,
+      sourceUrl: update.sourceUrl,
+    });
+  }
   return items;
+}
+
+function shortVersion(value: string): string {
+  return /^[a-f\d]{40}$/i.test(value) ? value.slice(0, 7) : value;
 }

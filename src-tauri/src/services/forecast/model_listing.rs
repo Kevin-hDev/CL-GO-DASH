@@ -1,5 +1,4 @@
-use super::{catalog, model_manager, registry, sidecar_runtime};
-use crate::services::paths::data_dir;
+use super::{catalog, model_manager, registry};
 use serde_json::Value;
 
 pub fn list_models() -> Value {
@@ -42,6 +41,7 @@ fn enrich_model_object(
     let runtime = registry::find_runtime(model.id);
     let installed_model = model_manager::is_installed(model.id);
     let provider_configured = configured.iter().any(|id| id == model.provider_id);
+    let runtime_ready = runtime_ready_state(model, runtime, provider_configured);
     if let Some(runtime) = runtime {
         object.insert(
             "engine_kind".into(),
@@ -63,6 +63,14 @@ fn enrich_model_object(
         "family_id".into(),
         Value::String(model.family_id.to_string()),
     );
+    object.insert(
+        "interval_support".into(),
+        Value::String(super::validation::interval_support(model.id).to_string()),
+    );
+    object.insert(
+        "interval_capability".into(),
+        serde_json::to_value(super::interval_capability::for_model(model.id)).unwrap_or_default(),
+    );
     object.insert("installed".into(), Value::Bool(installed_model));
     object.insert("installable".into(), Value::Bool(installable(model)));
     object.insert(
@@ -72,16 +80,10 @@ fn enrich_model_object(
             runtime,
             installed_model,
             provider_configured,
+            runtime_ready,
         )),
     );
-    object.insert(
-        "runtime_ready".into(),
-        Value::Bool(runtime_ready_state(
-            runtime,
-            installed_model,
-            provider_configured,
-        )),
-    );
+    object.insert("runtime_ready".into(), Value::Bool(runtime_ready));
     object.insert(
         "size_on_disk".into(),
         Value::Number(model_manager::get_model_size(model.id).into()),
@@ -96,6 +98,7 @@ fn empty_capabilities() -> Value {
     serde_json::json!({
         "past_covariates": false,
         "future_covariates": false,
+        "multi_series": false,
         "multivariate": false,
         "probabilistic": false,
         "backtesting_ready": false,
@@ -113,19 +116,22 @@ fn runnable_state(
     runtime: Option<&registry::ForecastRuntimeSpec>,
     installed: bool,
     provider_configured: bool,
+    runtime_ready: bool,
 ) -> bool {
     match runtime {
         Some(spec) if registry::is_cloud(spec) => {
             registry::has_predict_adapter(spec) && provider_configured
         }
-        Some(spec) => registry::has_predict_adapter(spec) && !model.is_cloud && installed,
+        Some(spec) => {
+            registry::has_predict_adapter(spec) && !model.is_cloud && installed && runtime_ready
+        }
         None => false,
     }
 }
 
 fn runtime_ready_state(
+    model: &catalog::ForecastModelSpec,
     runtime: Option<&registry::ForecastRuntimeSpec>,
-    installed: bool,
     provider_configured: bool,
 ) -> bool {
     let Some(spec) = runtime else {
@@ -134,10 +140,9 @@ fn runtime_ready_state(
     if registry::is_cloud(spec) {
         return registry::has_predict_adapter(spec) && provider_configured;
     }
-    registry::has_predict_adapter(spec)
-        && installed
-        && sidecar_runtime::family_runtime_ready(
-            &data_dir().join("forecast-sidecar"),
-            spec.family_id,
-        )
+    registry::has_predict_adapter(spec) && model_manager::is_ready(model.id)
 }
+
+#[cfg(test)]
+#[path = "model_listing_tests.rs"]
+mod tests;

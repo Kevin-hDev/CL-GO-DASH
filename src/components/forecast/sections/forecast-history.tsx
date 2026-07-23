@@ -1,6 +1,13 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
+import { useLatestRequest } from "@/hooks/use-latest-request";
+import {
+  FORECAST_ANALYSIS_CREATED,
+  FORECAST_ANALYSIS_DELETED,
+  FORECAST_ANALYSIS_UPDATED,
+  listenForecastAnalysisEvents,
+} from "@/lib/forecast-analysis-events";
 import { ForecastHistoryRow } from "./forecast-history-row";
 import "../forecast-sections.css";
 import "../forecast-history.css";
@@ -25,12 +32,38 @@ export function ForecastHistory({ onLoadAnalysis }: ForecastHistoryProps) {
   const [analyses, setAnalyses] = useState<AnalysisMeta[]>([]);
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const runLatest = useLatestRequest();
+
+  const load = useCallback(async () => {
+    try {
+      const next = await runLatest(
+        () => invoke<AnalysisMeta[]>("list_forecast_analyses"),
+      );
+      if (next === undefined) return;
+      setAnalyses([...next].sort((left, right) => (
+        right.created_at.localeCompare(left.created_at)
+      )));
+      setError(null);
+    } catch {
+      setError(t("forecast.analysis.loadFailed"));
+    }
+  }, [runLatest, t]);
 
   useEffect(() => {
-    invoke<AnalysisMeta[]>("list_forecast_analyses")
-      .then(setAnalyses)
-      .catch(() => {});
-  }, []);
+    const timer = window.setTimeout(() => void load(), 0);
+    const cleanup = listenForecastAnalysisEvents(
+      [
+        FORECAST_ANALYSIS_CREATED,
+        FORECAST_ANALYSIS_UPDATED,
+        FORECAST_ANALYSIS_DELETED,
+      ],
+      () => void load(),
+    );
+    return () => {
+      window.clearTimeout(timer);
+      cleanup();
+    };
+  }, [load]);
 
   const filtered = search
     ? analyses.filter((a) => a.name.toLowerCase().includes(search.toLowerCase()))

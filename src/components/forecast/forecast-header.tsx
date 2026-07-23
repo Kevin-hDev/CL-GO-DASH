@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Maximize2, Minimize2 } from "@/components/ui/icons";
+import { ArrowSquareOut } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
 import type { ForecastSection } from "@/hooks/use-forecast-panel";
 import { ForecastNav } from "./forecast-nav";
@@ -9,28 +9,26 @@ interface ForecastHeaderProps {
   activeSection: ForecastSection;
   navOpen: boolean;
   hasAnalysis: boolean;
-  fullscreen: boolean;
   contextLabel?: string | null;
   filterSlot?: ReactNode;
   rightSlot?: ReactNode;
   onToggleNav: () => void;
   onSectionChange: (section: ForecastSection) => void;
   onCloseAnalysis: () => void;
-  onFullscreenChange: (fs: boolean) => void;
+  onOpenWorkbench: () => void;
 }
 
 export function ForecastHeader({
   activeSection,
   navOpen,
   hasAnalysis,
-  fullscreen,
   contextLabel,
   filterSlot,
   rightSlot,
   onToggleNav,
   onSectionChange,
   onCloseAnalysis,
-  onFullscreenChange,
+  onOpenWorkbench,
 }: ForecastHeaderProps) {
   const { t } = useTranslation();
   return (
@@ -49,12 +47,14 @@ export function ForecastHeader({
       </div>
       <div className="fc-head-actions">
         {rightSlot}
-        <Tooltip label={fullscreen ? t("a11y.minimize") : t("a11y.maximize")} align="right">
+        <Tooltip label={t("forecast.workbench.open")} align="right">
           <button
             className="icon-btn fp-icon-btn"
-            onClick={() => onFullscreenChange(!fullscreen)}
+            type="button"
+            aria-label={t("forecast.workbench.open")}
+            onClick={onOpenWorkbench}
           >
-            {fullscreen ? <Minimize2 size="var(--icon-md)" /> : <Maximize2 size="var(--icon-md)" />}
+            <ArrowSquareOut size="var(--icon-md)" />
           </button>
         </Tooltip>
         {hasAnalysis && (

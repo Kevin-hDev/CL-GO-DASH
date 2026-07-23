@@ -1,5 +1,5 @@
 import { buildPeriodMeta, formatForecastValue, type ForecastMetricMeta } from "../forecast-view-format";
-import type { AnalysisCard, AnalysisEvent, ForecastAnalysisData, ForecastAnalysisPoint, VariableInsight } from "./forecast-analysis-types";
+import type { AnalysisCard, AnalysisEvent, ForecastAnalysisData, ForecastAnalysisPoint } from "./forecast-analysis-types";
 
 export function filterAnalysisPoints(points: ForecastAnalysisPoint[], seriesId: string) {
   if (!seriesId) return points;
@@ -80,53 +80,6 @@ export function buildHighlightEvents(
   ];
 }
 
-export function buildAnomalyEvents(points: ForecastAnalysisPoint[], locale: string, metric: ForecastMetricMeta, t: (key: string) => string): AnalysisEvent[] {
-  const values = points.map((point) => point.value);
-  const mean = averageOf(values);
-  const deviation = stddev(values, mean);
-  if (deviation <= 0) return [];
-  return points
-    .map((point, index) => ({ point, index, score: Math.abs((point.value - mean) / deviation) }))
-    .filter((item) => item.score >= 1.8)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 5)
-    .map((item) => ({
-      id: `anomaly-${item.index}`,
-      label: t("forecast.analysis.unusualPoint"),
-      value: formatForecastValue(item.point.value, locale, metric),
-      meta: item.point.date,
-      severity: item.score >= 2.6 ? "high" : item.score >= 2.1 ? "medium" : "low",
-    }));
-}
-
-export function buildVariableInsights(data: ForecastAnalysisData, selectedSeries: string, t: (key: string, values?: Record<string, unknown>) => string): VariableInsight[] {
-  const rows = data.input_data.rows ?? [];
-  return (data.covariates_used ?? [])
-    .map((name) => scoreVariable(name, rows, selectedSeries, data.series_column, t))
-    .filter((item): item is VariableInsight => item !== null)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 6);
-}
-
-function scoreVariable(name: string, rows: Record<string, unknown>[], seriesId: string, seriesColumn: string | null | undefined, t: (key: string, values?: Record<string, unknown>) => string): VariableInsight | null {
-  const values = rows
-    .filter((row) => matchesSeries(row, seriesId, seriesColumn))
-    .map((row) => Number(row[name]))
-    .filter(Number.isFinite);
-  if (values.length < 2) return null;
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const score = max - min;
-  return { name, score, detail: t("forecast.analysis.variableRange", { min: min.toFixed(2), max: max.toFixed(2) }) };
-}
-
-function matchesSeries(row: Record<string, unknown>, seriesId: string, seriesColumn: string | null | undefined): boolean {
-  if (!seriesId || !seriesColumn) return true;
-  const value = row[seriesColumn];
-  if (value == null) return true;
-  return typeof value === "string" || typeof value === "number" ? String(value) === seriesId : false;
-}
-
 function event(id: string, label: string, index: number, value: number, predictions: ForecastAnalysisPoint[], endDate: string, frequency: string, locale: string, metric: ForecastMetricMeta): AnalysisEvent {
   const point = predictions[index] ?? predictions[0];
   const period = buildPeriodMeta(index, point.date, endDate, frequency, locale);
@@ -141,8 +94,4 @@ function directionKey(percent: number) {
 
 function averageOf(values: number[]) {
   return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
-}
-
-function stddev(values: number[], mean: number) {
-  return Math.sqrt(averageOf(values.map((value) => (value - mean) ** 2)));
 }

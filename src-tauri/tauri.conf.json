@@ -42,7 +42,10 @@
     ],
     "resources": [
       "default-skills/**/*",
-      "resources/forecast-sidecar/**/*",
+      "resources/forecast-sidecar/server.py",
+      "resources/forecast-sidecar/test_model_smoke.py",
+      "resources/forecast-sidecar/requirements.txt",
+      "resources/forecast-sidecar/forecast_runtime/**/*",
       "resources/searxng-sidecar/**/*"
     ],
     "macOS": {

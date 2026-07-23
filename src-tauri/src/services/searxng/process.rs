@@ -1,4 +1,4 @@
-use crate::services::{ollama_kill, paths::data_dir};
+use crate::services::paths::data_dir;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::time::{Duration, Instant};
@@ -30,7 +30,7 @@ pub fn kill_orphan_sidecar() {
         return;
     }
     eprintln!("[searxng] orphelin détecté pid={pid}, kill");
-    ollama_kill::tree_kill(pid);
+    crate::services::process_tree::kill(pid, crate::services::process_tree::ProcessKind::Searxng);
 }
 
 pub fn spawn(python: &Path, source: &Path, settings: &Path, port: u16) -> Result<Child, String> {
@@ -70,7 +70,7 @@ pub fn kill_child_process(mut child: Child) {
         return;
     }
     eprintln!("[searxng] kill sidecar pid={pid}");
-    ollama_kill::tree_kill(pid);
+    crate::services::process_tree::kill(pid, crate::services::process_tree::ProcessKind::Searxng);
     let start = Instant::now();
     while start.elapsed() < Duration::from_secs(3) {
         if let Ok(Some(_)) = child.try_wait() {

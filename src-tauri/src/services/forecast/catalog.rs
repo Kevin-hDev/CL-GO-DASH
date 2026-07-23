@@ -44,7 +44,10 @@ pub fn find_provider(id: &str) -> Option<&'static ForecastProviderSpec> {
 }
 
 pub fn find_model(id: &str) -> Option<&'static ForecastModelSpec> {
-    FORECAST_MODELS.iter().find(|m| m.id == id)
+    FORECAST_MODELS
+        .iter()
+        .find(|model| model.id == id)
+        .or_else(|| (id == "tabpfn-ts").then_some(&catalog_specs::TABPFN_TS_ALIAS))
 }
 
 pub const FORECAST_PROVIDERS: &[ForecastProviderSpec] = catalog_specs::FORECAST_PROVIDERS;

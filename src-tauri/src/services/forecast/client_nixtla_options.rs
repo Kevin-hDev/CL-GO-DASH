@@ -4,11 +4,24 @@ pub fn effective_config(model: &str) -> Map<String, Value> {
     crate::services::forecast::model_config::effective_values(model).unwrap_or_default()
 }
 
-pub fn effective_level(config: &Map<String, Value>, fallback_confidence: f64) -> u64 {
-    config
-        .get("level")
-        .and_then(Value::as_u64)
-        .unwrap_or((fallback_confidence * 100.0) as u64)
+pub fn effective_level(confidence: f64) -> u64 {
+    (confidence * 100.0).round() as u64
+}
+
+pub fn interval_array(body: &Value, key: &str) -> Result<Vec<f64>, String> {
+    let values = body["intervals"][key]
+        .as_array()
+        .or_else(|| body[key].as_array())
+        .ok_or("Intervalles Nixtla manquants")?;
+    values
+        .iter()
+        .map(|value| {
+            value
+                .as_f64()
+                .filter(|number| number.is_finite())
+                .ok_or("Intervalle Nixtla invalide".to_string())
+        })
+        .collect()
 }
 
 pub fn apply(payload: &mut Value, config: &Map<String, Value>) {

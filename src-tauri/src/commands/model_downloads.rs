@@ -16,6 +16,12 @@ pub async fn start_model_download(
     downloads: tauri::State<'_, ModelDownloadManager>,
 ) -> Result<ModelDownloadState, String> {
     validate_download_request(kind, &model_id)?;
+    if kind == ModelDownloadKind::Forecast {
+        crate::storage_migration_files::install_forecast_sidecar(
+            &app,
+            &crate::services::paths::data_dir(),
+        )?;
+    }
     let manager = downloads.inner_clone();
     let (state, cancel) = manager
         .start(kind, model_id, is_update.unwrap_or(false))

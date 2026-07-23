@@ -1,6 +1,7 @@
 import { useCallback, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 
 type FloatingAlign = "left" | "right";
+type FloatingPlacement = "above" | "below" | "auto";
 
 const VIEWPORT_PADDING = 12;
 const HIDDEN_STYLE: CSSProperties = {
@@ -13,7 +14,13 @@ const HIDDEN_STYLE: CSSProperties = {
   zIndex: 1000,
 };
 
-export function useFloatingMenuPosition(open: boolean, align: FloatingAlign = "left", gap = 4) {
+export function useFloatingMenuPosition(
+  open: boolean,
+  align: FloatingAlign = "left",
+  gap = 4,
+  placement: FloatingPlacement = "above",
+  matchAnchorWidth = false,
+) {
   const anchorRef = useRef<HTMLElement | null>(null);
   const floatingRef = useRef<HTMLDivElement | null>(null);
   const [style, setStyle] = useState<CSSProperties>(HIDDEN_STYLE);
@@ -24,23 +31,42 @@ export function useFloatingMenuPosition(open: boolean, align: FloatingAlign = "l
     if (!open || !anchor || !floating) return;
 
     const anchorRect = anchor.getBoundingClientRect();
-    const width = floating.offsetWidth;
+    const width = Math.max(
+      floating.offsetWidth,
+      matchAnchorWidth ? anchorRect.width : 0,
+    );
     const height = floating.offsetHeight;
-    const maxLeft = Math.max(VIEWPORT_PADDING, window.innerWidth - width - VIEWPORT_PADDING);
+    const maxWidth = Math.max(0, window.innerWidth - (VIEWPORT_PADDING * 2));
+    const boundedWidth = Math.min(width, maxWidth);
+    const maxLeft = Math.max(VIEWPORT_PADDING, window.innerWidth - boundedWidth - VIEWPORT_PADDING);
     const rawLeft = align === "right" ? anchorRect.right - width : anchorRect.left;
     const left = Math.min(Math.max(rawLeft, VIEWPORT_PADDING), maxLeft);
-    const top = Math.max(VIEWPORT_PADDING, anchorRect.top - height - gap);
+    const availableAbove = Math.max(0, anchorRect.top - gap - VIEWPORT_PADDING);
+    const availableBelow = Math.max(
+      0,
+      window.innerHeight - anchorRect.bottom - gap - VIEWPORT_PADDING,
+    );
+    const opensBelow = placement === "below"
+      || (placement === "auto" && height > availableAbove && availableBelow > availableAbove);
+    const maxHeight = opensBelow ? availableBelow : availableAbove;
+    const visibleHeight = Math.min(height, maxHeight);
+    const top = opensBelow
+      ? anchorRect.bottom + gap
+      : Math.max(VIEWPORT_PADDING, anchorRect.top - visibleHeight - gap);
 
     setStyle({
       position: "fixed",
       top,
       left,
+      maxWidth,
+      maxHeight,
+      minWidth: matchAnchorWidth ? anchorRect.width : undefined,
       right: "auto",
       bottom: "auto",
       visibility: "visible",
       zIndex: 1000,
     });
-  }, [align, gap, open]);
+  }, [align, gap, matchAnchorWidth, open, placement]);
 
   useLayoutEffect(() => {
     if (!open) return;

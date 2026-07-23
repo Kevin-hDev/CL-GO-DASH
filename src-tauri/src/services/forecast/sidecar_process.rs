@@ -1,4 +1,4 @@
-use crate::services::{ollama_kill, paths::data_dir};
+use crate::services::{paths::data_dir, process_tree};
 use std::path::PathBuf;
 use std::process::{Child, Command};
 use std::time::{Duration, Instant};
@@ -34,17 +34,17 @@ pub fn kill_orphan_sidecar() {
         return;
     }
     eprintln!("[forecast] orphelin détecté pid={pid}, kill");
-    ollama_kill::tree_kill(pid);
+    process_tree::kill(pid, process_tree::ProcessKind::Forecast);
 }
 
 pub fn kill_child_process(mut child: Child) {
     let pid = child.id();
     eprintln!("[forecast] kill sidecar pid={pid}");
-    ollama_kill::tree_kill(pid);
+    process_tree::kill(pid, process_tree::ProcessKind::Forecast);
     let start = Instant::now();
     while start.elapsed() < Duration::from_secs(3) {
         if let Ok(Some(_)) = child.try_wait() {
-            eprintln!("[forecast] sidecar arrêté proprement");
+            eprintln!("[forecast] sidecar arrêté");
             return;
         }
         std::thread::sleep(Duration::from_millis(100));

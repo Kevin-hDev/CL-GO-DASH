@@ -18,6 +18,7 @@ fn permission_mode_change_preserves_enabled_tools() {
     let settings = AgentSettings {
         permission_mode: "auto".to_string(),
         enabled_optional_tools: vec!["load_skill".to_string()],
+        tool_catalog_schema: TOOL_CATALOG_SCHEMA,
     };
 
     let updated = with_permission_mode(settings, "manual".to_string()).unwrap();
@@ -31,6 +32,7 @@ fn grouped_toggle_updates_all_real_tools() {
     let settings = AgentSettings {
         permission_mode: "auto".to_string(),
         enabled_optional_tools: vec!["planmode".to_string(), "exitplanmode".to_string()],
+        tool_catalog_schema: TOOL_CATALOG_SCHEMA,
     };
 
     let updated = with_tool_group_enabled(settings, "plan_mode", false).unwrap();
@@ -43,6 +45,7 @@ fn old_delegate_setting_enables_all_subagent_tools() {
     let settings = AgentSettings {
         permission_mode: "auto".to_string(),
         enabled_optional_tools: vec!["delegate_task".to_string()],
+        tool_catalog_schema: TOOL_CATALOG_SCHEMA,
     }
     .normalized();
 
@@ -65,6 +68,7 @@ fn disabling_subagents_removes_all_control_tools() {
             .iter()
             .map(|id| (*id).to_string())
             .collect(),
+        tool_catalog_schema: TOOL_CATALOG_SCHEMA,
     };
 
     let updated = with_tool_group_enabled(settings, "subagents", false).unwrap();
@@ -82,4 +86,41 @@ fn grouped_toggle_rejects_locked_group() {
     let settings = AgentSettings::default();
 
     assert!(with_tool_group_enabled(settings, "web", false).is_err());
+}
+
+#[test]
+fn complete_legacy_forecast_group_gains_phase_three_tools() {
+    let settings = AgentSettings {
+        permission_mode: "auto".into(),
+        enabled_optional_tools: LEGACY_FORECAST_TOOLS
+            .iter()
+            .map(|tool| (*tool).to_string())
+            .collect(),
+        tool_catalog_schema: 1,
+    }
+    .normalized();
+
+    assert!(settings
+        .enabled_optional_tools
+        .contains(&"forecast_backtest".into()));
+    assert!(settings
+        .enabled_optional_tools
+        .contains(&"forecast_compare_models".into()));
+}
+
+#[test]
+fn current_catalog_keeps_a_phase_three_tool_disabled() {
+    let settings = AgentSettings {
+        permission_mode: "auto".into(),
+        enabled_optional_tools: LEGACY_FORECAST_TOOLS
+            .iter()
+            .map(|tool| (*tool).to_string())
+            .collect(),
+        tool_catalog_schema: TOOL_CATALOG_SCHEMA,
+    }
+    .normalized();
+
+    assert!(!settings
+        .enabled_optional_tools
+        .contains(&"forecast_backtest".into()));
 }

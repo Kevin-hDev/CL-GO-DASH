@@ -15,6 +15,17 @@ fn stable_provider_failures_are_provider_errors() {
 }
 
 #[test]
+fn provider_overload_is_classified_explicitly() {
+    assert_eq!(
+        classify_error(
+            "Codex: Our servers are currently overloaded. Please try again later.",
+            false
+        ),
+        "provider_overloaded"
+    );
+}
+
+#[test]
 fn stream_failures_are_bounded_and_sanitized() {
     let mut session = test_session();
     for i in 0..25 {

@@ -5,6 +5,7 @@ fn make_request(data: &str) -> ForecastRequest {
     ForecastRequest {
         data: Some(data.to_string()),
         file_path: None,
+        data_profile_id: None,
         target_column: "sales".into(),
         date_column: "date".into(),
         series_column: None,
@@ -13,6 +14,9 @@ fn make_request(data: &str) -> ForecastRequest {
         frequency: "D".into(),
         model: Some("chronos-bolt-small".into()),
         confidence_level: 0.9,
+        selection_id: None,
+        selection_source: None,
+        selection_reason_codes: Vec::new(),
     }
 }
 
@@ -64,7 +68,7 @@ fn rejects_missing_covariate_column() {
 }
 
 #[test]
-fn falls_back_to_relative_dates_for_unknown_formats() {
+fn rejects_unknown_date_formats() {
     let mut request = make_request(
         r#"
         [
@@ -75,9 +79,9 @@ fn falls_back_to_relative_dates_for_unknown_formats() {
     );
     request.frequency = "W".into();
 
-    let parsed = parse_request_input(&request).expect("input should parse");
+    let error = parse_request_input(&request).expect_err("invalid dates must fail");
 
-    assert_eq!(parsed.future_dates, vec!["T+1", "T+2", "T+3"]);
+    assert_eq!(error, "Dates invalides");
 }
 
 #[test]

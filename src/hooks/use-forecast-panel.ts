@@ -1,8 +1,11 @@
-import { useState, useCallback, useEffect } from "react";
-import { listen } from "@tauri-apps/api/event";
-import { cleanupTauriListener } from "@/lib/tauri-listen";
+import { useState, useCallback } from "react";
+import {
+  loadForecastPanelValue,
+  saveForecastPanelValue,
+  withBoundedPanelState,
+} from "./forecast-panel-storage";
 
-export type ForecastSection = "view" | "scenarios" | "comparisons" | "analysis" | "notes" | "history";
+export type ForecastSection = "view" | "comparisons" | "history";
 export type PanelMode = "preview" | "forecast" | "browser";
 
 export interface ForecastPanelState {
@@ -12,11 +15,6 @@ export interface ForecastPanelState {
   panelMode: PanelMode;
 }
 
-interface ForecastAnalysisCreatedEvent {
-  analysis_id: string;
-  session_id: string;
-}
-
 const DEFAULT_PANEL_STATE = {
   activeSection: "view" as ForecastSection,
   navOpen: false,
@@ -24,15 +22,19 @@ const DEFAULT_PANEL_STATE = {
   panelMode: "preview" as PanelMode,
 };
 
-const SECTIONS: ForecastSection[] = ["view", "scenarios", "comparisons", "analysis", "notes", "history"];
+const SECTIONS: ForecastSection[] = ["view", "comparisons", "history"];
+
+export function normalizeForecastSection(value: unknown): ForecastSection {
+  return SECTIONS.includes(value as ForecastSection)
+    ? value as ForecastSection
+    : DEFAULT_PANEL_STATE.activeSection;
+}
 
 function normalizePanelState(value: unknown): ForecastPanelState {
   if (!value || typeof value !== "object") return DEFAULT_PANEL_STATE;
   const raw = value as Partial<ForecastPanelState>;
   return {
-    activeSection: SECTIONS.includes(raw.activeSection as ForecastSection)
-      ? raw.activeSection as ForecastSection
-      : DEFAULT_PANEL_STATE.activeSection,
+    activeSection: normalizeForecastSection(raw.activeSection),
     navOpen: typeof raw.navOpen === "boolean" ? raw.navOpen : DEFAULT_PANEL_STATE.navOpen,
     currentAnalysisId: typeof raw.currentAnalysisId === "string" ? raw.currentAnalysisId : null,
     panelMode: raw.panelMode === "forecast" || raw.panelMode === "browser"
@@ -48,32 +50,25 @@ function samePanelState(a: ForecastPanelState, b: ForecastPanelState): boolean {
     a.panelMode === b.panelMode;
 }
 
-function loadFromStorage(storageKey: string): ForecastPanelState {
-  try {
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      return normalizePanelState(JSON.parse(saved));
-    }
-  } catch { /* ignore */ }
-  return DEFAULT_PANEL_STATE;
-}
-
 export function useForecastPanel(sessionId: string | null) {
   const stateKey = sessionId ?? "__no_session__";
-  const storageKey = sessionId ? `fc-panel-${sessionId}` : null;
 
   const [states, setStates] = useState<Record<string, ForecastPanelState>>(() => {
-    const saved = storageKey ? loadFromStorage(storageKey) : DEFAULT_PANEL_STATE;
+    const saved = sessionId
+      ? normalizePanelState(loadForecastPanelValue(sessionId))
+      : DEFAULT_PANEL_STATE;
     return { [stateKey]: saved };
   });
-  const state = states[stateKey] ?? (storageKey ? loadFromStorage(storageKey) : DEFAULT_PANEL_STATE);
+  const state = states[stateKey] ?? (
+    sessionId
+      ? normalizePanelState(loadForecastPanelValue(sessionId))
+      : DEFAULT_PANEL_STATE
+  );
 
   const persist = useCallback((next: ForecastPanelState) => {
-    setStates((prev) => ({ ...prev, [stateKey]: next }));
-    if (storageKey) {
-      try { localStorage.setItem(storageKey, JSON.stringify(next)); } catch { /* ignore */ }
-    }
-  }, [stateKey, storageKey]);
+    setStates((prev) => withBoundedPanelState(prev, stateKey, next));
+    if (sessionId) saveForecastPanelValue(sessionId, next);
+  }, [sessionId, stateKey]);
 
   const setSection = useCallback((section: ForecastSection) => {
     persist({ ...state, activeSection: section, navOpen: false });
@@ -100,25 +95,13 @@ export function useForecastPanel(sessionId: string | null) {
   }, [state, persist]);
 
   const restorePanelState = useCallback((next: ForecastPanelState) => {
-    if (samePanelState(state, next)) return;
-    persist(next);
-  }, [state, persist]);
-
-  useEffect(() => {
-    if (!sessionId) return;
-    let cancelled = false;
-    const unlisten = listen<ForecastAnalysisCreatedEvent>(
-      "forecast-analysis-created",
-      (event) => {
-        if (cancelled || event.payload.session_id !== sessionId) return;
-        loadAnalysis(event.payload.analysis_id);
-      },
-    );
-    return () => {
-      cancelled = true;
-      cleanupTauriListener(unlisten);
+    const normalized = {
+      ...next,
+      activeSection: normalizeForecastSection(next.activeSection),
     };
-  }, [sessionId, loadAnalysis]);
+    if (samePanelState(state, normalized)) return;
+    persist(normalized);
+  }, [state, persist]);
 
   return {
     ...state,

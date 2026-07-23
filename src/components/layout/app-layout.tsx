@@ -1,9 +1,7 @@
-import { useState, useCallback, useEffect, useRef, type CSSProperties, type ReactNode } from "react";
+import { useState, useCallback, useRef, type CSSProperties, type ReactNode } from "react";
 import { Sidebar, type TabId } from "./sidebar";
 import { DragRegion } from "./drag-region";
 import { WindowToolbar } from "./window-toolbar";
-import { SearchDialog } from "./search-dialog";
-import { UpdateNotifications } from "./update-notifications";
 import { useUpdateChecker } from "@/hooks/use-update-checker";
 import { CHAT_MIN_WIDTH } from "@/hooks/file-preview-storage";
 import { CHAT_COMPACT_MIN_WIDTH } from "@/hooks/agent-panel-layout-solver";
@@ -15,6 +13,7 @@ import { useAgentPanelsAutoSidebar } from "./agent-panels-auto-sidebar";
 import { useAppLayoutShortcuts, useSidebarHiddenOffset, useWindowFullscreen } from "./use-app-layout-effects";
 import { ModelDownloadBadge } from "./model-download-badge";
 import { getListMinWidthPx, nextListPanelWidth } from "./list-panel-width";
+import { AppLayoutOverlays } from "./app-layout-overlays";
 import {
   INITIAL_AGENT_SIDEBAR_LAYOUT_STATE,
   autoHideAgentSidebar,
@@ -25,9 +24,6 @@ import {
 import "./app-layout.css";
 
 const GPU_BADGE_OFFSET = 12;
-const UPDATES_ANCHOR_MAC = 197;
-const UPDATES_ANCHOR_OTHER = 122;
-
 interface AppLayoutProps {
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
@@ -57,17 +53,6 @@ export function AppLayout({
 
   const [listWidth, setListWidth] = useState<number | null>(null);
   const dragging = useRef(false);
-
-  useEffect(() => {
-    const platformClass = IS_MAC ? "os-mac" : "os-other";
-    const previousClass = IS_MAC ? "os-other" : "os-mac";
-    document.body.classList.add(platformClass);
-    document.body.classList.remove(previousClass);
-
-    return () => {
-      document.body.classList.remove(platformClass);
-    };
-  }, []);
 
   const handleResizeStart = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
@@ -171,26 +156,13 @@ export function AppLayout({
           <PanelSlotTarget name="detail" />
           <ModelDownloadBadge />
         </div>
-        <SearchDialog
-          open={searchOpen}
-          onClose={closeSearch}
-          onSelect={onSearchSelect}
-        />
-        <UpdateNotifications
-          isOpen={updatesOpen}
-          onClose={closeUpdates}
-          appUpdate={updates.appUpdate}
-          ollamaBinaryUpdate={updates.ollamaBinaryUpdate}
-          ollamaUpdates={updates.ollamaUpdates}
-          pulling={updates.pulling}
-          ollamaBinaryUpdating={updates.ollamaBinaryUpdating}
-          ollamaBinaryPercent={updates.ollamaBinaryPercent}
-          appDownloading={updates.appDownloading}
-          appPercent={updates.appPercent}
-          onPullModel={(name) => void updates.pullModel(name)}
-          onDownloadApp={(url) => void updates.downloadAppUpdate(url)}
-          onUpdateOllamaBinary={() => void updates.updateOllamaBinary()}
-          anchorLeft={IS_MAC ? UPDATES_ANCHOR_MAC : UPDATES_ANCHOR_OTHER}
+        <AppLayoutOverlays
+          searchOpen={searchOpen}
+          updatesOpen={updatesOpen}
+          onCloseSearch={closeSearch}
+          onCloseUpdates={closeUpdates}
+          onSearchSelect={onSearchSelect}
+          updates={updates}
         />
         {children}
       </div>

@@ -1,4 +1,5 @@
 use super::common::ExportBundle;
+use super::quantile_labels::QuantileLabels;
 use std::path::Path;
 
 const LINES_PER_PAGE: usize = 46;
@@ -25,6 +26,8 @@ pub fn write(bundle: &ExportBundle, path: &Path) -> Result<(), String> {
 
 fn report_lines(bundle: &ExportBundle) -> Vec<String> {
     let a = &bundle.analysis;
+    let labels = QuantileLabels::for_confidence(a.confidence_level);
+    let [lower, median, upper] = labels.uppercase_headers();
     let mut lines = vec![
         "CL-GO Forecast".into(),
         format!("Analyse      {}", a.name),
@@ -43,7 +46,7 @@ fn report_lines(bundle: &ExportBundle) -> Vec<String> {
         "PREVISIONS".into(),
         format!(
             "{:<20} {:<12} {:>12} {:>12} {:>12} {:>12}",
-            "Date", "Serie", "Valeur", "Q10", "Q50", "Q90"
+            "Date", "Serie", "Valeur", lower, median, upper
         ),
         "-".repeat(88),
     ];
@@ -58,6 +61,7 @@ fn report_lines(bundle: &ExportBundle) -> Vec<String> {
             q(&a.quantiles.q90, idx)
         ));
     }
+    lines.extend(super::report_advanced::lines(bundle));
     if !a.scenarios.is_empty() {
         lines.push(String::new());
         lines.push("SCENARIOS".into());

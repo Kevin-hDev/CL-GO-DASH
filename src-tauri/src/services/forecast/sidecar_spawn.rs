@@ -1,4 +1,6 @@
-use crate::services::forecast::{sidecar_http, sidecar_runtime, sidecar_settings::LaunchSettings};
+use crate::services::forecast::{
+    sidecar_http, sidecar_process_env, sidecar_runtime, sidecar_settings::LaunchSettings,
+};
 use crate::services::paths::data_dir;
 use std::path::{Path, PathBuf};
 use std::process::Child;
@@ -10,15 +12,9 @@ pub fn sidecar_dir() -> PathBuf {
     data_dir().join("forecast-sidecar")
 }
 
-pub async fn install_runtime(family_id: &str) -> Result<PathBuf, String> {
-    tokio::task::spawn_blocking({
-        let dir = sidecar_dir();
-        let family = family_id.to_string();
-        move || sidecar_runtime::ensure_runtime(&dir, &family)
-    })
-    .await
-    .map_err(|_| "Initialisation du moteur Forecast impossible".to_string())?
-    .map_err(|_| "Initialisation du moteur Forecast impossible".to_string())
+pub fn ready_runtime(family_id: &str) -> Result<PathBuf, String> {
+    sidecar_runtime::ensure_runtime(&sidecar_dir(), family_id)
+        .map_err(|_| "Moteur Forecast non préparé".to_string())
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -33,6 +29,7 @@ pub fn spawn_process(
     launch: &LaunchSettings,
 ) -> Result<Child, String> {
     let mut cmd = std::process::Command::new(runtime_python);
+    sidecar_process_env::configure(&mut cmd, &sidecar_dir())?;
     cmd.args([
         script.to_str().unwrap_or("server.py"),
         "--port",
@@ -59,6 +56,7 @@ pub async fn wait_until_ready(
     port: u16,
     model_name: &str,
     family_id: &str,
+    pid: u32,
     auth_token: Zeroizing<String>,
 ) -> Result<SidecarEndpoint, String> {
     for _ in 0..60 {
@@ -70,6 +68,7 @@ pub async fn wait_until_ready(
                 return Ok(SidecarEndpoint {
                     base_url: format!("http://127.0.0.1:{ready_port}"),
                     auth_token,
+                    pid,
                 });
             }
         }

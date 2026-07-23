@@ -14,7 +14,8 @@ pub async fn predict(
     let input = parse_request_input(request)?;
     let payload = build_payload(&input, request)?;
 
-    let client = client_http::loopback_client()?;
+    let client =
+        client_http::loopback_client().map_err(|_| "prediction_runtime_failed".to_string())?;
     let http_request = client
         .post(format!("{base_url}/predict"))
         .header("Content-Type", "application/json")
@@ -23,17 +24,24 @@ pub async fn predict(
     let resp = client
         .send(http_request)
         .await
-        .map_err(|_| "Erreur du service de prédiction".to_string())?;
+        .map_err(|_| "prediction_runtime_failed".to_string())?;
 
     if !resp.status().is_success() {
         let status = resp.status();
-        eprintln!("[chronos] erreur {status}");
-        return Err("Erreur du service de prédiction".to_string());
+        eprintln!("[forecast] requête de prédiction refusée status={status}");
+        return Err(if status.is_client_error() {
+            "prediction_rejected".to_string()
+        } else {
+            "prediction_runtime_failed".to_string()
+        });
     }
 
-    let body: Value = client_http::read_json(resp).await?;
+    let body: Value = client_http::read_json(resp)
+        .await
+        .map_err(|_| "invalid_prediction_output".to_string())?;
 
     client_local_response::parse_response(&body, request, &input, session_id)
+        .map_err(|_| "invalid_prediction_output".to_string())
 }
 
 fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value, String> {
@@ -47,7 +55,10 @@ fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value
     }
 
     let model_config = crate::services::forecast::model_config::effective_values(model)?;
-    let quantiles = config_quantiles(&model_config);
+    let quantiles = crate::services::forecast::intervals::configured_levels(
+        request.confidence_level,
+        &model_config,
+    );
 
     Ok(match runtime.engine_kind {
         ForecastEngineKind::LocalChronosBolt => serde_json::json!({
@@ -97,13 +108,4 @@ fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value
             return Err("Moteur local invalide".into());
         }
     })
-}
-
-fn config_quantiles(config: &serde_json::Map<String, Value>) -> Vec<f64> {
-    config
-        .get("quantiles")
-        .and_then(Value::as_array)
-        .map(|items| items.iter().filter_map(Value::as_f64).collect())
-        .filter(|items: &Vec<f64>| !items.is_empty())
-        .unwrap_or_else(|| vec![0.1, 0.5, 0.9])
 }

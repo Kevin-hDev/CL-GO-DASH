@@ -1,38 +1,42 @@
 use crate::services::model_downloads::{ModelDownloadPhase, ProgressUpdate};
-use futures_util::StreamExt;
-use std::path::Component;
+use reqwest::redirect::Policy;
 use std::path::Path;
-use tokio::io::AsyncWriteExt;
+use std::time::Duration;
 use tokio_util::sync::CancellationToken;
 
-const MAX_MODEL_FILES: usize = 128;
+use super::model_artifacts::{self, ModelArtifact};
+
+#[path = "download_io.rs"]
+mod download_io;
+
 const MIN_PROGRESS_STEP: f64 = 1.0;
+const RESPONSE_TIMEOUT: Duration = Duration::from_secs(30);
 
 pub async fn download_model(
-    hf_repo: &str,
-    hf_revision: Option<&str>,
+    model_id: &str,
     target_dir: &Path,
     cancel: &CancellationToken,
     on_progress: &(dyn Fn(ProgressUpdate) + Send + Sync),
 ) -> Result<(), String> {
-    let files = list_hf_files(hf_repo, hf_revision).await?;
-    let total_size: u64 = files.iter().map(|(_, size)| size).sum();
-    let mut downloaded: u64 = 0;
+    let model = model_artifacts::model(model_id)?;
+    let total_size = model_artifacts::total_size(model_id)?;
+    let client = download_client()?;
+    let mut downloaded = 0u64;
     let mut last_percent_sent = 0.0;
 
-    for (filename, _file_size) in &files {
-        let revision = hf_revision.unwrap_or("main");
-        let url = format!(
-            "https://huggingface.co/{}/resolve/{}/{}",
-            hf_repo, revision, filename
-        );
-        let dest = target_dir.join(filename);
-        if let Some(parent) = dest.parent() {
-            tokio::fs::create_dir_all(parent).await.ok();
+    for artifact in &model.artifacts {
+        let url = artifact_url(&model.repository, &model.revision, &artifact.path)?;
+        let destination = target_dir.join(&artifact.path);
+        if let Some(parent) = destination.parent() {
+            tokio::fs::create_dir_all(parent)
+                .await
+                .map_err(|_| "Préparation du téléchargement impossible".to_string())?;
         }
         download_single(
+            &client,
             &url,
-            &dest,
+            &destination,
+            artifact,
             &mut downloaded,
             total_size,
             cancel,
@@ -51,122 +55,102 @@ pub async fn download_model(
     Ok(())
 }
 
-async fn list_hf_files(repo: &str, revision: Option<&str>) -> Result<Vec<(String, u64)>, String> {
-    let rev = revision.unwrap_or("main");
-    let url = format!("https://huggingface.co/api/models/{repo}/tree/{rev}?recursive=true");
-    let client = reqwest::Client::new();
-    let resp = client
-        .get(&url)
-        .timeout(std::time::Duration::from_secs(15))
-        .send()
-        .await
-        .map_err(|_| "Erreur HuggingFace API".to_string())?;
-
-    if !resp.status().is_success() {
-        return Err("HuggingFace API erreur".into());
-    }
-
-    let body: serde_json::Value = resp.json().await.map_err(|_| "Parsing HF".to_string())?;
-
-    let tree = body.as_array().ok_or("Réponse HuggingFace invalide")?;
-
-    let files: Vec<(String, u64)> = tree
-        .iter()
-        .filter_map(|s| {
-            if s["type"].as_str()? != "file" {
-                return None;
+fn download_client() -> Result<reqwest::Client, String> {
+    reqwest::Client::builder()
+        .connect_timeout(Duration::from_secs(15))
+        .redirect(Policy::custom(|attempt| {
+            if attempt.previous().len() >= 5 || !allowed_download_url(attempt.url()) {
+                attempt.stop()
+            } else {
+                attempt.follow()
             }
-            let name = s["path"].as_str()?;
-            if !is_downloadable_model_file(name) {
-                return None;
-            }
-            Some((name.to_string(), s["size"].as_u64().unwrap_or(0)))
-        })
-        .take(MAX_MODEL_FILES + 1)
-        .collect();
-
-    if files.is_empty() {
-        return Err("Aucun fichier trouvé dans le repo".into());
-    }
-    if files.len() > MAX_MODEL_FILES {
-        return Err("Repo modèle trop volumineux".into());
-    }
-    if files.iter().any(|(_, size)| *size == 0) {
-        return Err("Taille modèle inconnue".into());
-    }
-    Ok(files)
+        }))
+        .build()
+        .map_err(|_| "Téléchargement du modèle impossible".to_string())
 }
 
-fn is_downloadable_model_file(name: &str) -> bool {
-    if name.is_empty() || name.len() > 240 || name == "README.md" || name.starts_with('.') {
-        return false;
+fn artifact_url(repository: &str, revision: &str, path: &str) -> Result<String, String> {
+    let url = format!("https://huggingface.co/{repository}/resolve/{revision}/{path}");
+    let parsed =
+        reqwest::Url::parse(&url).map_err(|_| "Source du modèle Forecast invalide".to_string())?;
+    if !allowed_download_url(&parsed) || parsed.host_str() != Some("huggingface.co") {
+        return Err("Source du modèle Forecast invalide".to_string());
     }
-    let path = Path::new(name);
-    if path.is_absolute() {
-        return false;
-    }
-    path.components()
-        .all(|part| matches!(part, Component::Normal(_)))
+    Ok(url)
 }
 
+fn allowed_download_url(url: &reqwest::Url) -> bool {
+    if url.scheme() != "https" || !url.username().is_empty() || url.password().is_some() {
+        return false;
+    }
+    url.host_str().is_some_and(|host| {
+        host == "huggingface.co"
+            || host.ends_with(".huggingface.co")
+            || host == "hf.co"
+            || host.ends_with(".hf.co")
+    })
+}
+
+#[allow(clippy::too_many_arguments)]
 async fn download_single(
+    client: &reqwest::Client,
     url: &str,
-    dest: &Path,
+    destination: &Path,
+    artifact: &ModelArtifact,
     downloaded: &mut u64,
     total_size: u64,
     cancel: &CancellationToken,
     on_progress: &(dyn Fn(ProgressUpdate) + Send + Sync),
     last_percent_sent: &mut f64,
 ) -> Result<(), String> {
-    let client = reqwest::Client::new();
-    let resp = client
-        .get(url)
-        .send()
-        .await
-        .map_err(|_| "Download échoué".to_string())?;
+    let response = tokio::time::timeout(
+        RESPONSE_TIMEOUT,
+        client
+            .get(url)
+            .header("User-Agent", "CL-GO-DASH/1.0")
+            .send(),
+    )
+    .await
+    .map_err(|_| "Téléchargement du modèle expiré".to_string())?
+    .map_err(|_| "Téléchargement du modèle impossible".to_string())?;
+    if !response.status().is_success() || !allowed_download_url(response.url()) {
+        return Err("Téléchargement du modèle impossible".to_string());
+    }
+    if response
+        .content_length()
+        .is_some_and(|size| size > artifact.size)
+    {
+        return Err("Téléchargement du modèle invalide".to_string());
+    }
+    download_io::write_model_response(
+        response,
+        destination,
+        artifact,
+        downloaded,
+        total_size,
+        cancel,
+        on_progress,
+        last_percent_sent,
+        MIN_PROGRESS_STEP,
+    )
+    .await
+}
 
-    if !resp.status().is_success() {
-        return Err("Download erreur".into());
+#[cfg(test)]
+mod tests {
+    use super::{allowed_download_url, artifact_url};
+
+    #[test]
+    fn only_approved_hugging_face_hosts_are_downloaded() {
+        let official = reqwest::Url::parse("https://cas-bridge.xethub.hf.co/file").unwrap();
+        let spoofed = reqwest::Url::parse("https://hf.co.evil.invalid/file").unwrap();
+        assert!(allowed_download_url(&official));
+        assert!(!allowed_download_url(&spoofed));
     }
 
-    let tmp = dest.with_extension("tmp");
-    let mut file = tokio::fs::File::create(&tmp)
-        .await
-        .map_err(|_| "Création tmp échouée".to_string())?;
-
-    let mut stream = resp.bytes_stream();
-
-    while let Some(chunk) = stream.next().await {
-        if cancel.is_cancelled() {
-            let _ = tokio::fs::remove_file(&tmp).await;
-            return Err("cancelled".into());
-        }
-        let chunk = chunk.map_err(|_| "Stream échoué".to_string())?;
-        file.write_all(&chunk)
-            .await
-            .map_err(|_| "Écriture échouée".to_string())?;
-
-        *downloaded += chunk.len() as u64;
-        let percent = if total_size > 0 {
-            (*downloaded as f64 / total_size as f64) * 100.0
-        } else {
-            0.0
-        };
-        if percent >= *last_percent_sent + MIN_PROGRESS_STEP || percent >= 99.9 {
-            *last_percent_sent = percent;
-            on_progress(ProgressUpdate {
-                phase: ModelDownloadPhase::Downloading,
-                downloaded: *downloaded,
-                total: total_size,
-                percent: percent.round() as u8,
-            });
-        }
+    #[test]
+    fn artifact_url_keeps_the_pinned_revision() {
+        let url = artifact_url("org/model", &"a".repeat(40), "model.safetensors").unwrap();
+        assert!(url.contains(&format!("/resolve/{}/", "a".repeat(40))));
     }
-
-    file.flush().await.map_err(|_| "Flush échoué".to_string())?;
-    drop(file);
-
-    tokio::fs::rename(&tmp, dest)
-        .await
-        .map_err(|_| "Rename échoué".to_string())
 }

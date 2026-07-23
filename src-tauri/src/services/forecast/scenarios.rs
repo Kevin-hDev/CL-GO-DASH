@@ -63,7 +63,7 @@ pub async fn create(
     )
     .await?;
     analysis.scenarios.push(scenario);
-    storage::save(&analysis).await?;
+    storage::save(&mut analysis).await?;
     Ok(analysis)
 }
 
@@ -104,7 +104,7 @@ pub async fn update(
         chronos,
     )
     .await?;
-    storage::save(&analysis).await?;
+    storage::save(&mut analysis).await?;
     Ok(analysis)
 }
 
@@ -117,7 +117,7 @@ pub async fn delete(analysis_id: &str, scenario_id: &str) -> Result<ForecastResu
     if analysis.scenarios.len() == before {
         return Err("Scénario introuvable".into());
     }
-    storage::save(&analysis).await?;
+    storage::save(&mut analysis).await?;
     Ok(analysis)
 }
 

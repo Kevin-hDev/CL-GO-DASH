@@ -1,38 +1,67 @@
 use crate::services::forecast::types::{ForecastAnalysisMeta, ForecastRequest, ForecastResult};
 use crate::services::forecast::{
-    client_chronos, client_nixtla, export, model_manager, notes, notes_cleanup, registry,
-    scenarios, selected_model, sidecar, storage, validation,
+    catalog, client_chronos, client_nixtla, data_profiles, export, model_manager, notes_cleanup,
+    registry, selected_model, sidecar, storage, validation,
 };
-use tauri::State;
+use std::time::Instant;
+use tauri::{AppHandle, State};
 
 #[tauri::command]
 pub async fn run_forecast(
     mut request: ForecastRequest,
     chronos: State<'_, sidecar::ChronosSidecar>,
 ) -> Result<ForecastResult, String> {
+    let started_at = Instant::now();
     crate::services::forecast::request_normalize::normalize_request(&mut request);
-    selected_model::apply_required(&mut request)?;
+    let policy = crate::services::forecast::selection_policy::get()?;
+    let selection_mode = policy.mode;
+    selected_model::apply_frontend_policy(&mut request, policy.clone())?;
+    data_profiles::hydrate_request(&mut request).await?;
     crate::services::forecast::file_input::ensure_request_data(&mut request, None)
         .await
         .map_err(|_| "Impossible de lire les données source".to_string())?;
     validation::validate_request(&request)?;
-    let model_id = validation::model_id(&request)?;
-    let runtime = registry::find_runtime(model_id).ok_or("Moteur indisponible")?;
+    let data_profile = crate::services::forecast::data_quality::validate_and_bind(&mut request)?;
+    let model_id = validation::model_id(&request)?.to_string();
+    let selection_proof = if selection_mode
+        == crate::services::forecast::selection_policy::ForecastSelectionMode::Auto
+    {
+        request.selection_id = None;
+        request.selection_source = Some(
+            crate::services::forecast::provenance_types::ForecastSelectionSource::ExplicitUserOverride,
+        );
+        request.selection_reason_codes = vec!["user_requested".into()];
+        Some(
+            crate::services::forecast::auto_selection_ui::verify_choice(
+                &data_profile,
+                &policy,
+                &model_id,
+            )
+            .await?,
+        )
+    } else {
+        None
+    };
+    let spec = catalog::find_model(&model_id).ok_or("Modèle inconnu")?;
+    let runtime = registry::find_runtime(&model_id).ok_or("Moteur indisponible")?;
+    validate_future_context(&request, &data_profile, runtime)?;
     if !registry::has_predict_adapter(runtime) {
         return Err("Moteur indisponible".into());
     }
 
-    let result = if registry::is_cloud(runtime) {
+    let mut result = if registry::is_cloud(runtime) {
         let key = crate::services::api_keys::get_key("nixtla")
             .map_err(|_| "Clé API Nixtla non configurée".to_string())?;
         client_nixtla::predict(&key, &request, None)
             .await
             .map_err(|_| "Erreur du service de prédiction".to_string())?
     } else {
-        if !model_manager::is_installed(model_id) {
+        if !model_manager::is_ready(&model_id) {
             return Err("Modèle non installé".into());
         }
-        let endpoint = sidecar::start(&chronos, model_id, runtime.family_id)
+        crate::services::forecast::hardware_profile::validate_model_resources(spec)?;
+        let _prediction_guard = chronos.lock_prediction().await;
+        let endpoint = sidecar::start(&chronos, &model_id, runtime.family_id)
             .await
             .map_err(|_| "Impossible de démarrer le service de prédiction".to_string())?;
         let prediction = client_chronos::predict(
@@ -46,8 +75,36 @@ pub async fn run_forecast(
         prediction.map_err(|_| "Erreur du service de prédiction".to_string())?
     };
 
-    storage::save(&result).await?;
+    crate::services::forecast::provenance::complete(
+        &mut result,
+        &request,
+        &data_profile,
+        request.selection_source.unwrap_or(
+            crate::services::forecast::provenance_types::ForecastSelectionSource::Manual,
+        ),
+        selection_proof.as_ref(),
+        u64::try_from(started_at.elapsed().as_millis()).unwrap_or(u64::MAX),
+    )?;
+
+    if let Some(profile) = &result.data_profile {
+        data_profiles::save(profile, &request).await?;
+    }
+    storage::save(&mut result).await?;
     Ok(result)
+}
+
+fn validate_future_context(
+    request: &ForecastRequest,
+    profile: &crate::services::forecast::data_quality::DataProfile,
+    runtime: &registry::ForecastRuntimeSpec,
+) -> Result<(), String> {
+    if profile.future_rows > 0
+        && !request.covariate_columns.is_empty()
+        && !runtime.capabilities.future_covariates
+    {
+        return Err("Variables futures non supportées par ce moteur".into());
+    }
+    Ok(())
 }
 
 #[tauri::command]
@@ -69,68 +126,19 @@ pub async fn export_forecast_analysis(
 }
 
 #[tauri::command]
-pub async fn create_forecast_scenario(
-    request: scenarios::ScenarioRequest,
-    chronos: State<'_, sidecar::ChronosSidecar>,
-) -> Result<ForecastResult, String> {
-    scenarios::create(request, Some(chronos.inner())).await
-}
-
-#[tauri::command]
-pub async fn update_forecast_scenario(
-    request: scenarios::ScenarioUpdateRequest,
-    chronos: State<'_, sidecar::ChronosSidecar>,
-) -> Result<ForecastResult, String> {
-    scenarios::update(request, Some(chronos.inner())).await
-}
-
-#[tauri::command]
-pub async fn delete_forecast_scenario(
-    analysis_id: String,
-    scenario_id: String,
-) -> Result<ForecastResult, String> {
-    scenarios::delete(&analysis_id, &scenario_id).await
-}
-
-#[tauri::command]
-pub async fn delete_forecast_analysis(id: String) -> Result<(), String> {
-    notes_cleanup::delete_analysis_notes(&id).await?;
-    storage::delete(&id).await
+pub async fn delete_forecast_analysis(app: AppHandle, id: String) -> Result<(), String> {
+    notes_cleanup::delete_analysis(&id).await?;
+    crate::services::forecast::events::emit_deleted(&app, &id);
+    Ok(())
 }
 
 #[tauri::command]
 pub async fn rename_forecast_analysis(
+    app: AppHandle,
     id: String,
     name: String,
 ) -> Result<ForecastAnalysisMeta, String> {
-    storage::rename(&id, &name).await
-}
-
-#[tauri::command]
-pub async fn list_forecast_notes(analysis_id: String) -> Result<Vec<notes::ForecastNote>, String> {
-    notes::list(&analysis_id).await
-}
-
-#[tauri::command]
-pub async fn create_forecast_note(
-    request: notes::ForecastNoteCreateRequest,
-) -> Result<notes::ForecastNote, String> {
-    notes::create(request).await
-}
-
-#[tauri::command]
-pub async fn update_forecast_note(
-    request: notes::ForecastNoteUpdateRequest,
-) -> Result<notes::ForecastNote, String> {
-    notes::update(request).await
-}
-
-#[tauri::command]
-pub async fn delete_forecast_note(analysis_id: String, note_id: String) -> Result<(), String> {
-    notes::delete(&analysis_id, &note_id).await
-}
-
-#[tauri::command]
-pub fn open_forecast_note(analysis_id: String, note_id: String) -> Result<(), String> {
-    notes::open(&analysis_id, &note_id)
+    let renamed = storage::rename(&id, &name).await?;
+    crate::services::forecast::events::emit_updated(&app, &renamed);
+    Ok(renamed.to_meta())
 }

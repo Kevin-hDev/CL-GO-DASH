@@ -2,6 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ForecastSection } from "@/hooks/use-forecast-panel";
 import { ForecastPanel } from "@/components/forecast/forecast-panel";
 import { openForecastDocsWindow } from "@/components/forecast/open-forecast-docs";
+import { openForecastWorkbench } from "@/components/forecast/workbench/open-forecast-workbench";
+import { syncOpenForecastWorkbenchContext } from "@/components/forecast/workbench/forecast-workbench-context-sync";
+import i18n from "@/i18n";
+import { showToast } from "@/lib/toast-emitter";
 
 interface ForecastNavigation {
   activeSection: ForecastSection;
@@ -10,7 +14,6 @@ interface ForecastNavigation {
   setSection: (section: ForecastSection) => void;
   toggleNav: () => void;
   loadAnalysis: (id: string) => void;
-  focusAnalysis: (id: string) => void;
   closeAnalysis: () => void;
 }
 
@@ -23,12 +26,32 @@ interface FilePreviewControls {
 interface Args {
   forecastNav: ForecastNavigation;
   filePreview: FilePreviewControls;
-  docsWindowTitle: string;
+  sessionId: string | null;
 }
 
-export function useAgentLocalForecastContent({ forecastNav, filePreview, docsWindowTitle }: Args) {
+export function useAgentLocalForecastContent({
+  forecastNav,
+  filePreview,
+  sessionId,
+}: Args) {
   const [fullscreenSwitching, setFullscreenSwitching] = useState(false);
   const fullscreenTimerRef = useRef<number | null>(null);
+  const setPreviewExtraWidth = filePreview.setExtraWidth;
+
+  useEffect(() => {
+    setPreviewExtraWidth(0);
+    return () => setPreviewExtraWidth(0);
+  }, [setPreviewExtraWidth]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    void syncOpenForecastWorkbenchContext({
+      sessionId,
+      analysisId: forecastNav.currentAnalysisId,
+      title: i18n.t("forecast.workbench.windowTitle"),
+    }).catch(() => showToast(i18n.t("forecast.workbench.syncFailed")));
+  }, [forecastNav.currentAnalysisId, sessionId]);
+
   const handlePreviewFullscreenChange = useCallback((value: boolean) => {
     if (fullscreenTimerRef.current !== null) window.clearTimeout(fullscreenTimerRef.current);
     setFullscreenSwitching(true);
@@ -41,24 +64,33 @@ export function useAgentLocalForecastContent({ forecastNav, filePreview, docsWin
   }, []);
 
   const handleOpenForecastDocs = useCallback(() => {
-    void openForecastDocsWindow(docsWindowTitle).catch(() => {});
-  }, [docsWindowTitle]);
+    void openForecastDocsWindow(i18n.t("forecast.docs.windowTitle"))
+      .catch(() => showToast(i18n.t("forecast.docs.openFailed")));
+  }, []);
+  const handleOpenForecastWorkbench = useCallback(() => {
+    if (!sessionId) {
+      showToast(i18n.t("forecast.workbench.openFailed"));
+      return;
+    }
+    void openForecastWorkbench({
+      sessionId,
+      analysisId: forecastNav.currentAnalysisId,
+      title: i18n.t("forecast.workbench.windowTitle"),
+    }).catch(() => showToast(i18n.t("forecast.workbench.openFailed")));
+  }, [forecastNav.currentAnalysisId, sessionId]);
 
   const forecastContent = useMemo(() => (
     <ForecastPanel
       activeSection={forecastNav.activeSection}
       navOpen={forecastNav.navOpen}
       currentAnalysisId={forecastNav.currentAnalysisId}
-      fullscreen={filePreview.fullscreen}
       onSectionChange={forecastNav.setSection}
       onToggleNav={forecastNav.toggleNav}
       onLoadAnalysis={forecastNav.loadAnalysis}
-      onFocusAnalysis={forecastNav.focusAnalysis}
-      onPanelExtraWidthChange={filePreview.setExtraWidth}
       onCloseAnalysis={forecastNav.closeAnalysis}
-      onFullscreenChange={handlePreviewFullscreenChange}
+      onOpenWorkbench={handleOpenForecastWorkbench}
     />
-  ), [filePreview.fullscreen, filePreview.setExtraWidth, forecastNav, handlePreviewFullscreenChange]);
+  ), [forecastNav, handleOpenForecastWorkbench]);
 
   return {
     forecastContent, fullscreenSwitching, handleOpenForecastDocs, handlePreviewFullscreenChange,

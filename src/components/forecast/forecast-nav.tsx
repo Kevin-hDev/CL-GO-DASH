@@ -7,10 +7,7 @@ import "./forecast-nav.css";
 
 const NAV_ITEMS: { id: ForecastSection; i18nKey: string }[] = [
   { id: "view", i18nKey: "forecast.nav.mainView" },
-  { id: "scenarios", i18nKey: "forecast.nav.scenarios" },
   { id: "comparisons", i18nKey: "forecast.nav.comparisons" },
-  { id: "analysis", i18nKey: "forecast.nav.analysis" },
-  { id: "notes", i18nKey: "forecast.nav.notes" },
   { id: "history", i18nKey: "forecast.nav.history" },
 ];
 

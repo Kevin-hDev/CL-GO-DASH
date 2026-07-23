@@ -76,7 +76,7 @@
 .fca-accordion {
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
-  background: var(--surface-glass);
+  background: var(--surface);
   overflow: hidden;
 }
 
@@ -122,7 +122,7 @@
 
 .fca-accordion-caret {
   color: var(--ink-faint);
-  transition: transform 700ms ease;
+  transition: transform var(--ease-smooth);
 }
 
 .fca-accordion.is-open .fca-accordion-caret {
@@ -132,7 +132,7 @@
 .fca-accordion-panel {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 700ms ease;
+  transition: grid-template-rows var(--ease-smooth);
 }
 
 .fca-accordion.is-open .fca-accordion-panel {

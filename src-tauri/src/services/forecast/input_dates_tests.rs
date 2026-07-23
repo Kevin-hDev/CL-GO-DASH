@@ -12,6 +12,12 @@ fn daily_frequency_advances_by_days() {
 }
 
 #[test]
+fn business_frequency_skips_weekends() {
+    let dates = build_future_dates("2026-07-17", "B", 3);
+    assert_eq!(dates, vec!["2026-07-20", "2026-07-21", "2026-07-22"]);
+}
+
+#[test]
 fn weekly_frequency_advances_by_weeks() {
     let dates = build_future_dates("2026-01-01", "W", 2);
     assert_eq!(dates, vec!["2026-01-08", "2026-01-15"]);

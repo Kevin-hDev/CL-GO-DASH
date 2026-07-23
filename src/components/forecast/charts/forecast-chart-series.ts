@@ -6,6 +6,11 @@ import type {
   TimelineEntry,
   VariableLine,
 } from "./forecast-chart-types";
+import {
+  FORECAST_CHART_LINE_MONOTONE_AXIS,
+  FORECAST_CHART_LINE_SMOOTHING,
+} from "./forecast-chart-line-style";
+import { buildAnnotationSeries } from "./forecast-chart-annotations";
 
 export function buildSeries(
   timeline: TimelineEntry[],
@@ -83,20 +88,11 @@ export function buildSeries(
         false
       )
     ),
-    annotationSeries(
-      "annotation-user",
-      labels.annotationUser,
+    ...buildAnnotationSeries(
       timeline,
-      palette.annotationUser,
-      "user",
-      activeAnnotationId,
-    ),
-    annotationSeries(
-      "annotation-llm",
-      labels.annotationLlm,
-      timeline,
-      palette.annotationLlm,
-      "llm",
+      palette,
+      labels,
+      layers,
       activeAnnotationId,
     ),
   ];
@@ -118,6 +114,8 @@ function seriesLine(
     symbol: "circle" as const,
     showSymbol: Boolean(showSymbol),
     symbolSize: 5,
+    smooth: FORECAST_CHART_LINE_SMOOTHING,
+    smoothMonotone: FORECAST_CHART_LINE_MONOTONE_AXIS,
     connectNulls: false,
     lineStyle,
     areaStyle: areaColor ? { color: areaColor } : undefined,
@@ -143,45 +141,4 @@ function scenarioColor(palette: ForecastChartPalette, index: number): string {
 
 function variableColor(palette: ForecastChartPalette, index: number): string {
   return palette.variables[index % Math.max(palette.variables.length, 1)] || palette.inkMuted;
-}
-
-function annotationSeries(
-  id: string,
-  name: string,
-  timeline: TimelineEntry[],
-  color: string,
-  source: "user" | "llm",
-  activeAnnotationId: string | null,
-) {
-  return {
-    id,
-    name,
-    type: "scatter" as const,
-    data: timeline.map((entry) => {
-      const annotations = entry.annotationValues.filter(
-        (annotation) => annotation.source === source,
-      );
-      const value = markerValue(entry);
-      if (!annotations.length || value == null) return null;
-      return {
-        value: [entry.timestamp, value],
-        annotationIds: annotations.map((annotation) => annotation.id),
-        symbolSize: annotations.some((annotation) => annotation.id === activeAnnotationId) ? 11 : 8,
-      };
-    }),
-    symbol: "circle" as const,
-    symbolSize: 8,
-    itemStyle: { color, borderColor: color, borderWidth: 1 },
-    emphasis: { scale: 1.25 },
-    z: 8,
-  };
-}
-
-function markerValue(entry: TimelineEntry): number | null {
-  if (entry.historyValue != null) return entry.historyValue;
-  if (entry.forecastValue != null) return entry.forecastValue;
-  if (entry.lowerValue != null && entry.upperValue != null) {
-    return (entry.lowerValue + entry.upperValue) / 2;
-  }
-  return entry.scenarioValues[0]?.value ?? entry.variableValues[0]?.value ?? null;
 }

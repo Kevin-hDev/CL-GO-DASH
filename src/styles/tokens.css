@@ -69,10 +69,23 @@
 
   --browser-toolbar-height: 2rem;
   --browser-control-size: 1.75rem;
+  --compact-control-height: 24px;
   --browser-toolbar-padding-y: 0.125rem;
   --browser-field-padding-y: var(--space-xs);
   --browser-tab-max-width: 12rem;
   --browser-home-max-width: 26rem;
+  --forecast-model-trigger-max-width: 12.25rem;
+  --forecast-model-menu-width: 17.5rem;
+  --forecast-download-progress-width: 18rem;
+  --forecast-workbench-nav-width: 13rem;
+  --forecast-workbench-copy-width: 42rem;
+  --forecast-workbench-content-width: 64rem;
+  --forecast-workbench-table-cell-width: 18rem;
+  --forecast-filter-menu-width: 13.75rem;
+  --forecast-note-date-width: 7.5rem;
+  --forecast-note-type-width: 8rem;
+  --forecast-series-menu-width: 10rem;
+  --forecast-evaluation-table-min-width: 48rem;
 
   --settings-content-max-width: 37.5rem;
   --settings-editor-min-height: 20rem;

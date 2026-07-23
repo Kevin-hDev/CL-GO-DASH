@@ -20,7 +20,7 @@ export function ForecastAnalysisVariableList({ variables, t }: ForecastAnalysisV
             <span>{variable.detail}</span>
           </div>
           <div className="fca-variable-track">
-            <span style={{ width: `${Math.max(6, (variable.score / max) * 100)}%` }} />
+            <span style={{ width: `${Math.max(0, (variable.score / max) * 100)}%` }} />
           </div>
         </div>
       ))}

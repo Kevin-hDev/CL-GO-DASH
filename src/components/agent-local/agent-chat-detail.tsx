@@ -59,12 +59,13 @@ interface AgentChatDetailProps {
 
 export function AgentChatDetail(props: AgentChatDetailProps) {
   const previewDesiredWidth = props.filePreview.width + props.filePreview.extraWidth;
+  const previewFullscreen = props.panelMode !== "forecast" && props.filePreview.fullscreen;
   const openPreviewTarget = (target: string | FileOperation) => (
     typeof target === "string" ? props.filePreview.openPath(target) : props.filePreview.openOperation(target)
   );
   const { containerRef, layout } = useAgentPanelLayout({
     previewOpen: props.filePreview.open,
-    previewFullscreen: props.filePreview.fullscreen,
+    previewFullscreen,
     previewDesiredWidth,
     fileTreeOpen: props.fileTree.open,
     fileTreeDesiredWidth: props.fileTree.width,
@@ -85,7 +86,7 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
           ← Chat parent
         </button>
       )}
-      <div className={`agent-detail-chat ${props.filePreview.fullscreen ? "agent-detail-chat-fs" : ""} ${props.fullscreenSwitching ? "agent-detail-chat-instant" : ""}`}>
+      <div className={`agent-detail-chat ${previewFullscreen ? "agent-detail-chat-fs" : ""} ${props.fullscreenSwitching ? "agent-detail-chat-instant" : ""}`}>
         <ChatView
           sessionId={props.sessionId}
           model={props.model}
@@ -120,7 +121,7 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
       </div>
       <AgentSidePanel
         open={props.filePreview.open}
-        fullscreen={props.filePreview.fullscreen}
+        fullscreen={previewFullscreen}
         displayWidth={layout.previewWidth}
         fullscreenSwitching={props.fullscreenSwitching}
         resizing={props.filePreview.resizing}

@@ -19,6 +19,7 @@ function caps(past: boolean, future: boolean) {
   return {
     past_covariates: past,
     future_covariates: future,
+    multi_series: false,
     multivariate: false,
     probabilistic: false,
     backtesting_ready: false,
@@ -32,6 +33,7 @@ function model(overrides: Partial<ForecastModelEntry> = {}): ForecastModelEntry 
     id: "chronos",
     familyId: "chronos-bolt",
     capabilities: caps(false, false),
+    horizon_max: 1000,
     ...overrides,
   } as ForecastModelEntry;
 }
@@ -39,6 +41,12 @@ function model(overrides: Partial<ForecastModelEntry> = {}): ForecastModelEntry 
 describe("buildLaunchErrorKey", () => {
   it("retourne null quand tout est valide (pas de futures rows ni covariables)", () => {
     expect(buildLaunchErrorKey(model(), profile(), 3)).toBeNull();
+  });
+
+  it("refuse un horizon supérieur à la limite du modèle", () => {
+    expect(buildLaunchErrorKey(model({ horizon_max: 12 }), profile(), 13)).toBe(
+      "forecast.config.validation.horizonTooLong",
+    );
   });
 
   it("détecte une inadéquation futureRows/horizon", () => {

@@ -37,6 +37,9 @@ pub fn tool_short_desc(id: &str) -> Option<&'static str> {
         "forecast_models" => "List available forecast models",
         "forecast_analyze" => "Add annotations or scenarios to a saved forecast",
         "forecast_read" => "Read saved forecast analyses",
+        "forecast_data_audit" => "Audit Forecast data quality",
+        "forecast_backtest" => "Evaluate models with rolling temporal backtests",
+        "forecast_compare_models" => "Compare saved Forecast backtest results",
         // office: spreadsheet
         "read_spreadsheet" => "Read data from an Excel or CSV file",
         "write_spreadsheet" => "Create or modify an Excel file",

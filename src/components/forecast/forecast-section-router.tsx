@@ -1,10 +1,7 @@
 import type { ForecastSection } from "@/hooks/use-forecast-panel";
 import type { ForecastLayerState } from "./forecast-layer-matrix";
 import { ForecastView } from "./sections/forecast-view";
-import { ForecastScenarios } from "./sections/forecast-scenarios";
 import { ForecastComparisons } from "./sections/forecast-comparisons";
-import { ForecastAnalysis } from "./sections/forecast-analysis";
-import { ForecastNotes } from "./sections/forecast-notes";
 import { ForecastHistory } from "./sections/forecast-history";
 
 interface ForecastSectionRouterProps {
@@ -12,9 +9,6 @@ interface ForecastSectionRouterProps {
   analysisId: string;
   layers: ForecastLayerState;
   onLoadAnalysis: (id: string) => void;
-  onFocusAnalysis: (id: string) => void;
-  onAnalysisChanged: () => void;
-  scenarioPickerOpen: boolean;
 }
 
 export function ForecastSectionRouter({
@@ -22,28 +16,12 @@ export function ForecastSectionRouter({
   analysisId,
   layers,
   onLoadAnalysis,
-  onFocusAnalysis,
-  onAnalysisChanged,
-  scenarioPickerOpen,
 }: ForecastSectionRouterProps) {
   switch (section) {
     case "view":
-      return <ForecastView analysisId={analysisId} layers={layers} />;
-    case "scenarios":
-      return (
-        <ForecastScenarios
-          analysisId={analysisId}
-          onFocusAnalysis={onFocusAnalysis}
-          onAnalysisChanged={onAnalysisChanged}
-          pickerOpen={scenarioPickerOpen}
-        />
-      );
+      return <ForecastView key={analysisId} analysisId={analysisId} layers={layers} />;
     case "comparisons":
-      return <ForecastComparisons analysisId={analysisId} />;
-    case "analysis":
-      return <ForecastAnalysis analysisId={analysisId} />;
-    case "notes":
-      return <ForecastNotes analysisId={analysisId} />;
+      return <ForecastComparisons key={analysisId} analysisId={analysisId} />;
     case "history":
       return <ForecastHistory onLoadAnalysis={onLoadAnalysis} />;
     default:

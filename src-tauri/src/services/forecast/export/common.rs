@@ -1,5 +1,7 @@
 use super::super::notes::ForecastNote;
 use super::super::types::{ForecastResult, Prediction};
+use super::quantile_labels::QuantileLabels;
+use super::spreadsheet_text::safe_csv_cell;
 use serde::Serialize;
 use serde_json::json;
 use std::path::Path;
@@ -82,13 +84,16 @@ pub fn rows(bundle: &ExportBundle) -> Vec<TableRow> {
             source: note.source.clone(),
         });
     }
+    rows.extend(super::advanced_rows::rows(bundle));
     rows
 }
 
 pub fn write_json(bundle: &ExportBundle, path: &Path) -> Result<(), String> {
+    let quantile_labels = QuantileLabels::for_confidence(bundle.analysis.confidence_level);
     let value = json!({
         "analysis": bundle.analysis,
         "notes": bundle.notes,
+        "quantile_labels": quantile_labels,
     });
     let body =
         serde_json::to_string_pretty(&value).map_err(|_| "Export JSON impossible".to_string())?;
@@ -97,25 +102,28 @@ pub fn write_json(bundle: &ExportBundle, path: &Path) -> Result<(), String> {
 
 pub fn clipboard_text(bundle: &ExportBundle) -> String {
     let a = &bundle.analysis;
+    let labels = QuantileLabels::for_confidence(a.confidence_level);
+    let [lower, median, upper] = labels.table_headers();
     let mut lines = vec![
         format!("Forecast: {}", a.name),
         format!("Model: {}", a.model),
         format!("Target: {}", a.target_column),
         format!("Horizon: {} {}", a.horizon, a.frequency),
         String::new(),
-        "date\tseries\tprediction\tq10\tq50\tq90".into(),
+        format!("date\tseries\tprediction\t{lower}\t{median}\t{upper}"),
     ];
     for (idx, point) in a.predictions.iter().enumerate() {
         lines.push(format!(
             "{}\t{}\t{}\t{}\t{}\t{}",
-            point.date,
-            point.series_id.clone().unwrap_or_default(),
+            safe_csv_cell(&point.date),
+            safe_csv_cell(point.series_id.as_deref().unwrap_or_default()),
             fmt(point.value),
             q(&a.quantiles.q10, idx),
             q(&a.quantiles.q50, idx),
             q(&a.quantiles.q90, idx)
         ));
     }
+    lines.extend(super::report_advanced::lines(bundle));
     lines.join("\n")
 }
 

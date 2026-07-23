@@ -1,8 +1,6 @@
 import math
 
-MAX_POINTS = 10000
-MAX_HORIZON = 1000
-MAX_COVARIATES = 64
+from .limits import MAX_COVARIATES, MAX_HORIZON, MAX_POINTS, MAX_QUANTILES
 
 
 def validate_values(values):
@@ -20,23 +18,31 @@ def validate_values(values):
 
 
 def validate_horizon(raw_horizon):
-    horizon = int(raw_horizon or 0)
+    if isinstance(raw_horizon, bool) or not isinstance(raw_horizon, int):
+        raise ValueError("invalid_horizon")
+    horizon = raw_horizon
     if horizon <= 0 or horizon > MAX_HORIZON:
         raise ValueError("invalid_horizon")
     return horizon
 
 
 def validate_quantiles(raw_quantiles):
-    if not isinstance(raw_quantiles, list) or not raw_quantiles:
+    if (
+        not isinstance(raw_quantiles, list)
+        or not raw_quantiles
+        or len(raw_quantiles) > MAX_QUANTILES
+    ):
         raise ValueError("invalid_quantiles")
     normalized = []
     for quantile in raw_quantiles:
-        if not isinstance(quantile, (int, float)):
+        if isinstance(quantile, bool) or not isinstance(quantile, (int, float)):
             raise ValueError("invalid_quantiles")
         value = float(quantile)
         if value <= 0 or value >= 1:
             raise ValueError("invalid_quantiles")
         normalized.append(value)
+    if normalized != sorted(set(normalized)) or 0.5 not in normalized:
+        raise ValueError("invalid_quantiles")
     return normalized
 
 
@@ -101,4 +107,11 @@ def read_numeric_value(value, error_code):
 
 
 def quantile_key(level):
-    return f"q{int(round(level * 100)):02d}"
+    basis_points = int(round(level * 10_000))
+    if basis_points % 100 == 0:
+        return f"q{basis_points // 100:02d}"
+    return f"q{basis_points:04d}"
+
+
+def forecast_quantile_index(level):
+    return max(0, min(8, int(round(level * 10)) - 1))

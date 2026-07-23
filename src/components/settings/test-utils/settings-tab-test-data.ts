@@ -35,7 +35,13 @@ export function agentToolGroups() {
       id: "forecast",
       locked: false,
       defaultEnabled: false,
-      toolIds: ["forecast", "forecast_models", "forecast_analyze", "forecast_read"],
+      toolIds: [
+        "forecast_data_audit",
+        "forecast",
+        "forecast_models",
+        "forecast_analyze",
+        "forecast_read",
+      ],
     },
   ];
 }
@@ -111,6 +117,7 @@ export function forecastModels() {
       frequencies: "D,H",
       is_cloud: false,
       installed: true,
+      runtime_ready: true,
       runnable: true,
     }],
   };

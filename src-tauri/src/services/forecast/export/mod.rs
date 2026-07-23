@@ -1,12 +1,23 @@
+mod advanced_rows;
+#[cfg(test)]
+mod advanced_rows_tests;
 mod chart;
 mod chart_data;
 mod common;
 #[cfg(test)]
 mod common_tests;
 mod csv;
+#[cfg(test)]
+mod csv_tests;
 mod pdf;
+mod quantile_labels;
+mod report_advanced;
+mod spreadsheet_text;
 mod xlsx;
+mod xlsx_advanced;
 mod xlsx_input;
+#[cfg(test)]
+mod xlsx_security_tests;
 mod xlsx_style;
 
 use super::{notes, storage};
@@ -33,8 +44,8 @@ pub async fn export_analysis(
     format: &str,
 ) -> Result<ForecastExportResult, String> {
     let format = ExportFormat::parse(format)?;
+    let notes = notes::list(analysis_id).await?.notes;
     let analysis = storage::load(analysis_id).await?;
-    let notes = notes::list(analysis_id).await.unwrap_or_default();
     let bundle = common::ExportBundle { analysis, notes };
 
     if format == ExportFormat::Clipboard {

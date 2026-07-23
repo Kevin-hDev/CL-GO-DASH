@@ -62,6 +62,18 @@ fn repair_path_removes_existing_group_and_world_access() {
     let _ = std::fs::remove_dir_all(root);
 }
 
+#[cfg(unix)]
+#[test]
+fn app_storage_repairs_the_forecast_notes_directory() {
+    use std::os::unix::fs::PermissionsExt;
+
+    super::repair_app_storage().unwrap();
+    let path = crate::services::paths::data_dir().join("forecast-notes");
+    let mode = std::fs::metadata(path).unwrap().permissions().mode();
+
+    assert_eq!(mode & 0o777, 0o700);
+}
+
 #[test]
 fn atomic_write_leaves_no_temporary_file() {
     let root = test_dir();

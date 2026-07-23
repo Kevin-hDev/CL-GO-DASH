@@ -33,7 +33,7 @@ pub struct ForecastModelConfig {
 pub fn get(model_id: &str) -> Result<ForecastModelConfig, String> {
     super::validation::validate_runnable_model_id(model_id)?;
     let runtime = registry::find_runtime(model_id).ok_or("Moteur indisponible")?;
-    let saved = storage::read_model(model_id);
+    let saved = validated_saved(model_id, runtime)?;
     Ok(build_response(model_id, runtime, saved))
 }
 
@@ -48,7 +48,7 @@ pub fn set(model_id: &str, values: Map<String, Value>) -> Result<ForecastModelCo
 
 pub fn effective_values(model_id: &str) -> Result<Map<String, Value>, String> {
     let runtime = registry::find_runtime(model_id).ok_or("Moteur indisponible")?;
-    let saved = storage::read_model(model_id);
+    let saved = validated_saved(model_id, runtime)?;
     let mut effective = Map::new();
     for spec in schema::specs_for_runtime(runtime) {
         effective.insert(
@@ -57,6 +57,14 @@ pub fn effective_values(model_id: &str) -> Result<Map<String, Value>, String> {
         );
     }
     Ok(effective)
+}
+
+fn validated_saved(
+    model_id: &str,
+    runtime: &registry::ForecastRuntimeSpec,
+) -> Result<Map<String, Value>, String> {
+    let specs = schema::specs_for_runtime(runtime);
+    validate::sanitize(&specs, storage::read_model(model_id)?)
 }
 
 fn require_configurable(model_id: &str) -> Result<(), String> {

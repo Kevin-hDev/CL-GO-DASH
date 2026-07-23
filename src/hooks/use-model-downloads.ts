@@ -5,7 +5,12 @@ import { cleanupTauriListener } from "@/lib/tauri-listen";
 
 type ModelDownloadKind = "ollama" | "forecast";
 type ModelDownloadStatus = "running" | "completed" | "failed" | "cancelled";
-type ModelDownloadPhase = "starting" | "downloading" | "installing" | "completed";
+export type ModelDownloadPhase =
+  | "starting"
+  | "downloading"
+  | "installing"
+  | "preparing-runtime"
+  | "completed";
 
 export interface ModelDownloadState {
   id: string;

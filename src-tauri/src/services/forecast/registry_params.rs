@@ -9,7 +9,6 @@ pub const TIMESFM_PARAMS: &[&str] = CHRONOS_BOLT_PARAMS;
 
 pub const TIMEGPT_PARAMS: &[&str] = &[
     "horizon_max_override",
-    "level",
     "clean_ex_first",
     "finetune_steps",
     "finetune_loss",

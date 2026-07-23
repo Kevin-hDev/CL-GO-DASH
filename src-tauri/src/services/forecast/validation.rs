@@ -1,9 +1,5 @@
+use super::limits;
 use super::{catalog, registry, types::ForecastRequest};
-
-const MAX_DATA_BYTES: usize = 5 * 1024 * 1024;
-const MAX_COLUMN_LEN: usize = 80;
-const MAX_COVARIATES: usize = 64;
-const MAX_MODEL_ID_LEN: usize = 80;
 const ALLOWED_FREQUENCIES: &[&str] = &[
     "10S", "15S", "30S", "S", "T", "min", "H", "D", "B", "W", "M", "Q", "Y",
 ];
@@ -18,7 +14,15 @@ pub fn model_id(request: &ForecastRequest) -> Result<&str, String> {
 }
 
 pub fn validate_model_id(id: &str) -> Result<(), String> {
-    if id.is_empty() || id.len() > MAX_MODEL_ID_LEN {
+    validate_model_id_format(id)?;
+    if catalog::find_model(id).is_none() {
+        return Err("Modèle inconnu".into());
+    }
+    Ok(())
+}
+
+pub fn validate_model_id_format(id: &str) -> Result<(), String> {
+    if id.is_empty() || id.chars().count() > limits::MAX_MODEL_ID_CHARS {
         return Err("Modèle invalide".into());
     }
     if !id
@@ -26,9 +30,6 @@ pub fn validate_model_id(id: &str) -> Result<(), String> {
         .all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.'))
     {
         return Err("Modèle invalide".into());
-    }
-    if catalog::find_model(id).is_none() {
-        return Err("Modèle inconnu".into());
     }
     Ok(())
 }
@@ -42,11 +43,60 @@ pub fn validate_runnable_model_id(id: &str) -> Result<(), String> {
 }
 
 pub fn validate_request(request: &ForecastRequest) -> Result<(), String> {
+    validate_data_request(request)?;
+    super::validation_selection::validate_selection_metadata(request)?;
     let model_id = model_id(request)?;
     validate_runnable_model_id(model_id)?;
     let spec = catalog::find_model(model_id).ok_or("Modèle inconnu")?;
     let runtime = registry::find_runtime(model_id).ok_or("Moteur indisponible")?;
+    validate_confidence_support(runtime, request.confidence_level)?;
 
+    if request.series_column.is_some() && !runtime.capabilities.multi_series {
+        return Err("Multi-séries non supporté par ce moteur".into());
+    }
+    if !request.covariate_columns.is_empty() && !runtime.capabilities.past_covariates {
+        return Err("Variables de contexte non supportées par ce moteur".into());
+    }
+    let horizon_max = effective_horizon_max(model_id, spec.horizon_max)?;
+    if request.horizon == 0 || request.horizon > horizon_max {
+        return Err("Horizon invalide".into());
+    }
+    if !supports_frequency(spec, &request.frequency) {
+        return Err("Fréquence non supportée par ce moteur".into());
+    }
+    Ok(())
+}
+
+pub fn supports_frequency(spec: &catalog::ForecastModelSpec, frequency: &str) -> bool {
+    match spec.frequencies {
+        "Toutes" | "10S à Y" => ALLOWED_FREQUENCIES.contains(&frequency),
+        "T à Y" => matches!(
+            frequency,
+            "T" | "min" | "H" | "D" | "B" | "W" | "M" | "Q" | "Y"
+        ),
+        _ => false,
+    }
+}
+
+pub fn interval_support(model_id: &str) -> &'static str {
+    super::interval_capability::legacy_label(model_id)
+}
+
+pub fn supports_confidence(model_id: &str, confidence: f64) -> bool {
+    super::interval_capability::supports(model_id, confidence)
+}
+
+fn validate_confidence_support(
+    runtime: &registry::ForecastRuntimeSpec,
+    confidence: f64,
+) -> Result<(), String> {
+    if supports_confidence(runtime.model_id, confidence) {
+        return Ok(());
+    }
+    Err("Niveau de confiance non supporté par ce moteur".into())
+}
+
+pub fn validate_data_request(request: &ForecastRequest) -> Result<(), String> {
     validate_column(&request.target_column)?;
     validate_column(&request.date_column)?;
     if request.target_column == request.date_column {
@@ -54,18 +104,12 @@ pub fn validate_request(request: &ForecastRequest) -> Result<(), String> {
     }
     if let Some(series_column) = request.series_column.as_ref() {
         validate_column(series_column)?;
-        if !runtime.capabilities.multivariate {
-            return Err("Multi-séries non supporté par ce moteur".into());
-        }
         if series_column == &request.target_column || series_column == &request.date_column {
             return Err("Colonne série invalide".into());
         }
     }
-    if request.covariate_columns.len() > MAX_COVARIATES {
+    if request.covariate_columns.len() > limits::MAX_COVARIATES {
         return Err("Trop de covariables".into());
-    }
-    if !request.covariate_columns.is_empty() && !runtime.capabilities.past_covariates {
-        return Err("Variables de contexte non supportées par ce moteur".into());
     }
     let mut unique_covariates = std::collections::BTreeSet::new();
     for column in &request.covariate_columns {
@@ -73,18 +117,15 @@ pub fn validate_request(request: &ForecastRequest) -> Result<(), String> {
         if column == &request.target_column
             || column == &request.date_column
             || request.series_column.as_ref() == Some(column)
+            || !unique_covariates.insert(column)
         {
             return Err("Covariables invalides".into());
         }
-        if !unique_covariates.insert(column) {
-            return Err("Covariables invalides".into());
-        }
     }
-    let horizon_max = configured_horizon_max(model_id, spec.horizon_max)?;
-    if request.horizon == 0 || request.horizon > horizon_max {
+    if request.horizon == 0 || request.horizon > limits::MAX_HORIZON {
         return Err("Horizon invalide".into());
     }
-    if !(0.5..=0.99).contains(&request.confidence_level) {
+    if !super::interval_capability::valid_input_level(request.confidence_level) {
         return Err("Niveau de confiance invalide".into());
     }
     if !ALLOWED_FREQUENCIES.contains(&request.frequency.as_str()) {
@@ -92,20 +133,22 @@ pub fn validate_request(request: &ForecastRequest) -> Result<(), String> {
     }
     match (&request.data, &request.file_path) {
         (None, None) => Err("Données manquantes".into()),
-        (Some(data), _) if data.len() > MAX_DATA_BYTES => Err("Données trop volumineuses".into()),
+        (Some(data), _) if data.len() > limits::MAX_INLINE_DATA_BYTES => {
+            Err("Données trop volumineuses".into())
+        }
         _ => Ok(()),
     }
 }
 
-fn configured_horizon_max(model_id: &str, catalog_max: u32) -> Result<u32, String> {
+pub fn effective_horizon_max(model_id: &str, catalog_max: u32) -> Result<u32, String> {
     let override_max = super::model_config::effective_values(model_id)?
         .get("horizon_max_override")
         .and_then(ValueExt::as_u32)
         .unwrap_or(0);
     if override_max == 0 {
-        return Ok(catalog_max);
+        return Ok(catalog_max.min(limits::MAX_HORIZON));
     }
-    Ok(override_max.min(catalog_max))
+    Ok(override_max.min(catalog_max).min(limits::MAX_HORIZON))
 }
 
 trait ValueExt {
@@ -119,7 +162,7 @@ impl ValueExt for serde_json::Value {
 }
 
 fn validate_column(column: &str) -> Result<(), String> {
-    if column.is_empty() || column.len() > MAX_COLUMN_LEN {
+    if column.is_empty() || column.chars().count() > limits::MAX_COLUMN_CHARS {
         return Err("Colonne invalide".into());
     }
     if column

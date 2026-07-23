@@ -20,7 +20,10 @@ export function buildTimeline(args: ForecastChartOptionArgs): TimelineEntry[] {
           rawValue: variable.rawValues[historyIndex],
         }))
         .filter(hasVariableValue),
-      annotationValues: annotationsByDate.get(dateKey(point.date)) ?? [],
+      annotationValues: visibleAnnotations(
+        annotationsByDate.get(dateKey(point.date)),
+        args.layers,
+      ),
       lowerValue: null,
       upperValue: null,
     })),
@@ -55,7 +58,10 @@ export function buildTimeline(args: ForecastChartOptionArgs): TimelineEntry[] {
             args.layers[variable.id] === true &&
             typeof variable.value === "number" && typeof variable.rawValue === "number",
           ),
-        annotationValues: annotationsByDate.get(dateKey(point.date)) ?? [],
+        annotationValues: visibleAnnotations(
+          annotationsByDate.get(dateKey(point.date)),
+          args.layers,
+        ),
         lowerValue: args.quantiles.q10[index] ?? null,
         upperValue: args.quantiles.q90[index] ?? null,
       };
@@ -70,6 +76,15 @@ function groupAnnotations(annotations: ForecastChartAnnotation[]) {
     map.set(key, [...(map.get(key) ?? []), annotation]);
   }
   return map;
+}
+
+function visibleAnnotations(
+  annotations: ForecastChartAnnotation[] | undefined,
+  layers: ForecastChartOptionArgs["layers"],
+) {
+  return (annotations ?? []).filter((annotation) => (
+    layers[annotation.kind ?? "annotations"] === true
+  ));
 }
 
 function hasVariableValue(

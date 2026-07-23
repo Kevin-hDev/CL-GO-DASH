@@ -6,10 +6,11 @@ import { selectReleaseNotes, type ReleaseNotesByLocale } from "./update-release-
 import logoIcon from "@/assets/logo.png";
 import ollamaDark from "@/assets/ollama.png";
 import ollamaLight from "@/assets/ollama-light.png";
+import { openForecastDevSource } from "./forecast-dev-source";
 
 export interface ItemData {
   id: string;
-  type: "app" | "ollama-binary" | "ollama";
+  type: "app" | "ollama-binary" | "ollama" | "forecast-dev";
   name: string;
   sub: string;
   version?: string;
@@ -19,6 +20,7 @@ export interface ItemData {
   language?: string;
   fullName?: string;
   assetUrl?: string;
+  sourceUrl?: string;
 }
 
 interface BubbleItemProps {
@@ -70,10 +72,13 @@ export function BubbleItem({
   const buttonLabel =
     item.type === "app" ? t("updates.appUpdate")
     : item.type === "ollama-binary" ? t("updates.ollamaBinaryUpdate")
+    : item.type === "forecast-dev" ? t("updates.forecastDevReview")
     : t("updates.modelUpdate");
 
   const handleClick = () => {
-    if (item.type === "app" && item.assetUrl) {
+    if (item.type === "forecast-dev" && item.sourceUrl) {
+      void openForecastDevSource(item.sourceUrl).catch(() => {});
+    } else if (item.type === "app" && item.assetUrl) {
       onDownloadApp(item.assetUrl);
     } else if (item.type === "ollama-binary") {
       onUpdateOllamaBinary();
@@ -93,7 +98,7 @@ export function BubbleItem({
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="update-bubble-main">
-        {item.type === "app" ? (
+        {item.type === "app" || item.type === "forecast-dev" ? (
           <img src={logoIcon} alt="" className="update-bubble-icon" />
         ) : (
           <ThemedIcon

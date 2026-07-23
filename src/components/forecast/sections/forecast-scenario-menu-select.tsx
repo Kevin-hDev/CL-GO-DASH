@@ -1,6 +1,12 @@
 import { CaretDown } from "@/components/ui/icons";
+import { createPortal } from "react-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { focusLocalListItem, useLocalListNavigation, type LocalListNavItem } from "@/hooks/use-local-list-navigation";
+import {
+  floatingMenuPortalRoot,
+  useFloatingMenuPosition,
+} from "@/hooks/use-floating-menu-position";
+import "./forecast-scenario-menu.css";
 
 interface ForecastScenarioMenuSelectProps {
   value: string;
@@ -19,8 +25,9 @@ export function ForecastScenarioMenuSelect({
 }: ForecastScenarioMenuSelectProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const panelRef = useRef<HTMLDivElement | null>(null);
   const pendingFocusDirection = useRef<1 | -1>(1);
+  const { anchorRef, floatingRef, floatingStyle } =
+    useFloatingMenuPosition(open, "left", 6, "auto", true);
   const selected = options.find((option) => option.value === value);
   const navItems = useMemo<LocalListNavItem[]>(() => options.map((option) => ({
     id: option.value,
@@ -39,7 +46,11 @@ export function ForecastScenarioMenuSelect({
   useEffect(() => {
     if (!open) return;
     const handlePointerDown = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        !rootRef.current?.contains(target)
+        && !floatingRef.current?.contains(target)
+      ) {
         setOpen(false);
       }
     };
@@ -52,55 +63,70 @@ export function ForecastScenarioMenuSelect({
       window.removeEventListener("mousedown", handlePointerDown);
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open]);
+  }, [floatingRef, open]);
 
   useEffect(() => {
-    if (open) focusLocalListItem(panelRef.current, pendingFocusDirection.current);
-  }, [open]);
+    if (open) focusLocalListItem(floatingRef.current, pendingFocusDirection.current);
+  }, [floatingRef, open]);
+
+  const panel = open ? (
+    <div
+      ref={floatingRef}
+      className="fcs-menu-panel"
+      role="menu"
+      tabIndex={-1}
+      style={floatingStyle}
+      data-keyboard-scope="local"
+      onKeyDown={nav.listProps.onKeyDown}
+    >
+      {options.map((option) => (
+        <button
+          key={option.value}
+          ref={nav.getItemRef(option.value)}
+          className={`fcs-menu-option ${option.value === value ? "is-selected" : ""}`}
+          type="button"
+          data-local-nav-item="true"
+          data-local-nav-active={nav.isActive(option.value) ? "true" : undefined}
+          tabIndex={nav.isActive(option.value) ? 0 : -1}
+          onFocus={() => nav.activate(option.value)}
+          onMouseEnter={() => nav.activate(option.value)}
+          onKeyDown={nav.listProps.onKeyDown}
+          onClick={() => {
+            onChange(option.value);
+            setOpen(false);
+          }}
+        >
+          <span className="fcs-menu-option-mark">
+            {option.value === value ? <span className="fcs-menu-option-dot" /> : null}
+          </span>
+          <span>{option.label}</span>
+        </button>
+      ))}
+    </div>
+  ) : null;
 
   return (
     <div ref={rootRef} className={`fcs-menu ${className ?? ""}`.trim()} data-keyboard-scope="local">
       <button
-        className={`fcs-menu-trigger ${open ? "is-open" : ""}`}
+        ref={(node) => { anchorRef.current = node; }}
+        className={`btn btn-sm btn-secondary fcs-menu-trigger ${open ? "is-open" : ""}`}
         type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
         onKeyDown={(event) => {
           if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
           event.preventDefault();
           event.stopPropagation();
           pendingFocusDirection.current = event.key === "ArrowDown" ? 1 : -1;
-          if (open) focusLocalListItem(panelRef.current, pendingFocusDirection.current);
+          if (open) focusLocalListItem(floatingRef.current, pendingFocusDirection.current);
           else setOpen(true);
         }}
       >
         <span className="fcs-menu-label">{selected?.label ?? placeholder ?? ""}</span>
         <CaretDown size="var(--icon-13)" className={`fcs-menu-caret ${open ? "is-open" : ""}`} />
       </button>
-      <div ref={panelRef} className={`fcs-menu-panel ${open ? "is-open" : ""}`} role="menu" tabIndex={-1} onKeyDown={nav.listProps.onKeyDown}>
-        {options.map((option) => (
-          <button
-            key={option.value}
-            ref={nav.getItemRef(option.value)}
-            className={`fcs-menu-option ${option.value === value ? "is-selected" : ""}`}
-            type="button"
-            data-local-nav-item="true"
-            data-local-nav-active={nav.isActive(option.value) ? "true" : undefined}
-            tabIndex={open && nav.isActive(option.value) ? 0 : -1}
-            onFocus={() => nav.activate(option.value)}
-            onMouseEnter={() => nav.activate(option.value)}
-            onKeyDown={nav.listProps.onKeyDown}
-            onClick={() => {
-              onChange(option.value);
-              setOpen(false);
-            }}
-          >
-            <span className="fcs-menu-option-mark">
-              {option.value === value ? <span className="fcs-menu-option-dot" /> : null}
-            </span>
-            <span>{option.label}</span>
-          </button>
-        ))}
-      </div>
+      {panel ? createPortal(panel, floatingMenuPortalRoot()) : null}
     </div>
   );
 }

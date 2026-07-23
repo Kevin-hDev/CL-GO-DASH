@@ -1,46 +1,80 @@
-use super::{types::ForecastRequest, validation};
-use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use super::{
+    selection_policy::{self, ForecastSelectionMode},
+    types::ForecastRequest,
+    validation,
+};
 
-#[derive(Deserialize, Serialize)]
-struct SelectedForecastModel {
-    model: String,
-}
-
-fn path() -> PathBuf {
-    crate::services::paths::data_dir().join("forecast-selected-model.json")
-}
-
-pub fn get() -> Option<String> {
-    let content = std::fs::read_to_string(path()).ok()?;
-    let selected: SelectedForecastModel = serde_json::from_str(&content).ok()?;
-    validation::validate_runnable_model_id(&selected.model).ok()?;
-    Some(selected.model)
-}
-
-pub fn require() -> Result<String, String> {
-    get().ok_or_else(|| "Aucun modèle Forecast sélectionné".to_string())
-}
-
-pub fn set(model: &str) -> Result<(), String> {
-    validation::validate_runnable_model_id(model)?;
-    let target = path();
-    if let Some(parent) = target.parent() {
-        std::fs::create_dir_all(parent)
-            .map_err(|_| "Impossible d'enregistrer le modèle".to_string())?;
+pub(crate) fn apply_policy(
+    request: &mut ForecastRequest,
+    policy: selection_policy::ForecastSelectionPolicy,
+) -> Result<String, String> {
+    match policy.mode {
+        ForecastSelectionMode::Manual => {
+            if request.selection_id.is_some()
+                || request.selection_source.is_some()
+                || !request.selection_reason_codes.is_empty()
+            {
+                return Err("Métadonnées Auto interdites en mode Manuel".into());
+            }
+            let model = policy
+                .manual_model_id
+                .ok_or_else(|| "Aucun modèle Forecast sélectionné".to_string())?;
+            if request
+                .model
+                .as_deref()
+                .is_some_and(|requested| requested != model)
+            {
+                return Err("Le modèle demandé ne correspond pas à la sélection manuelle".into());
+            }
+            request.model = Some(model.clone());
+            Ok(model)
+        }
+        ForecastSelectionMode::Auto => {
+            if request.selection_id.is_none() {
+                return Err("Sélection Auto requise".into());
+            }
+            match request.selection_source {
+                Some(super::provenance_types::ForecastSelectionSource::Auto) => {}
+                Some(super::provenance_types::ForecastSelectionSource::ExplicitUserOverride)
+                    if request
+                        .selection_reason_codes
+                        .iter()
+                        .any(|reason| reason == "user_requested") => {}
+                _ => return Err("Source de sélection Auto invalide".into()),
+            }
+            let model = request
+                .model
+                .as_deref()
+                .ok_or_else(|| "Aucun modèle compatible choisi pour Auto".to_string())?;
+            validation::validate_runnable_model_id(model)?;
+            let spec = super::catalog::find_model(model).ok_or("Modèle inconnu")?;
+            if spec.is_cloud && !policy.allow_cloud_in_auto {
+                return Err("Les modèles cloud ne sont pas autorisés en mode Auto".into());
+            }
+            Ok(model.to_string())
+        }
     }
-    let selected = SelectedForecastModel {
-        model: model.to_string(),
-    };
-    let content = serde_json::to_string_pretty(&selected)
-        .map_err(|_| "Impossible d'enregistrer le modèle".to_string())?;
-    let tmp = target.with_extension("tmp");
-    std::fs::write(&tmp, content).map_err(|_| "Impossible d'enregistrer le modèle".to_string())?;
-    std::fs::rename(&tmp, &target).map_err(|_| "Impossible d'enregistrer le modèle".to_string())
 }
 
-pub fn apply_required(request: &mut ForecastRequest) -> Result<String, String> {
-    let model = require()?;
-    request.model = Some(model.clone());
-    Ok(model)
+pub(crate) fn apply_frontend_policy(
+    request: &mut ForecastRequest,
+    policy: selection_policy::ForecastSelectionPolicy,
+) -> Result<String, String> {
+    if policy.mode == ForecastSelectionMode::Manual {
+        return apply_policy(request, policy);
+    }
+    let model = request
+        .model
+        .as_deref()
+        .ok_or("Aucun modèle compatible choisi pour Auto")?;
+    validation::validate_runnable_model_id(model)?;
+    let spec = super::catalog::find_model(model).ok_or("Modèle inconnu")?;
+    if spec.is_cloud && !policy.allow_cloud_in_auto {
+        return Err("Les modèles cloud ne sont pas autorisés en mode Auto".into());
+    }
+    Ok(model.to_string())
 }
+
+#[cfg(test)]
+#[path = "selected_model_tests.rs"]
+mod tests;

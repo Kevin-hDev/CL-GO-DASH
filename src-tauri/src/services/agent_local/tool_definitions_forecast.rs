@@ -1,78 +1,21 @@
 use serde_json::Value;
 
+#[path = "tool_definitions_forecast_run.rs"]
+mod forecast_run;
+#[path = "tool_definitions_forecast_audit.rs"]
+mod forecast_audit;
+#[path = "tool_definitions_forecast_data.rs"]
+mod forecast_data;
+#[path = "tool_definitions_forecast_evaluation.rs"]
+mod forecast_evaluation;
+
 pub fn forecast_tool_definitions() -> Vec<Value> {
-    let selector_policy = match crate::services::forecast::selected_model::get() {
-        Some(model) => format!(
-            "The Forecast UI selector currently forces '{model}'. The model is selected by the app, not by you. Do not pass a model id. If the run fails, report the selected model error and keep the active model unchanged."
-        ),
-        None => "No Forecast model is currently selected in the UI. Ask the user to select one before running forecast.".to_string(),
-    };
-    let forecast_description = format!(
-        "Run a time series forecast from structured data. Use this when the user wants to predict future values of a series such as demand, sales, traffic, price, load, or trend. \
-         Provide either a JSON array in 'data' or a CSV/Excel path in 'file_path'. \
-         The tool returns a compact saved-analysis summary with analysis_id first. \
-         Call forecast_read with that analysis_id for predictions and quantiles. \
-         {selector_policy} \
-         Use forecast_models only when the user asks which Forecast models are available or when you need to inspect the current selector policy. \
-         Use series_column for multi-series models. Models with covariate support can use past columns and optional future-known rows."
-    );
     vec![
-        super::tool_definitions::tool_def(
-            "forecast",
-            &forecast_description,
-            serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "data": {
-                        "type": "string",
-                        "description": "JSON array of row objects. Historical rows must include date and target. Optional future rows may omit the target and keep known future covariates."
-                    },
-                    "file_path": {
-                        "type": "string",
-                        "description": "Path to a CSV or Excel file. Use this instead of 'data' when the source already exists on disk."
-                    },
-                    "target_column": {
-                        "type": "string",
-                        "description": "Name of the target column to forecast."
-                    },
-                    "date_column": {
-                        "type": "string",
-                        "description": "Name of the date or timestamp column."
-                    },
-                    "series_column": {
-                        "type": "string",
-                        "description": "Optional series identifier column for multi-series forecasts."
-                    },
-                    "covariate_columns": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "Optional context columns. For Chronos-2 they can be used as past covariates and future-known covariates if future rows are provided."
-                    },
-                    "horizon": {
-                        "type": "integer",
-                        "description": "Number of future steps to predict."
-                    },
-                    "frequency": {
-                        "type": "string",
-                        "description": "Time frequency such as D, W, M, Q, Y, H, or T."
-                    },
-                    "confidence_level": {
-                        "type": "number",
-                        "description": "Confidence level for prediction intervals, usually 0.9."
-                    }
-                },
-                "required": ["target_column", "date_column", "horizon", "frequency"]
-            }),
-        ),
-        super::tool_definitions::tool_def(
-            "forecast_models",
-            "List Forecast model ids available to the app. Read selection_policy.forced_model_state first: it is the authoritative state of the model forced by the Forecast UI selector. Do not infer the selected model state from other variants in the same family, and do not use this tool to override the selector.",
-            serde_json::json!({
-                "type": "object",
-                "properties": {},
-                "required": []
-            }),
-        ),
+        forecast_run_definition(),
+        forecast_audit::definition(),
+        forecast_models_definition(),
+        forecast_evaluation::backtest(),
+        forecast_evaluation::compare(),
         super::tool_definitions::tool_def(
             "forecast_analyze",
             "Operate on an existing saved forecast analysis. \
@@ -82,7 +25,8 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
              For contextual scenarios, params.scenario_kind='context_adjustment' and params.covariate_adjustments are required. \
              Use action 'scenario_update' with params.scenario_id to edit one scenario. \
              Use action 'scenario_delete' with params.scenario_id to delete one scenario. \
-             Do not use this tool for decomposition, anomalies, or feature importance yet.",
+             Use action 'ensemble' only after a successful multi-model backtest; optionally pass params.model_ids with two to four successful model ids. The result is weighted by inverse MASE and is explicitly marked as not independently backtested. \
+             Decomposition, residual anomalies, variable importance and drift are computed automatically; read them with forecast_read instead of fabricating them.",
             serde_json::json!({
                 "type": "object",
                 "properties": {
@@ -144,6 +88,13 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
                             "scenario_id": {
                                 "type": "string",
                                 "description": "Existing scenario id for scenario_update or scenario_delete."
+                            },
+                            "model_ids": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": crate::services::forecast::limits::MAX_ENSEMBLE_MODELS,
+                                "items": {"type": "string", "maxLength": 80},
+                                "description": "Optional successful backtested model ids for action ensemble. Omit to use the top successful model results."
                             }
                         }
                     }
@@ -153,13 +104,24 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
         ),
         super::tool_definitions::tool_def(
             "forecast_read",
-            "Read saved forecast analyses. Omit analysis_id, or pass an empty string, to list available analyses. Provide a non-empty analysis_id to read predictions, quantiles, metadata, annotations, and scenarios for one analysis.",
+            "Read saved forecast analyses. Omit analysis_id to list a bounded set. Provide analysis_id to read one bounded predictions page plus compact advanced analytics: decomposition, residual anomalies, chronological permutation importance and drift. Use offset and limit for later prediction pages. Treat unavailable or low-reliability analytics honestly and never replace them with a global z-score or variable amplitude.",
             serde_json::json!({
                 "type": "object",
                 "properties": {
                     "analysis_id": {
                         "type": "string",
                         "description": "Optional. Omit or pass an empty string to list analyses. Provide a non-empty saved analysis id to read one analysis."
+                    },
+                    "offset": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "description": "Prediction offset. Defaults to 0."
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 200,
+                        "description": "Predictions per page. Defaults to 100 and is capped at 200."
                     }
                 },
                 "required": []
@@ -167,3 +129,56 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
         ),
     ]
 }
+
+pub(super) fn forecast_run_definition() -> Value {
+    forecast_run::definition()
+}
+
+fn forecast_models_definition() -> Value {
+    let auto = crate::services::forecast::selection_policy::get()
+        .unwrap_or_default()
+        .mode
+        == crate::services::forecast::selection_policy::ForecastSelectionMode::Auto;
+    forecast_models_definition_for(auto)
+}
+
+fn forecast_models_definition_for(auto: bool) -> Value {
+    let properties = if auto {
+        serde_json::json!({
+            "data_profile_id": {
+                "type": "string",
+                "maxLength": 64,
+                "description": "Validated profile id returned by forecast_data_audit for the current task."
+            },
+            "requested_model_id": {
+                "type": "string",
+                "maxLength": crate::services::forecast::limits::MAX_MODEL_ID_CHARS,
+                "description": "Optional exact catalog model id. Pass it only when the user explicitly requested this Forecast model."
+            }
+        })
+    } else {
+        serde_json::json!({})
+    };
+    super::tool_definitions::tool_def(
+        "forecast_models",
+        "Inspect the Forecast selection policy and interval capabilities. In Manual, inspect forced_model_state.interval_capability and use only forced_model when it supports the exact audited confidence. In Auto, pass the validated data_profile_id: all returned candidates already support that profile's exact confidence, so choose only one candidate and pass the confidence unchanged. If the user explicitly names a model, also pass requested_model_id and follow requested_model status. Never round confidence to fit a model. Prefer rolling backtests when selection_basis is rolling_backtest. Hardware data is exposed only in this Forecast response. Pass the returned selection_id to forecast and never call a capability-only choice the best model.",
+        serde_json::json!({
+            "type": "object",
+            "properties": properties,
+            "required": if auto { vec!["data_profile_id"] } else { Vec::<&str>::new() }
+        }),
+    )
+}
+
+pub(super) fn definition_for_tool(name: &str) -> Option<Value> {
+    forecast_tool_definitions().into_iter().find(|definition| {
+        definition
+            .pointer("/function/name")
+            .and_then(Value::as_str)
+            == Some(name)
+    })
+}
+
+#[cfg(test)]
+#[path = "tool_definitions_forecast_models_tests.rs"]
+mod tests;

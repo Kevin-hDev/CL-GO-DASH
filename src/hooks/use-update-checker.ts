@@ -5,6 +5,7 @@ import { showToast } from "@/lib/toast-emitter";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import i18n from "@/i18n";
 import { useModelDownloads } from "@/hooks/use-model-downloads";
+import { useForecastDevUpdates } from "@/hooks/use-forecast-dev-updates";
 
 const CHECK_INTERVAL_MS = 60 * 60 * 1000;
 
@@ -40,6 +41,7 @@ export interface PullingState {
 
 export function useUpdateChecker() {
   const { activeDownload, startDownload } = useModelDownloads();
+  const { forecastDevUpdates } = useForecastDevUpdates();
   const [appUpdate, setAppUpdate] = useState<AppUpdate | null>(null);
   const [ollamaUpdates, setOllamaUpdates] = useState<OllamaModelUpdate[]>([]);
   const [ollamaBinaryUpdate, setOllamaBinaryUpdate] =
@@ -160,7 +162,8 @@ export function useUpdateChecker() {
   }, [ollamaBinaryUpdate]);
 
   const totalCount =
-    (appUpdate ? 1 : 0) + (ollamaBinaryUpdate ? 1 : 0) + ollamaUpdates.length;
+    (appUpdate ? 1 : 0) + (ollamaBinaryUpdate ? 1 : 0)
+    + ollamaUpdates.length + forecastDevUpdates.length;
 
   const pulling = useMemo<PullingState | null>(() => {
     if (!activeDownload || activeDownload.kind !== "ollama") return null;
@@ -177,6 +180,7 @@ export function useUpdateChecker() {
   return {
     appUpdate,
     ollamaUpdates,
+    forecastDevUpdates,
     pulling,
     ollamaBinaryUpdate,
     ollamaBinaryUpdating,

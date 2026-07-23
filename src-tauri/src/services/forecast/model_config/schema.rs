@@ -46,7 +46,6 @@ pub fn specs_for_family(family_id: &str) -> Vec<ParamSpec> {
         ],
         "timegpt-2" => vec![
             horizon_override(),
-            level(),
             bool_param("clean_ex_first", true),
             int_param("finetune_steps", 0, 0.0, 1000.0),
             select(
@@ -54,7 +53,7 @@ pub fn specs_for_family(family_id: &str) -> Vec<ParamSpec> {
                 "default",
                 &["default", "mae", "mse", "rmse"],
             ),
-            int_param("finetune_depth", 0, 0.0, 10.0),
+            int_param("finetune_depth", 1, 1.0, 5.0),
             bool_param("feature_contributions", false),
         ],
         "toto-2" => vec![
@@ -120,4 +119,29 @@ pub fn specs_for_runtime(runtime: &ForecastRuntimeSpec) -> Vec<ParamSpec> {
         .into_iter()
         .filter(|spec| runtime.config_params.contains(&spec.id))
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::specs_for_family;
+    use serde_json::{json, Map};
+
+    #[test]
+    fn timegpt_finetune_depth_matches_the_api_contract() {
+        let specs = specs_for_family("timegpt-2");
+        let depth = specs
+            .iter()
+            .find(|spec| spec.id == "finetune_depth")
+            .unwrap();
+
+        assert_eq!(depth.default_value, 1);
+        assert_eq!(depth.min, Some(1.0));
+        assert_eq!(depth.max, Some(5.0));
+
+        for invalid in [0, 6] {
+            let mut values = Map::new();
+            values.insert("finetune_depth".into(), json!(invalid));
+            assert!(super::super::validate::sanitize(&specs, values).is_err());
+        }
+    }
 }

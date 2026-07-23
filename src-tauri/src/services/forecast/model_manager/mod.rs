@@ -1,14 +1,27 @@
-use crate::services::forecast::{catalog, validation};
-use crate::services::model_downloads::{ModelDownloadPhase, ProgressUpdate};
+use crate::services::forecast::validation;
 use crate::services::paths::data_dir;
-use std::path::PathBuf;
-use tokio_util::sync::CancellationToken;
+use std::path::{Path, PathBuf};
 
 pub mod download;
-pub mod download_github;
+mod fs_safety;
+mod install;
+mod install_plan;
+mod model_artifacts;
+mod model_receipt;
+mod runtime_install;
+mod smoke;
+mod smoke_proof;
+mod uninstall;
+
+pub use install::install_with_callback;
+pub use uninstall::uninstall;
 
 fn models_dir() -> PathBuf {
     data_dir().join("forecast-models")
+}
+
+fn sidecar_dir() -> PathBuf {
+    data_dir().join("forecast-sidecar")
 }
 
 pub fn model_path(model_id: &str) -> PathBuf {
@@ -16,108 +29,60 @@ pub fn model_path(model_id: &str) -> PathBuf {
 }
 
 pub fn is_installed(model_id: &str) -> bool {
-    if validation::validate_model_id(model_id).is_err() {
+    validation::validate_model_id(model_id).is_ok() && is_installed_in(&models_dir(), model_id)
+}
+
+pub fn is_ready(model_id: &str) -> bool {
+    let Some(spec) = crate::services::forecast::catalog::find_model(model_id) else {
         return false;
-    }
-    model_path(model_id).join(".complete").exists()
-}
-
-pub async fn install_with_callback<F>(
-    model_id: &str,
-    cancel: &CancellationToken,
-    on_progress: F,
-) -> Result<(), String>
-where
-    F: Fn(ProgressUpdate) + Send + Sync,
-{
-    validation::validate_model_id(model_id)?;
-    let spec =
-        catalog::find_model(model_id).ok_or_else(|| format!("Modèle inconnu: {model_id}"))?;
-
-    let hf_repo = spec.hf_repo;
-    let github_repo = spec.github_repo;
-
-    let target_dir = model_path(model_id);
-    let staging_dir = models_dir().join(format!(".{model_id}.staging"));
-    let _ = tokio::fs::remove_dir_all(&staging_dir).await;
-    tokio::fs::create_dir_all(&staging_dir)
-        .await
-        .map_err(|_| "Impossible de préparer l'installation".to_string())?;
-
-    let download_result = if let Some(repo) = hf_repo {
-        download::download_model(repo, spec.hf_revision, &staging_dir, cancel, &on_progress).await
-    } else if let Some(repo) = github_repo {
-        download_github::download_repo_snapshot(
-            repo,
-            spec.github_revision,
-            &staging_dir,
-            cancel,
-            &on_progress,
-        )
-        .await
-    } else {
-        Err("Ce modèle n'a pas de source téléchargeable".to_string())
     };
-
-    if let Err(e) = download_result {
-        let _ = tokio::fs::remove_dir_all(&staging_dir).await;
-        return Err(e);
-    }
-    if cancel.is_cancelled() {
-        let _ = tokio::fs::remove_dir_all(&staging_dir).await;
-        return Err("cancelled".into());
-    }
-    on_progress(ProgressUpdate {
-        phase: ModelDownloadPhase::Installing,
-        downloaded: 0,
-        total: 0,
-        percent: 99,
-    });
-    tokio::fs::write(staging_dir.join(".complete"), b"ok")
-        .await
-        .map_err(|_| "Validation installation échouée".to_string())?;
-    let _ = tokio::fs::remove_dir_all(&target_dir).await;
-    tokio::fs::rename(&staging_dir, &target_dir)
-        .await
-        .map_err(|_| "Finalisation installation échouée".to_string())
-}
-
-pub async fn uninstall(model_id: &str) -> Result<(), String> {
-    validation::validate_model_id(model_id)?;
-    let path = model_path(model_id);
-    if path.exists() {
-        tokio::fs::remove_dir_all(&path)
-            .await
-            .map_err(|_| "Suppression échouée".to_string())?;
-    }
-    Ok(())
+    is_installed(model_id)
+        && model_receipt::is_current(&model_path(model_id), model_id)
+        && crate::services::forecast::sidecar_runtime::family_runtime_ready(
+            &sidecar_dir(),
+            spec.family_id,
+        )
+        && smoke::is_validated(&model_path(model_id), &sidecar_dir())
 }
 
 pub fn get_model_size(model_id: &str) -> u64 {
     if validation::validate_model_id(model_id).is_err() {
         return 0;
     }
-    let path = model_path(model_id);
-    if !path.exists() {
-        return 0;
-    }
-    walkdir_size(&path)
+    fs_safety::bounded_directory_size(&model_path(model_id)).unwrap_or(0)
 }
 
-fn walkdir_size(path: &PathBuf) -> u64 {
-    std::fs::read_dir(path)
-        .ok()
-        .map(|entries| {
-            entries
-                .filter_map(|e| e.ok())
-                .map(|e| {
-                    if e.path().is_dir() {
-                        walkdir_size(&e.path())
-                    } else {
-                        e.metadata().map(|m| m.len()).unwrap_or(0)
-                    }
-                })
-                .sum()
-        })
-        .unwrap_or(0)
+fn is_installed_in(root: &Path, model_id: &str) -> bool {
+    has_downloaded_weights(root, model_id)
 }
+
+fn has_downloaded_weights(root: &Path, model_id: &str) -> bool {
+    let model = root.join(model_id);
+    fs_safety::is_real_directory(&model) && fs_safety::is_regular_file(&model.join(".complete"))
+}
+
+fn family_has_installed_model(models: &Path, family_id: &str) -> bool {
+    family_has_other_installed_model(models, family_id, None)
+}
+
+fn family_has_other_installed_model(
+    models: &Path,
+    family_id: &str,
+    excluded_model_id: Option<&str>,
+) -> bool {
+    let Ok(runtime) = crate::services::forecast::sidecar_runtime::runtime_id(family_id) else {
+        return false;
+    };
+    crate::services::forecast::catalog::FORECAST_MODELS
+        .iter()
+        .filter(|model| {
+            Some(model.id) != excluded_model_id
+                && !model.is_cloud
+                && crate::services::forecast::sidecar_runtime::runtime_id(model.family_id)
+                    .is_ok_and(|candidate| candidate == runtime)
+        })
+        .any(|model| is_installed_in(models, model.id))
+}
+
+#[cfg(test)]
+mod tests;

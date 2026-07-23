@@ -1,41 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { invoke } from "@tauri-apps/api/core";
 import type { ForecastLayerState } from "../forecast-layer-matrix";
 import { formatForecastValue, inferMetricMeta } from "../forecast-view-format";
 import { ForecastChart } from "../charts/forecast-chart";
 import { useForecastChartResize } from "../use-forecast-chart-resize";
 import { KpiRow, PeriodCell, ValueCell } from "../forecast-view-widgets";
 import { buildForecastVariableLines } from "../forecast-variable-lines";
+import { useForecastResult } from "../use-forecast-result";
+import { ForecastScenarioMenuSelect } from "./forecast-scenario-menu-select";
+import {
+  buildForecastLayerAnnotations,
+  filterForecastSeriesData,
+  type ForecastViewResult,
+} from "./forecast-view-data";
 import "../forecast-view.css";
 import "../forecast-view-table.css";
-
-interface ForecastResult {
-  id: string;
-  name: string;
-  target_column?: string;
-  series_column?: string | null;
-  model: string;
-  horizon: number;
-  frequency: string;
-  input_summary: {
-    end: string;
-  };
-  input_data: {
-    rows?: Record<string, unknown>[];
-    series_ids?: string[];
-    history: { date: string; value: number; series_id?: string | null }[];
-  };
-  covariates_used?: string[];
-  predictions: { date: string; value: number; series_id?: string | null }[];
-  quantiles: { q10: number[]; q50: number[]; q90: number[] };
-  scenarios: {
-    id: string;
-    name: string;
-    predictions: { date: string; value: number; series_id?: string | null }[];
-  }[];
-  metrics: { mape: number | null; mae: number | null; crps: number | null; bias: number | null } | null;
-}
 
 interface ForecastViewProps {
   analysisId: string;
@@ -44,16 +23,9 @@ interface ForecastViewProps {
 
 export function ForecastView({ analysisId, layers }: ForecastViewProps) {
   const { t, i18n } = useTranslation();
-  const [data, setData] = useState<ForecastResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { data, error } = useForecastResult<ForecastViewResult>(analysisId, t("forecast.noAnalysis"));
   const [selectedSeries, setSelectedSeries] = useState("");
   const chart = useForecastChartResize();
-
-  useEffect(() => {
-    invoke<ForecastResult>("get_forecast_analysis", { id: analysisId })
-      .then(setData)
-      .catch(() => setError(t("forecast.noAnalysis")));
-  }, [analysisId, t]);
 
   if (error) return <div className="fc-error">{error}</div>;
   if (!data) return <div className="fc-loading"><div className="fc-skeleton" /></div>;
@@ -63,7 +35,19 @@ export function ForecastView({ analysisId, layers }: ForecastViewProps) {
     selectedSeries && data.input_data.series_ids?.includes(selectedSeries)
       ? selectedSeries
       : data.input_data.series_ids?.[0] ?? "";
-  const filtered = filterSeriesData(data, activeSeries);
+  const scenarioLines = [
+    ...(data.scenarios ?? []),
+    ...(data.ensemble ? [{
+      id: "ensemble",
+      name: t("forecast.view.ensembleSeries"),
+      predictions: data.ensemble.predictions,
+    }] : []),
+  ];
+  const filtered = filterForecastSeriesData(data, activeSeries, scenarioLines);
+  const annotations = buildForecastLayerAnnotations(data, activeSeries, {
+    anomaly: t("forecast.view.filters.residualAnomalies"),
+    quality: t("forecast.view.filters.dataQualityIssues"),
+  });
   const variables = buildForecastVariableLines({
     rows: data.input_data.rows ?? [],
     covariates: data.covariates_used ?? [],
@@ -79,21 +63,18 @@ export function ForecastView({ analysisId, layers }: ForecastViewProps) {
       {data.metrics && <KpiRow metrics={data.metrics} />}
       {data.input_data.series_ids && data.input_data.series_ids.length > 1 && (
         <div className="fc-view-toolbar">
-          <label className="fc-view-toolbar-label" htmlFor="fc-view-series">
+          <span className="fc-view-toolbar-label">
             {t("forecast.view.series")}
-          </label>
-          <select
-            id="fc-view-series"
-            className="fc-view-toolbar-select"
+          </span>
+          <ForecastScenarioMenuSelect
+            className="fc-view-toolbar-menu"
             value={activeSeries}
-            onChange={(event) => setSelectedSeries(event.target.value)}
-          >
-            {data.input_data.series_ids.map((seriesId) => (
-              <option key={seriesId} value={seriesId}>
-                {seriesId}
-              </option>
-            ))}
-          </select>
+            options={data.input_data.series_ids.map((seriesId) => ({
+              value: seriesId,
+              label: seriesId,
+            }))}
+            onChange={setSelectedSeries}
+          />
         </div>
       )}
       <div
@@ -106,6 +87,7 @@ export function ForecastView({ analysisId, layers }: ForecastViewProps) {
             predictions={filtered.predictions}
             scenarios={filtered.scenarios}
             variables={variables}
+            annotations={annotations}
             quantiles={{ q10: filtered.q10, q90: filtered.q90 }}
             frequency={data.frequency}
             endDate={data.input_summary.end}
@@ -154,35 +136,4 @@ export function ForecastView({ analysisId, layers }: ForecastViewProps) {
       </div>
     </div>
   );
-}
-
-function filterSeriesData(data: ForecastResult, selectedSeries: string) {
-  if (!data.input_data.series_ids || data.input_data.series_ids.length <= 1) {
-    return {
-      history: data.input_data.history,
-      predictions: data.predictions,
-      scenarios: data.scenarios ?? [],
-      q10: data.quantiles.q10,
-      q90: data.quantiles.q90,
-    };
-  }
-
-  const seriesId = selectedSeries || data.input_data.series_ids[0];
-  const indices: number[] = [];
-  const predictions = data.predictions.filter((point, index) => {
-    const match = point.series_id === seriesId;
-    if (match) indices.push(index);
-    return match;
-  });
-
-  return {
-    history: data.input_data.history.filter((point) => point.series_id === seriesId),
-    predictions,
-    scenarios: (data.scenarios ?? []).map((scenario) => ({
-      ...scenario,
-      predictions: scenario.predictions.filter((point) => point.series_id === seriesId),
-    })),
-    q10: indices.map((index) => data.quantiles.q10[index]).filter((value) => value !== undefined),
-    q90: indices.map((index) => data.quantiles.q90[index]).filter((value) => value !== undefined),
-  };
 }

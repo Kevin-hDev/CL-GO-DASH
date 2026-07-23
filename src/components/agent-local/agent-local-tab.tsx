@@ -1,5 +1,4 @@
 import { useMemo, memo } from "react";
-import { useTranslation } from "react-i18next";
 import { ChatHeader } from "./chat-header";
 import { AgentChatDetail } from "./agent-chat-detail";
 import { WelcomeView } from "./welcome-view";
@@ -30,7 +29,6 @@ export const AgentLocalTab = memo(function AgentLocalTab({
   onNavChange,
   listFocused = true,
 }: AgentLocalTabProps) {
-  const { t } = useTranslation();
   const s = useAgentLocalTab({ navState, onSessionChange, onNavChange, listFocused });
   const { sessions, refresh, archive, updateModel } = s;
   const { projectsHook, terminal, activeSession, activeSessionId } = s;
@@ -66,11 +64,17 @@ export const AgentLocalTab = memo(function AgentLocalTab({
   const fileTree = useFileTree(displaySessionId, displayProject?.path);
   const forecast = useForecastPanel(displaySessionId ?? null);
   useAgentLocalPanelNav({ navState, fileTree, forecast });
-  const { fileTreeNav, forecastNav } = useAgentLocalControlledPanels({ navState, fileTree, forecast, onNavChange });
+  const { fileTreeNav, forecastNav } = useAgentLocalControlledPanels({
+    navState, sessionId: displaySessionId ?? null, filePreview, fileTree, forecast, onNavChange,
+  });
   const availablePanel = useAvailablePanelMode(forecastNav.panelMode);
   const {
     forecastContent, fullscreenSwitching, handleOpenForecastDocs, handlePreviewFullscreenChange,
-  } = useAgentLocalForecastContent({ forecastNav, filePreview, docsWindowTitle: t("forecast.docs.windowTitle") });
+  } = useAgentLocalForecastContent({
+    forecastNav,
+    filePreview,
+    sessionId: displaySessionId ?? null,
+  });
 
   const list = useAgentLocalConversationList(s, activeSessionId);
 

@@ -56,10 +56,13 @@ const OPTIONAL_GROUPS: &[ToolGroupEntry] = &[
         false,
         false,
         &[
+            "forecast_data_audit",
             "forecast",
             "forecast_models",
             "forecast_analyze",
             "forecast_read",
+            "forecast_backtest",
+            "forecast_compare_models",
         ],
     ),
     group(
@@ -130,6 +133,15 @@ mod tests {
         let plan_tools = optional_group_tool_ids("plan_mode").unwrap();
 
         assert_eq!(plan_tools, ["planmode", "exitplanmode"]);
+    }
+
+    #[test]
+    fn forecast_group_contains_the_data_audit() {
+        let tools = optional_group_tool_ids("forecast").unwrap();
+
+        assert!(tools.contains(&"forecast_data_audit"));
+        assert!(tools.contains(&"forecast_backtest"));
+        assert!(tools.contains(&"forecast_compare_models"));
     }
 
     #[test]

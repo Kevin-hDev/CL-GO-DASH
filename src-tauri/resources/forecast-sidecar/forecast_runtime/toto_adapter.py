@@ -1,14 +1,12 @@
-from .adapter_utils import (
-    forecast_payload_result,
-    forecast_quantile_index,
-    simple_result,
-    values_tensor,
-)
-from .config_utils import config_bool, config_int
+from .config_utils import config_bool, config_int, trim_history
 from .config_utils import standard_quantile_levels
 from .device_utils import move_model, move_tensor
-from .toto_covariates import build_covariate_jobs, format_covariate_predictions
-from .validation import validate_column_names
+from .toto_multivariate import (
+    build_joint_job,
+    extract_quantile_grids,
+    format_joint_predictions,
+)
+from .validation import quantile_key, validate_values
 
 
 class TotoAdapter:
@@ -18,139 +16,66 @@ class TotoAdapter:
         self.model = None
 
     def predict(self, payload, horizon, quantile_levels):
-        quantile_levels = standard_quantile_levels(quantile_levels)
-        covariates = validate_column_names(payload.get("covariate_columns"))
-        if covariates:
-            return self._predict_with_covariates(
-                payload, horizon, quantile_levels, covariates
-            )
-        return forecast_payload_result(
-            payload,
-            horizon,
-            quantile_levels,
-            lambda values, length, levels: self._forecast_one(
-                values, length, levels, payload
-            ),
+        quantile_levels = sorted(
+            set(standard_quantile_levels(quantile_levels) + [0.1, 0.5, 0.9])
         )
-
-    def _predict_with_covariates(self, payload, horizon, quantile_levels, covariates):
-        jobs = build_covariate_jobs(payload, horizon, covariates)
-        if len(jobs) == 1 and jobs[0]["series_id"] is None:
-            median, quantiles = self._forecast_with_covariates(
-                jobs[0]["values"],
-                jobs[0]["covariates"],
-                horizon,
-                quantile_levels,
-                payload,
+        if payload.get("covariate_columns"):
+            raise ValueError("covariates_not_supported")
+        if payload.get("series_column"):
+            job = build_joint_job(payload, horizon)
+            median, quantiles = self._forecast_tensor(
+                job["values"], horizon, quantile_levels, payload
             )
-            return simple_result(median, quantile_levels, quantiles, horizon)
-
-        forecasts = []
-        for job in jobs:
-            median, quantiles = self._forecast_with_covariates(
-                job["values"],
-                job["covariates"],
-                horizon,
-                quantile_levels,
-                payload,
+            return format_joint_predictions(
+                job, median, quantiles, quantile_levels, horizon
             )
-            forecasts.append((job, median, quantiles))
-        return format_covariate_predictions(forecasts, quantile_levels, horizon)
+        values = trim_history(validate_values(payload.get("values")), payload)
+        median, quantiles = self._forecast_tensor(
+            [values], horizon, quantile_levels, payload
+        )
+        result = {"median": median[0]}
+        for level, grid in zip(quantile_levels, quantiles, strict=True):
+            result[quantile_key(level)] = grid[0]
+        return result
 
-    def _forecast_one(self, values, horizon, quantile_levels, payload):
+    def _forecast_tensor(self, series_values, horizon, quantile_levels, payload):
         import torch
 
         model = move_model(self._load_model(), self.device).eval()
         patch_size = max(1, int(getattr(model.config, "patch_size", 32)))
-        pad_count = (-len(values)) % patch_size
-        padded = ([values[0]] * pad_count) + values if pad_count else values
-
-        target = move_tensor(values_tensor(padded), self.device).view(1, 1, -1)
-        mask = torch.ones_like(target, dtype=torch.bool)
-        if pad_count:
-            mask[..., :pad_count] = False
-        series_ids = move_tensor(torch.zeros(1, 1, dtype=torch.long), self.device)
-        decode_block_size = config_int(payload, "decode_block_size", 768, 1, 4096)
-        has_missing_values = config_bool(payload, "has_missing_values", bool(pad_count))
-        with torch.no_grad():
-            quantiles = model.forecast(
-                {"target": target, "target_mask": mask, "series_ids": series_ids},
-                horizon=horizon,
-                decode_block_size=decode_block_size,
-                has_missing_values=has_missing_values or bool(pad_count),
-            )
-        q50 = quantiles[forecast_quantile_index(0.5), 0, 0, :horizon]
-        selected = [
-            quantiles[forecast_quantile_index(level), 0, 0, :horizon]
-            for level in quantile_levels
+        pad_count = (-len(series_values[0])) % patch_size
+        padded = [
+            ([values[0]] * pad_count) + values if pad_count else values
+            for values in series_values
         ]
-        return q50, selected
-
-    def _forecast_with_covariates(
-        self, values, covariates, horizon, quantile_levels, payload
-    ):
-        import torch
-
-        model = move_model(self._load_model(), self.device).eval()
-        patch_size = max(1, int(getattr(model.config, "patch_size", 32)))
-        pad_count = (-len(values)) % patch_size
-        padded = ([values[0]] * pad_count) + values if pad_count else values
-
-        target = move_tensor(values_tensor(padded), self.device).view(1, 1, -1)
-        mask = torch.ones_like(target, dtype=torch.bool)
-        if pad_count:
-            mask[..., :pad_count] = False
-        series_ids = move_tensor(torch.zeros(1, 1, dtype=torch.long), self.device)
-
-        dynamic_values = []
-        dynamic_masks = []
-        for series in covariates:
-            history = series["history"]
-            future = series["future"]
-            padded_values = ([history[0]] * pad_count) + history + future
-            padded_mask = (
-                ([False] * pad_count)
-                + series["history_mask"]
-                + series["future_mask"]
-            )
-            dynamic_values.append(padded_values)
-            dynamic_masks.append(padded_mask)
-
-        known_dynamic = move_tensor(values_tensor(dynamic_values), self.device).view(
-            1, len(dynamic_values), -1
+        masks = [
+            ([False] * pad_count) + ([True] * len(values)) for values in series_values
+        ]
+        target = move_tensor(
+            torch.tensor([padded], dtype=torch.float32), self.device
         )
-        known_dynamic_mask = torch.tensor(dynamic_masks, dtype=torch.bool).view(
-            1, len(dynamic_masks), -1
+        mask = move_tensor(torch.tensor([masks], dtype=torch.bool), self.device)
+        series_ids = move_tensor(
+            torch.tensor([[0] * len(series_values)], dtype=torch.long), self.device
         )
-        known_dynamic_mask = move_tensor(known_dynamic_mask, self.device)
-        known_dynamic_ids = move_tensor(
-            torch.zeros(1, len(dynamic_values), dtype=torch.long), self.device
-        )
-
         decode_block_size = config_int(payload, "decode_block_size", 768, 1, 4096)
-        has_missing_values = config_bool(payload, "has_missing_values", False)
+        has_missing = config_bool(payload, "has_missing_values", False) or bool(
+            pad_count
+        )
         with torch.no_grad():
             quantiles = model.forecast(
                 {
                     "target": target,
                     "target_mask": mask,
                     "series_ids": series_ids,
-                    "known_dynamic": known_dynamic,
-                    "known_dynamic_mask": known_dynamic_mask,
-                    "known_dynamic_series_ids": known_dynamic_ids,
                 },
                 horizon=horizon,
                 decode_block_size=decode_block_size,
-                has_missing_values=has_missing_values
-                or bool(pad_count)
-                or not bool(known_dynamic_mask.all()),
+                has_missing_values=has_missing,
             )
-        q50 = quantiles[forecast_quantile_index(0.5), 0, 0, :horizon]
-        selected = [
-            quantiles[forecast_quantile_index(level), 0, 0, :horizon]
-            for level in quantile_levels
-        ]
-        return q50, selected
+        return extract_quantile_grids(
+            quantiles, quantile_levels, horizon, len(series_values)
+        )
 
     def _load_model(self):
         if self.model is None:

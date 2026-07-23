@@ -6,6 +6,9 @@ export function buildLaunchErrorKey(
   profile: ForecastContextProfile,
   horizon: number,
 ): string | null {
+  if (model && horizon > Math.min(model.horizon_max, 5_000)) {
+    return "forecast.config.validation.horizonTooLong";
+  }
   if (
     profile.futureRows > 0 &&
     profile.futureRowsPerSeries != null &&
