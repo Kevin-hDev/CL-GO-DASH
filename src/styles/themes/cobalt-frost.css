@@ -60,6 +60,8 @@
   /* Surface variants */
   --surface-glass: rgba(232, 238, 247, 0.68);
   --surface-overlay: rgba(255, 255, 255, 0.86);
+  /* Thème clair : le blanc est le sommet — l'élévation est portée par l'ombre */
+  --surface-raised: var(--surface);
   --tooltip-bg: #ffffff;
   --tooltip-border: rgba(69, 91, 122, 0.18);
   --tooltip-text: var(--ink);

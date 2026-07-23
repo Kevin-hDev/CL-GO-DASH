@@ -26,7 +26,7 @@
   align-items: center;
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
-  background: var(--void);
+  background: var(--surface-raised);
   padding: 8px 10px;
 }
 
@@ -83,7 +83,7 @@
 .fca-variable {
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
-  background: var(--void);
+  background: var(--surface-raised);
   padding: 9px 10px;
 }
 

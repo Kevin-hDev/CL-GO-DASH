@@ -60,6 +60,8 @@
   /* Surface variants */
   --surface-glass: rgba(37, 37, 37, 0.55);
   --surface-overlay: rgba(37, 37, 37, 0.70);
+  /* Marche d'élévation au-dessus de l'overlay — cartes sur panneaux (≈ #282828 sur --void) */
+  --surface-raised: rgba(46, 46, 46, 0.80);
   --tooltip-bg: #252525;
   --tooltip-border: rgba(255, 255, 255, 0.10);
   --tooltip-text: var(--ink);

@@ -60,6 +60,8 @@
   /* Surface variants */
   --surface-glass: rgba(11, 48, 42, 0.58);
   --surface-overlay: rgba(13, 58, 49, 0.78);
+  /* Marche d'élévation au-dessus de l'overlay, dans la famille verte du thème */
+  --surface-raised: rgba(18, 72, 61, 0.82);
   --tooltip-bg: #0b302a;
   --tooltip-border: rgba(207, 225, 207, 0.16);
   --tooltip-text: var(--ink);

@@ -47,7 +47,7 @@
   overflow: hidden;
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
-  background: var(--void);
+  background: var(--surface-raised);
 }
 
 .ts-preview-accent,
