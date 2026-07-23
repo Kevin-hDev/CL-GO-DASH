@@ -78,7 +78,14 @@ export function ForecastChartCard({
           />
         </button>
       </div>
-      <div ref={bodyRef} className={`fcrd-body ${open ? "is-open" : ""}`}>
+      <div
+        ref={bodyRef}
+        className={`fcrd-body ${open ? "is-open" : ""}`}
+        // Collapsed bodies stay in the DOM for the grid-rows animation but
+        // must leave the tab order and the accessibility tree.
+        inert={!open}
+        aria-hidden={!open}
+      >
         <div className="fcrd-inner">{children}</div>
       </div>
     </section>

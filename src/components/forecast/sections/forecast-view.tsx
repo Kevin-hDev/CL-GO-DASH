@@ -173,7 +173,9 @@ export function ForecastView({
               <span>{metric.columnTitle}</span>
             </div>
             <div className="fc-table-body">
-              {filtered.predictions.map((p, i) => (
+              {/* Rows mount only when the section opens: long horizons
+                  would otherwise render hundreds of hidden cells. */}
+              {tableOpen && filtered.predictions.map((p, i) => (
                 <div key={i} className="fc-table-row">
                   <PeriodCell
                     index={i}
