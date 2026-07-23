@@ -4,9 +4,9 @@ import {
   clampForecastZoomWindow,
   FORECAST_CHART_MIN_ZOOM_SPAN,
   sameForecastZoomWindow,
-  shouldIgnoreRoamAtFullExtent,
   type ForecastZoomWindow,
 } from "./forecast-chart-zoom-utils";
+import { useForecastWheelZoom } from "./use-forecast-wheel-zoom";
 
 interface UseForecastChartZoomArgs {
   signature: string;
@@ -24,8 +24,9 @@ export function useForecastChartZoom({
   const shellRef = useRef<HTMLDivElement | null>(null);
   const controlsRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef({ active: false, x: 0, start: 0, end: 100 });
-  // Last window synced to React state; lets handleDataZoom know the window
-  // before a roam gesture without depending on re-renders.
+  // Latest window synced to React state, updated synchronously so event
+  // handlers (wheel, slider) always read the current window without
+  // waiting for a re-render.
   const syncedRef = useRef({ signature, start: 0, end: 100 });
   const [zoomState, setZoomState] = useState({
     signature,
@@ -74,30 +75,16 @@ export function useForecastChartZoom({
     syncZoomState(next);
   }, [jump, zoomWindow, chartRef, syncZoomState]);
 
-  const handleDataZoom = useCallback((event?: unknown) => {
+  const handleDataZoom = useCallback(() => {
     if (dragRef.current.active) return;
     const raw = readChartZoom();
     if (!raw) return;
     const next = clampForecastZoomWindow(raw.start, raw.end);
-    const synced = syncedRef.current;
-    const current = synced.signature === signature
-      ? { start: synced.start, end: synced.end }
-      : { start: 0, end: 100 };
-    // Wheel/roam events carry `batch`; our own dispatchAction calls do not.
-    // At full extent the wheel must be a complete no-op: ECharts anchors
-    // wheel zoom-in at the cursor, which contracts the window toward it and
-    // reads as a silent pan. Revert and leave state untouched. Our controls
-    // (slider/jump/reset/drag) sync state directly, so they are unaffected.
-    const isRoam = Array.isArray((event as { batch?: unknown } | undefined)?.batch);
-    if (isRoam && shouldIgnoreRoamAtFullExtent(current, next)) {
-      chartRef.current?.dispatchAction({ type: "dataZoom", start: 0, end: 100 });
-      return;
-    }
     if (!sameForecastZoomWindow(raw, next)) {
       chartRef.current?.dispatchAction({ type: "dataZoom", ...next });
     }
     syncZoomState(next);
-  }, [chartRef, readChartZoom, signature, syncZoomState]);
+  }, [chartRef, readChartZoom, syncZoomState]);
 
   const handleResetZoom = useCallback(() => {
     chartRef.current?.dispatchAction({ type: "dataZoom", start: 0, end: 100 });
@@ -145,6 +132,8 @@ export function useForecastChartZoom({
     if (raw) syncZoomState(raw);
     dragRef.current.active = false;
   }, [readChartZoom, syncZoomState]);
+
+  useForecastWheelZoom({ shellRef, chartRef, signature, syncedRef, syncZoomState });
 
   return {
     shellRef,

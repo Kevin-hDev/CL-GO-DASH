@@ -54,7 +54,9 @@ export function buildForecastChartOption(args: ForecastChartOptionArgs): ECharts
         realtime: true,
         throttle: 16,
         filterMode: "none",
-        zoomOnMouseWheel: true,
+        // Wheel zoom is owned by use-forecast-wheel-zoom (ECharts roam wheel
+        // anchors zoom at the cursor and drifts; we compute the window).
+        zoomOnMouseWheel: false,
         moveOnMouseWheel: false,
         moveOnMouseMove: false,
       },

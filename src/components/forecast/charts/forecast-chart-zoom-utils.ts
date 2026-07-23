@@ -24,22 +24,50 @@ export function sameForecastZoomWindow(left: ForecastZoomWindow, right: Forecast
   return Math.abs(left.start - right.start) < 0.001 && Math.abs(left.end - right.end) < 0.001;
 }
 
-export const FULL_EXTENT_ZOOM_WINDOW: ForecastZoomWindow = { start: 0, end: 100 };
+// Wheel zoom factor per tick: span is multiplied (out) or divided (in) by it.
+export const FORECAST_WHEEL_ZOOM_FACTOR = 1.12;
 
-export function isFullExtentZoomWindow(window: ForecastZoomWindow): boolean {
-  return sameForecastZoomWindow(window, FULL_EXTENT_ZOOM_WINDOW);
+function shiftZoomWindowIntoBounds(start: number, span: number): ForecastZoomWindow {
+  if (start < 0) return { start: 0, end: span };
+  if (start + span > 100) return { start: 100 - span, end: 100 };
+  return { start, end: start + span };
 }
 
-// ECharts anchors inside-dataZoom wheel zoom at the cursor. Zooming OUT at
-// full extent is already a no-op (the expanded window clamps back), but
-// zooming IN contracts the window toward the cursor, which reads as a silent
-// pan (e.g. sliding right with the right edge pinned). Roam gestures at full
-// extent are therefore ignored entirely; only span < 100 keeps wheel zoom.
-export function shouldIgnoreRoamAtFullExtent(
+// Our own wheel pipeline (ECharts inside-roam wheel is disabled):
+// - zoom OUT expands symmetrically around the CURRENT center, so no
+//   cursor-anchor drift can appear; reaching full extent snaps to exactly
+//   {0,100}, which makes beyond-100% drift impossible by construction.
+// - zoom IN shrinks ANCHORED at the cursor (anchorRatio in plot space), so
+//   the point under the cursor stays fixed; span floors at minSpan.
+export function computeWheelZoomWindow(
   current: ForecastZoomWindow,
-  next: ForecastZoomWindow,
-): boolean {
-  return isFullExtentZoomWindow(current) && !isFullExtentZoomWindow(next);
+  direction: number,
+  anchorRatio: number,
+  minSpan: number = FORECAST_CHART_MIN_ZOOM_SPAN,
+): ForecastZoomWindow {
+  const span = current.end - current.start;
+  if (!Number.isFinite(span) || span <= 0 || !Number.isFinite(direction) || direction === 0) {
+    return clampForecastZoomWindow(current.start, current.end);
+  }
+  if (direction > 0) {
+    // Snap to exact full extent within half a percent: avoids asymptotic
+    // 99.97% slivers (and float dust) that would read as micro-drift.
+    const nextSpan = Math.min(100, span * FORECAST_WHEEL_ZOOM_FACTOR);
+    if (nextSpan >= 99.5) return { start: 0, end: 100 };
+    const center = (current.start + current.end) / 2;
+    return shiftZoomWindowIntoBounds(center - nextSpan / 2, nextSpan);
+  }
+  const anchor = Number.isFinite(anchorRatio) ? Math.min(1, Math.max(0, anchorRatio)) : 0.5;
+  const nextSpan = Math.max(minSpan, span / FORECAST_WHEEL_ZOOM_FACTOR);
+  if (nextSpan >= 100) return { start: 0, end: 100 };
+  const anchorPosition = current.start + anchor * span;
+  return shiftZoomWindowIntoBounds(anchorPosition - anchor * nextSpan, nextSpan);
+}
+
+// Cursor position mapped to a 0-1 ratio across the plot area.
+export function zoomAnchorRatio(offsetX: number, plotLeft: number, plotWidth: number): number {
+  if (!Number.isFinite(offsetX) || !Number.isFinite(plotWidth) || plotWidth <= 0) return 0.5;
+  return Math.min(1, Math.max(0, (offsetX - plotLeft) / plotWidth));
 }
 
 export function forecastZoomSliderValue(span: number): number {
