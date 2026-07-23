@@ -61,6 +61,11 @@ async fn annotate(
             date,
             text,
             source: crate::services::forecast::types::AnnotationSource::Llm,
+            note_title: None,
+            note_type: None,
+            note_content: None,
+            note_created_at: None,
+            note_updated_at: None,
         });
     match storage::save(&mut analysis).await {
         Ok(_) => ToolResult::ok("Annotation ajoutée"),

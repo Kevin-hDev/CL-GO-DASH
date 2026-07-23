@@ -35,7 +35,7 @@ pub(super) async fn rollback_deleted(previous: Option<&ForecastNote>, original: 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::services::forecast::notes_files::{load_note, note_path, write_note};
+    use crate::services::forecast::notes_files::{existing_note_path, load_note, write_note};
 
     fn note(content: &str) -> ForecastNote {
         ForecastNote {
@@ -60,7 +60,9 @@ mod tests {
         let error = rollback_created(&item, "original".into()).await;
 
         assert_eq!(error, "original");
-        assert!(!note_path(&item.analysis_id, &item.id).exists());
+        assert!(existing_note_path(&item.analysis_id, &item.id)
+            .await
+            .is_err());
     }
 
     #[tokio::test]

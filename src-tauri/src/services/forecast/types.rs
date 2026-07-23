@@ -1,3 +1,4 @@
+pub use super::annotation_types::{Annotation, AnnotationSource};
 use super::evaluation::types::BacktestIndexSummary;
 use super::evaluation::types::ForecastEvaluation;
 use super::input_data::InputSnapshot;
@@ -117,21 +118,6 @@ pub struct ForecastMetrics {
     pub mae: Option<f64>,
     pub crps: Option<f64>,
     pub bias: Option<f64>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Annotation {
-    pub id: String,
-    pub date: String,
-    pub text: String,
-    pub source: AnnotationSource,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum AnnotationSource {
-    User,
-    Llm,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

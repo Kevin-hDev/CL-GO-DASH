@@ -87,6 +87,14 @@ pub fn run() {
                 eprintln!("[storage migration] {}", e);
             }
             services::private_store::repair_app_storage().map_err(std::io::Error::other)?;
+            tauri::async_runtime::spawn(async {
+                if services::forecast::notes_cleanup::recover_pending_deletions()
+                    .await
+                    .is_err()
+                {
+                    eprintln!("[forecast] récupération des notes différée");
+                }
+            });
             if services::security_cleanup::run().is_err() {
                 eprintln!("[security cleanup] cleanup failed");
             }

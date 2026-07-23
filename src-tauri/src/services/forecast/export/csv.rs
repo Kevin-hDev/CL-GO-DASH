@@ -1,5 +1,6 @@
 use super::common::{rows, ExportBundle};
 use super::quantile_labels::QuantileLabels;
+use super::spreadsheet_text::safe_csv_cell;
 use std::path::Path;
 
 pub fn write(bundle: &ExportBundle, path: &Path) -> Result<(), String> {
@@ -25,15 +26,15 @@ pub fn write(bundle: &ExportBundle, path: &Path) -> Result<(), String> {
         writer
             .write_record([
                 row.section,
-                row.name,
-                row.date,
-                row.series_id,
+                safe_csv_cell(&row.name),
+                safe_csv_cell(&row.date),
+                safe_csv_cell(&row.series_id),
                 row.value,
                 row.q10,
                 row.q50,
                 row.q90,
-                row.text,
-                row.source,
+                safe_csv_cell(&row.text),
+                safe_csv_cell(&row.source),
             ])
             .map_err(|_| "Export CSV impossible".to_string())?;
     }

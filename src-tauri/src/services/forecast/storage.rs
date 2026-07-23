@@ -70,6 +70,15 @@ pub async fn load(id: &str) -> Result<ForecastResult, String> {
     serde_json::from_slice(&data).map_err(|_| "Données d'analyse corrompues".to_string())
 }
 
+pub async fn exists(id: &str) -> Result<bool, String> {
+    validate_analysis_id(id)?;
+    match analysis_path_for_read(id).await {
+        Ok(_) => Ok(true),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(false),
+        Err(_) => Err("Accès à l'analyse impossible".into()),
+    }
+}
+
 pub async fn delete(id: &str) -> Result<(), String> {
     validate_analysis_id(id)?;
     let _save_guard = SAVE_LOCK.lock().await;
@@ -89,13 +98,13 @@ pub async fn delete(id: &str) -> Result<(), String> {
     Ok(())
 }
 
-pub async fn rename(id: &str, name: &str) -> Result<ForecastAnalysisMeta, String> {
+pub async fn rename(id: &str, name: &str) -> Result<ForecastResult, String> {
     validate_analysis_id(id)?;
     let next_name = validate_analysis_name(name)?;
     let mut analysis = load(id).await?;
     analysis.name = next_name;
     save(&mut analysis).await?;
-    Ok(analysis.to_meta())
+    Ok(analysis)
 }
 
 pub async fn list() -> Result<Vec<ForecastAnalysisMeta>, String> {

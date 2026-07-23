@@ -1,6 +1,7 @@
 use super::super::notes::ForecastNote;
 use super::super::types::{ForecastResult, Prediction};
 use super::quantile_labels::QuantileLabels;
+use super::spreadsheet_text::safe_csv_cell;
 use serde::Serialize;
 use serde_json::json;
 use std::path::Path;
@@ -114,8 +115,8 @@ pub fn clipboard_text(bundle: &ExportBundle) -> String {
     for (idx, point) in a.predictions.iter().enumerate() {
         lines.push(format!(
             "{}\t{}\t{}\t{}\t{}\t{}",
-            point.date,
-            point.series_id.clone().unwrap_or_default(),
+            safe_csv_cell(&point.date),
+            safe_csv_cell(point.series_id.as_deref().unwrap_or_default()),
             fmt(point.value),
             q(&a.quantiles.q10, idx),
             q(&a.quantiles.q50, idx),

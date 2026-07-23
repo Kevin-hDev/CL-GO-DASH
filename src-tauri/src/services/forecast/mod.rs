@@ -1,4 +1,5 @@
 pub mod advanced;
+mod annotation_types;
 pub mod auto_selection;
 pub mod auto_selection_ui;
 pub mod catalog;
@@ -39,9 +40,13 @@ pub mod model_listing;
 pub mod model_manager;
 pub mod nixtla_multiseries;
 pub mod notes;
+mod notes_annotations;
 pub mod notes_cleanup;
 mod notes_files;
+mod notes_format;
+mod notes_paths;
 mod notes_transaction;
+mod notes_types;
 mod notes_validation;
 pub mod numeric_parse;
 pub mod provenance;
@@ -85,6 +90,8 @@ mod auto_selection_request_tests;
 mod file_input_tests;
 #[cfg(test)]
 mod input_data_tests;
+#[cfg(test)]
+mod notes_security_tests;
 #[cfg(test)]
 mod registry_tests;
 #[cfg(test)]

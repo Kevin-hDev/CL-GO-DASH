@@ -1,7 +1,7 @@
 use crate::services::forecast::types::{ForecastAnalysisMeta, ForecastRequest, ForecastResult};
 use crate::services::forecast::{
-    catalog, client_chronos, client_nixtla, data_profiles, export, model_manager, notes,
-    notes_cleanup, registry, selected_model, sidecar, storage, validation,
+    catalog, client_chronos, client_nixtla, data_profiles, export, model_manager, notes_cleanup,
+    registry, selected_model, sidecar, storage, validation,
 };
 use std::time::Instant;
 use tauri::{AppHandle, State};
@@ -139,54 +139,6 @@ pub async fn rename_forecast_analysis(
     name: String,
 ) -> Result<ForecastAnalysisMeta, String> {
     let renamed = storage::rename(&id, &name).await?;
-    crate::services::forecast::events::emit_updated_id(
-        &app,
-        &renamed.id,
-        renamed.session_id.as_deref(),
-        None,
-    );
-    Ok(renamed)
-}
-
-#[tauri::command]
-pub async fn list_forecast_notes(analysis_id: String) -> Result<Vec<notes::ForecastNote>, String> {
-    notes::list(&analysis_id).await
-}
-
-#[tauri::command]
-pub async fn create_forecast_note(
-    app: AppHandle,
-    request: notes::ForecastNoteCreateRequest,
-) -> Result<notes::ForecastNote, String> {
-    let analysis_id = request.analysis_id.clone();
-    let note = notes::create(request).await?;
-    crate::services::forecast::events::emit_updated_id(&app, &analysis_id, None, None);
-    Ok(note)
-}
-
-#[tauri::command]
-pub async fn update_forecast_note(
-    app: AppHandle,
-    request: notes::ForecastNoteUpdateRequest,
-) -> Result<notes::ForecastNote, String> {
-    let analysis_id = request.analysis_id.clone();
-    let note = notes::update(request).await?;
-    crate::services::forecast::events::emit_updated_id(&app, &analysis_id, None, None);
-    Ok(note)
-}
-
-#[tauri::command]
-pub async fn delete_forecast_note(
-    app: AppHandle,
-    analysis_id: String,
-    note_id: String,
-) -> Result<(), String> {
-    notes::delete(&analysis_id, &note_id).await?;
-    crate::services::forecast::events::emit_updated_id(&app, &analysis_id, None, None);
-    Ok(())
-}
-
-#[tauri::command]
-pub fn open_forecast_note(analysis_id: String, note_id: String) -> Result<(), String> {
-    notes::open(&analysis_id, &note_id)
+    crate::services::forecast::events::emit_updated(&app, &renamed);
+    Ok(renamed.to_meta())
 }

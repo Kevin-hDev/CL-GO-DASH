@@ -7,9 +7,12 @@ mod common;
 #[cfg(test)]
 mod common_tests;
 mod csv;
+#[cfg(test)]
+mod csv_tests;
 mod pdf;
 mod quantile_labels;
 mod report_advanced;
+mod spreadsheet_text;
 mod xlsx;
 mod xlsx_advanced;
 mod xlsx_input;
@@ -39,8 +42,8 @@ pub async fn export_analysis(
     format: &str,
 ) -> Result<ForecastExportResult, String> {
     let format = ExportFormat::parse(format)?;
+    let notes = notes::list(analysis_id).await?.notes;
     let analysis = storage::load(analysis_id).await?;
-    let notes = notes::list(analysis_id).await.unwrap_or_default();
     let bundle = common::ExportBundle { analysis, notes };
 
     if format == ExportFormat::Clipboard {
