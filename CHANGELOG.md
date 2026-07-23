@@ -4,6 +4,45 @@
 
 ---
 
+## v1.0.2
+
+### Forecast workspace
+
+- **Forecast V2 workbench** — rebuilt Forecast around a dedicated workspace that remains linked to the active chat while keeping the side panel focused on the essential visual result.
+- **Live session synchronization** — prediction changes made by the LLM or selected from the side panel now update the Forecast workspace in real time without reopening the window.
+- **Complete result exploration** — added dedicated Data, Forecast, Evaluation, Comparison, Scenarios, Notes, and Report views with responsive navigation, scrollable reports, smoother charts, and layouts that remain usable across narrow, resized, and full-screen windows.
+- **Focused side panel** — kept the main forecast visual and exports in the conversation panel while moving detailed reports, scenarios, notes, evaluation, and model comparison into the larger workspace.
+
+### Prediction quality and model selection
+
+- **Manual or automatic model selection** — users can keep full control of the forecast model or enable Auto so the agent selects a compatible model from the available hardware, data profile, requested horizon, frequency, uncertainty needs, and model capabilities.
+- **Data quality contracts** — added reusable dataset profiles, mapping and quality audits, missing-period and anomaly checks, multi-series support, future covariates, bounded inputs, and consistent confidence-level handling before predictions run.
+- **Stronger prediction contracts** — validated point forecasts, quantiles, horizons, series alignment, confidence intervals, and bounded model responses so incomplete or incoherent outputs fail clearly instead of producing misleading results.
+- **Agent-ready Forecast tools** — expanded and clarified the LLM tool contracts for data audits, model discovery, prediction, reading, analysis, rolling backtests, and model comparison so agents can plan valid Forecast workflows from the first call.
+
+### Evaluation and advanced analytics
+
+- **Rolling backtests and baselines** — added chronological rolling validation with Drift, ETS, Naive, and Seasonal Naive baselines, plus MASE, sMAPE, MAE, interval coverage, duration, rankings, and comparable stored results.
+- **Model comparison** — added a dedicated comparison view for forecast quality, speed, uncertainty coverage, resource constraints, and failed or unavailable models.
+- **Advanced analysis** — added time-series decomposition, residual anomaly detection, variable importance, drift analysis, and confidence-aware reporting.
+- **Forecast ensembles** — added validated weighted ensembles built from comparable backtested models, with explicit member weights, uncertainty ranges, and validation status.
+
+### Models and local runtimes
+
+- **Broader local model support** — completed the local adapters and runtime integration for the Forecast model catalog, including Chronos, TimesFM, Moirai, and other supported forecasting families.
+- **Prepared model installs** — model downloads now prepare their required runtime and dependencies during installation, avoiding long first-prediction setup delays, and uninstalling a model cleans up its dedicated resources.
+- **Verified model sources** — switched model runtimes and artifacts to official or trusted pinned sources with bounded downloads, revision and integrity checks, safer remote-code handling, and developer-only update discovery before changes can reach users.
+
+### Reliability, exports, and security
+
+- **Revisioned Forecast storage** — added indexed, versioned, bounded, and atomically written analyses with reliable rename, deletion, event propagation, session restoration, and display of LLM-created predictions.
+- **Crash-safe notes** — protected Forecast notes with private permissions, canonical path checks, symlink rejection, bounded parsing, atomic writes, revision synchronization, and recovery after interrupted creation, updates, or deletion.
+- **Reliable model lifecycle** — improved sidecar startup, shutdown, cancellation, error propagation, runtime preparation, and cleanup while keeping expected idle stops separate from actual prediction failures.
+- **Safer exports** — prevented incomplete exports, neutralized spreadsheet formulas in CSV and clipboard output, verified XLSX values remain text, and kept Forecast reports available across CSV, Excel, JSON, PNG, SVG, PDF, and clipboard formats.
+- **Responsive regression coverage** — added backend and interface tests for model selection, prediction contracts, data audits, backtests, storage revisions, notes, exports, responsive navigation, and cross-window synchronization.
+
+---
+
 ## v1.0.1
 
 ### Features
