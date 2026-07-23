@@ -50,6 +50,7 @@ export function ForecastPanel({
     selectedModelId,
     selectModel,
     setMode,
+    setCloudAllowed,
     ready: selectedModelReady,
   } = useForecastSelectionPolicy();
   const currentAnalysisName = useCurrentForecastAnalysisName(currentAnalysisId);
@@ -155,9 +156,11 @@ export function ForecastPanel({
             <ForecastModelSelector
               selectedModelId={selectedModelId}
               selectionMode={policy.mode}
+              allowCloudInAuto={policy.allow_cloud_in_auto}
               selectionReady={selectedModelReady}
               onSelectModel={handleSelectModel}
               onModeChange={setMode}
+              onCloudAllowedChange={setCloudAllowed}
             />
           )}
           <ExportDropdown

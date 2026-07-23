@@ -2,6 +2,14 @@ use crate::services::paths::data_dir;
 use std::path::PathBuf;
 use uuid::Uuid;
 
+pub async fn delete_analysis(analysis_id: &str) -> Result<(), String> {
+    validate_analysis_id(analysis_id)?;
+    let _guard = super::notes_transaction::lock().await;
+    super::storage::delete(analysis_id).await?;
+    let _ = delete_analysis_notes(analysis_id).await;
+    Ok(())
+}
+
 pub async fn delete_analysis_notes(analysis_id: &str) -> Result<(), String> {
     validate_analysis_id(analysis_id)?;
     let dir = notes_dir(analysis_id);

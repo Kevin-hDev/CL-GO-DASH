@@ -1168,6 +1168,7 @@
       "label": "选择",
       "manual": "手动",
       "auto": "Auto",
+      "allowCloud": "允许云端模型",
       "loadFailed": "无法加载 Forecast 选择。",
       "saveFailed": "无法保存 Forecast 选择。"
     },
@@ -1330,6 +1331,9 @@
         "history": "历史",
         "forecast": "预测",
         "confidence": "置信区间",
+        "annotations": "注释",
+        "residualAnomalies": "残差异常",
+        "dataQualityIssues": "数据质量警告",
         "noScenarioLayers": "此分析没有可用的场景层。",
         "noVariableLayers": "此分析没有可显示的变量。",
         "noLayersYet": "当前还没有可用图层。"

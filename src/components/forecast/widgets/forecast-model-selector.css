@@ -36,11 +36,18 @@
 
 .fmsel-mode {
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--chrome-2);
+  padding: var(--chrome-2) var(--chrome-3);
+  border-bottom: 1px solid var(--edge);
+}
+
+.fmsel-mode-row {
+  display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: var(--space-sm);
-  padding: var(--chrome-2) var(--chrome-3);
-  border-bottom: 1px solid var(--edge);
 }
 
 .fmsel-mode-label {
@@ -83,4 +90,14 @@
 .fmsel-mode-option:focus-visible {
   outline: 2px solid var(--pulse);
   outline-offset: 1px;
+}
+
+.fmsel-cloud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--chrome-1) 0;
+  color: var(--ink-faint);
+  font-size: var(--text-xs);
 }

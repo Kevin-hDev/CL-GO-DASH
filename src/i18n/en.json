@@ -1184,6 +1184,7 @@
       "label": "Selection",
       "manual": "Manual",
       "auto": "Auto",
+      "allowCloud": "Allow cloud models",
       "loadFailed": "Unable to load the Forecast selection.",
       "saveFailed": "Unable to save the Forecast selection."
     },
@@ -1357,6 +1358,9 @@
         "history": "History",
         "forecast": "Forecast",
         "confidence": "Confidence range",
+        "annotations": "Annotations",
+        "residualAnomalies": "Residual anomalies",
+        "dataQualityIssues": "Data quality alerts",
         "noScenarioLayers": "No scenario layer is available for this analysis.",
         "noVariableLayers": "No displayable variable is available for this analysis.",
         "noLayersYet": "No layer is available yet."

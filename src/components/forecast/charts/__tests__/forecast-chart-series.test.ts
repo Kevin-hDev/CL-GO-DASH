@@ -66,4 +66,45 @@ describe("forecast chart line series", () => {
       expect(line.connectNulls).toBe(false);
     }
   });
+
+  it("only renders annotations whose layer is enabled", () => {
+    const annotated: TimelineEntry[] = [{
+      ...timeline[0],
+      annotationValues: [{
+        id: "anomaly",
+        date: "2026-01-01",
+        text: "Anomaly",
+        source: "llm",
+        kind: "anomalies",
+      }],
+    }];
+    const labels = {
+      history: "History",
+      forecast: "Forecast",
+      confidence: "Confidence",
+      annotationUser: "User",
+      annotationLlm: "LLM",
+    };
+
+    const hidden = buildSeries(
+      annotated, null, palette, [], [], labels,
+      { history: true, forecast: true, confidence: true, anomalies: false },
+      null,
+    );
+    const visible = buildSeries(
+      annotated, null, palette, [], [], labels,
+      { history: true, forecast: true, confidence: true, anomalies: true },
+      null,
+    );
+
+    const hiddenAnnotation = hidden.find(
+      (item) => "id" in item && item.id === "annotation-llm",
+    );
+    const visibleAnnotation = visible.find(
+      (item) => "id" in item && item.id === "annotation-llm",
+    );
+
+    expect(hiddenAnnotation?.data[0]).toBeNull();
+    expect(visibleAnnotation?.data[0]).not.toBeNull();
+  });
 });

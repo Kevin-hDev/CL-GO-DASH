@@ -1,6 +1,6 @@
 use crate::services::forecast::types::ForecastResult;
 use crate::services::forecast::{scenarios, sidecar};
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, State};
 
 #[tauri::command]
 pub async fn create_forecast_scenario(
@@ -36,11 +36,5 @@ pub async fn delete_forecast_scenario(
 }
 
 fn emit_updated(app: &AppHandle, analysis: &ForecastResult) {
-    let _ = app.emit(
-        "forecast-analysis-updated",
-        serde_json::json!({
-            "analysis_id": analysis.id,
-            "session_id": analysis.session_id,
-        }),
-    );
+    crate::services::forecast::events::emit_updated(app, analysis);
 }

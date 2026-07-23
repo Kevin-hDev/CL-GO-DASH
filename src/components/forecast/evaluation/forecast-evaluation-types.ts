@@ -39,6 +39,7 @@ export interface ForecastEvaluation {
 
 export interface EvaluationAnalysis {
   id: string;
+  revision?: number;
   model: string;
   evaluation?: ForecastEvaluation | null;
   ensemble?: {

@@ -59,6 +59,15 @@ pub(crate) async fn write_note(note: &ForecastNote) -> Result<(), String> {
         .map_err(|_| "Sauvegarde de note échouée".to_string())
 }
 
+pub(crate) async fn remove_note(analysis_id: &str, note_id: &str) -> Result<(), String> {
+    let path = note_path(analysis_id, note_id);
+    match tokio::fs::remove_file(path).await {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(_) => Err("Suppression échouée".into()),
+    }
+}
+
 pub(crate) async fn sync_annotation_files(analysis: &ForecastResult) -> Result<(), String> {
     ensure_dir(&analysis.id).await?;
     for annotation in &analysis.annotations {

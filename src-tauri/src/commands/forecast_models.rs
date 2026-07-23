@@ -22,8 +22,6 @@ pub fn set_selected_forecast_model(
     let policy = selection_policy::select_manual_model(&name)?;
     app.emit("forecast-selection-policy-changed", &policy)
         .map_err(|_| "Impossible d'actualiser Forecast".to_string())?;
-    app.emit("forecast-selected-model-changed", name)
-        .map_err(|_| "Impossible d'actualiser Forecast".to_string())?;
     Ok(policy)
 }
 
@@ -83,11 +81,8 @@ pub fn get_forecast_model_config(
 
 #[tauri::command]
 pub fn set_forecast_model_config(
-    app: AppHandle,
     model_id: String,
     values: Map<String, Value>,
 ) -> Result<model_config::ForecastModelConfig, String> {
-    let config = model_config::set(&model_id, values)?;
-    let _ = app.emit("forecast-model-config-changed", &model_id);
-    Ok(config)
+    model_config::set(&model_id, values)
 }

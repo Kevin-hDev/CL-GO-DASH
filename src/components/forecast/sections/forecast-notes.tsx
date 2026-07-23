@@ -1,22 +1,28 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
-import { Plus } from "@/components/ui/icons";
+import { useLatestRequest } from "@/hooks/use-latest-request";
+import {
+  FORECAST_ANALYSIS_UPDATED,
+  listenForecastAnalysisEvents,
+} from "@/lib/forecast-analysis-events";
 import { ForecastNotesTimeline } from "./forecast-notes-timeline";
+import { ForecastNotesHeader } from "./forecast-notes-header";
 import { ForecastNotesList } from "./forecast-notes-list";
 import { ForecastNotesDetail } from "./forecast-notes-detail";
 import { useForecastChartResize } from "../use-forecast-chart-resize";
-import type { ForecastNote, ForecastNoteDraft, ForecastNotesAnalysis } from "./forecast-notes-types";
+import type {
+  ForecastNote,
+  ForecastNoteDraft,
+  ForecastNotesAnalysis,
+  ForecastNotesProps,
+} from "./forecast-notes-types";
 import { appScopedPath, buildNoteRange, defaultNoteDate } from "./forecast-notes-utils";
 import "../forecast-sections.css";
 import "./forecast-scenario-menu.css";
 import "./forecast-notes.css";
 import "./forecast-notes-detail.css";
 import "./forecast-notes-markdown.css";
-
-interface ForecastNotesProps {
-  analysisId: string;
-}
 
 export function ForecastNotes({ analysisId }: ForecastNotesProps) {
   const { t, i18n } = useTranslation();
@@ -26,6 +32,7 @@ export function ForecastNotes({ analysisId }: ForecastNotesProps) {
   const [draft, setDraft] = useState<ForecastNoteDraft | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const runLatest = useLatestRequest();
   const timeline = useForecastChartResize({ defaultHeight: 91, minHeight: 70, maxWindowRatio: 0.35 });
 
   const selectedNote = useMemo(
@@ -36,10 +43,12 @@ export function ForecastNotes({ analysisId }: ForecastNotesProps) {
 
   const load = useCallback(async () => {
     try {
-      const [nextAnalysis, nextNotes] = await Promise.all([
-        invoke<ForecastNotesAnalysis>("get_forecast_analysis", { id: analysisId }),
-        invoke<ForecastNote[]>("list_forecast_notes", { analysisId }),
-      ]);
+      const loaded = await runLatest(() => Promise.all([
+          invoke<ForecastNotesAnalysis>("get_forecast_analysis", { id: analysisId }),
+          invoke<ForecastNote[]>("list_forecast_notes", { analysisId }),
+        ]));
+      if (loaded === undefined) return;
+      const [nextAnalysis, nextNotes] = loaded;
       setAnalysis(nextAnalysis);
       setNotes(nextNotes);
       setSelectedId((current) => current ?? nextNotes[0]?.id ?? null);
@@ -47,7 +56,7 @@ export function ForecastNotes({ analysisId }: ForecastNotesProps) {
     } catch {
       setError(t("forecast.notes.loadFailed"));
     }
-  }, [analysisId, t]);
+  }, [analysisId, runLatest, t]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 0);
@@ -59,6 +68,12 @@ export function ForecastNotes({ analysisId }: ForecastNotesProps) {
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
   }, [load]);
+
+  useEffect(() => (
+    listenForecastAnalysisEvents([FORECAST_ANALYSIS_UPDATED], (event) => {
+      if (event.analysis_id === analysisId) void load();
+    })
+  ), [analysisId, load]);
 
   const startCreate = () => {
     setDraft({
@@ -120,22 +135,11 @@ export function ForecastNotes({ analysisId }: ForecastNotesProps) {
 
   return (
     <div className="fcn-root">
-      <div className="fcn-toolbar">
-        <div className="fcn-title-wrap">
-          <span className="fcs-section-title">{t("forecast.nav.notes")}</span>
-          <span className="fcn-count">{t("forecast.notes.count", { count: notes.length })}</span>
-          {analysis && <span className="fcn-analysis-name">{analysis.name}</span>}
-          {analysis && (
-            <span className="fcn-analysis-meta">
-              {analysis.model} · H{analysis.horizon}
-            </span>
-          )}
-        </div>
-        <button className="fcn-new-btn" type="button" onClick={startCreate}>
-          <Plus size="var(--icon-sm)" />
-          <span>{t("forecast.notes.new")}</span>
-        </button>
-      </div>
+      <ForecastNotesHeader
+        analysis={analysis}
+        noteCount={notes.length}
+        onCreate={startCreate}
+      />
       <div className="fcn-content">
         <ForecastNotesTimeline
           notes={notes}

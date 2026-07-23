@@ -14,4 +14,19 @@ describe("buildForecastLayerGroups", () => {
       { id: "scenario-ensemble", label: "Ensemble", interactive: true },
     ]);
   });
+
+  it("exposes annotations, anomalies and data quality as real layers", () => {
+    const groups = buildForecastLayerGroups({
+      scenarioLayers: [],
+      comparisonLayers: [],
+      covariateNames: [],
+      eventLayers: [{ id: "annotations", label: "Annotations", interactive: true }],
+      anomalyLayers: [{ id: "anomalies", label: "Anomalies", interactive: true }],
+      qualityLayers: [{ id: "quality", label: "Quality", interactive: true }],
+    }, (key) => key);
+
+    expect(groups.find((group) => group.id === "events")?.items).toHaveLength(1);
+    expect(groups.find((group) => group.id === "anomalies")?.items).toHaveLength(1);
+    expect(groups.find((group) => group.id === "quality")?.items).toHaveLength(1);
+  });
 });

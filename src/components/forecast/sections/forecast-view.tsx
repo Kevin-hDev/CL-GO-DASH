@@ -8,38 +8,13 @@ import { KpiRow, PeriodCell, ValueCell } from "../forecast-view-widgets";
 import { buildForecastVariableLines } from "../forecast-variable-lines";
 import { useForecastResult } from "../use-forecast-result";
 import { ForecastScenarioMenuSelect } from "./forecast-scenario-menu-select";
+import {
+  buildForecastLayerAnnotations,
+  filterForecastSeriesData,
+  type ForecastViewResult,
+} from "./forecast-view-data";
 import "../forecast-view.css";
 import "../forecast-view-table.css";
-
-interface ForecastResult {
-  id: string;
-  name: string;
-  target_column?: string;
-  series_column?: string | null;
-  model: string;
-  horizon: number;
-  frequency: string;
-  input_summary: {
-    end: string;
-  };
-  input_data: {
-    rows?: Record<string, unknown>[];
-    series_ids?: string[];
-    history: { date: string; value: number; series_id?: string | null }[];
-  };
-  covariates_used?: string[];
-  predictions: { date: string; value: number; series_id?: string | null }[];
-  quantiles: { q10: number[]; q50: number[]; q90: number[] };
-  scenarios: {
-    id: string;
-    name: string;
-    predictions: { date: string; value: number; series_id?: string | null }[];
-  }[];
-  ensemble?: {
-    predictions: { date: string; value: number; series_id?: string | null }[];
-  } | null;
-  metrics: { mape: number | null; mae: number | null; crps: number | null; bias: number | null } | null;
-}
 
 interface ForecastViewProps {
   analysisId: string;
@@ -48,7 +23,7 @@ interface ForecastViewProps {
 
 export function ForecastView({ analysisId, layers }: ForecastViewProps) {
   const { t, i18n } = useTranslation();
-  const { data, error } = useForecastResult<ForecastResult>(analysisId, t("forecast.noAnalysis"));
+  const { data, error } = useForecastResult<ForecastViewResult>(analysisId, t("forecast.noAnalysis"));
   const [selectedSeries, setSelectedSeries] = useState("");
   const chart = useForecastChartResize();
 
@@ -68,7 +43,11 @@ export function ForecastView({ analysisId, layers }: ForecastViewProps) {
       predictions: data.ensemble.predictions,
     }] : []),
   ];
-  const filtered = filterSeriesData(data, activeSeries, scenarioLines);
+  const filtered = filterForecastSeriesData(data, activeSeries, scenarioLines);
+  const annotations = buildForecastLayerAnnotations(data, activeSeries, {
+    anomaly: t("forecast.view.filters.residualAnomalies"),
+    quality: t("forecast.view.filters.dataQualityIssues"),
+  });
   const variables = buildForecastVariableLines({
     rows: data.input_data.rows ?? [],
     covariates: data.covariates_used ?? [],
@@ -108,6 +87,7 @@ export function ForecastView({ analysisId, layers }: ForecastViewProps) {
             predictions={filtered.predictions}
             scenarios={filtered.scenarios}
             variables={variables}
+            annotations={annotations}
             quantiles={{ q10: filtered.q10, q90: filtered.q90 }}
             frequency={data.frequency}
             endDate={data.input_summary.end}
@@ -156,39 +136,4 @@ export function ForecastView({ analysisId, layers }: ForecastViewProps) {
       </div>
     </div>
   );
-}
-
-function filterSeriesData(
-  data: ForecastResult,
-  selectedSeries: string,
-  scenarios: ForecastResult["scenarios"],
-) {
-  if (!data.input_data.series_ids || data.input_data.series_ids.length <= 1) {
-    return {
-      history: data.input_data.history,
-      predictions: data.predictions,
-      scenarios,
-      q10: data.quantiles.q10,
-      q90: data.quantiles.q90,
-    };
-  }
-
-  const seriesId = selectedSeries || data.input_data.series_ids[0];
-  const indices: number[] = [];
-  const predictions = data.predictions.filter((point, index) => {
-    const match = point.series_id === seriesId;
-    if (match) indices.push(index);
-    return match;
-  });
-
-  return {
-    history: data.input_data.history.filter((point) => point.series_id === seriesId),
-    predictions,
-    scenarios: scenarios.map((scenario) => ({
-      ...scenario,
-      predictions: scenario.predictions.filter((point) => point.series_id === seriesId),
-    })),
-    q10: indices.map((index) => data.quantiles.q10[index]).filter((value) => value !== undefined),
-    q90: indices.map((index) => data.quantiles.q90[index]).filter((value) => value !== undefined),
-  };
 }

@@ -1,24 +1,28 @@
 use super::common::ExportBundle;
+use super::quantile_labels::QuantileLabels;
 use super::xlsx_style::{finish_table, label_format};
 use rust_xlsxwriter::{Workbook, Worksheet};
 use std::path::Path;
 
 pub fn write(bundle: &ExportBundle, path: &Path) -> Result<(), String> {
     let mut workbook = Workbook::new();
+    let labels = QuantileLabels::for_confidence(bundle.analysis.confidence_level);
     write_metadata(workbook.add_worksheet(), bundle)?;
     write_points(
         workbook.add_worksheet(),
         "Historique",
         &bundle.analysis.input_data.history,
         None,
+        &labels,
     )?;
     write_points(
         workbook.add_worksheet(),
         "Prévisions",
         &bundle.analysis.predictions,
         Some(&bundle.analysis.quantiles),
+        &labels,
     )?;
-    write_scenarios(workbook.add_worksheet(), bundle)?;
+    write_scenarios(workbook.add_worksheet(), bundle, &labels)?;
     write_annotations(workbook.add_worksheet(), bundle)?;
     super::xlsx_advanced::write(workbook.add_worksheet(), bundle)?;
     if let Some(ensemble) = &bundle.analysis.ensemble {
@@ -27,6 +31,7 @@ pub fn write(bundle: &ExportBundle, path: &Path) -> Result<(), String> {
             "Ensemble",
             &ensemble.predictions,
             Some(&ensemble.quantiles),
+            &labels,
         )?;
     }
     super::xlsx_input::write(workbook.add_worksheet(), bundle)?;
@@ -72,10 +77,12 @@ fn write_points(
     name: &str,
     points: &[super::super::types::Prediction],
     quantiles: Option<&super::super::types::Quantiles>,
+    labels: &QuantileLabels,
 ) -> Result<(), String> {
     ws.set_name(name)
         .map_err(|_| "Export XLSX impossible".to_string())?;
-    for (col, header) in ["date", "series_id", "value", "q10", "q50", "q90"]
+    let [lower, median, upper] = labels.table_headers();
+    for (col, header) in ["date", "series_id", "value", lower, median, upper]
         .iter()
         .enumerate()
     {
@@ -100,17 +107,22 @@ fn write_points(
     Ok(())
 }
 
-fn write_scenarios(ws: &mut Worksheet, bundle: &ExportBundle) -> Result<(), String> {
+fn write_scenarios(
+    ws: &mut Worksheet,
+    bundle: &ExportBundle,
+    labels: &QuantileLabels,
+) -> Result<(), String> {
     ws.set_name("Scenarios")
         .map_err(|_| "Export XLSX impossible".to_string())?;
+    let [lower, median, upper] = labels.table_headers();
     for (col, header) in [
         "scenario",
         "date",
         "series_id",
         "value",
-        "q10",
-        "q50",
-        "q90",
+        lower,
+        median,
+        upper,
     ]
     .iter()
     .enumerate()

@@ -25,6 +25,7 @@ export interface ForecastChartAnnotation {
   date: string;
   text: string;
   source: "user" | "llm";
+  kind?: "annotations" | "anomalies" | "quality";
 }
 
 export interface TimelineEntry {

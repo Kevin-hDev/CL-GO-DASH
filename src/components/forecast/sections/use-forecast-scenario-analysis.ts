@@ -1,12 +1,11 @@
 import { useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
-import { cleanupTauriListener } from "@/lib/tauri-listen";
+import { useLatestRequest } from "@/hooks/use-latest-request";
+import {
+  FORECAST_ANALYSIS_UPDATED,
+  listenForecastAnalysisEvents,
+} from "@/lib/forecast-analysis-events";
 import type { ForecastScenarioAnalysis } from "./forecast-scenario-types";
-
-interface ForecastUpdatedEvent {
-  analysis_id: string;
-}
 
 interface UseForecastScenarioAnalysisArgs {
   analysisId: string;
@@ -19,24 +18,28 @@ export function useForecastScenarioAnalysis({
   onLoaded,
   onFailed,
 }: UseForecastScenarioAnalysisArgs) {
+  const runLatest = useLatestRequest();
+
   useEffect(() => {
     let active = true;
     const refresh = () => {
-      void invoke<ForecastScenarioAnalysis>("get_forecast_analysis", { id: analysisId })
+      void runLatest(
+        () => invoke<ForecastScenarioAnalysis>("get_forecast_analysis", { id: analysisId }),
+      )
         .then((analysis) => {
-          if (active) onLoaded(analysis);
+          if (active && analysis !== undefined) onLoaded(analysis);
         })
         .catch(() => {
           if (active) onFailed();
         });
     };
     refresh();
-    const unlisten = listen<ForecastUpdatedEvent>("forecast-analysis-updated", (event) => {
-      if (event.payload.analysis_id === analysisId) refresh();
+    const cleanup = listenForecastAnalysisEvents([FORECAST_ANALYSIS_UPDATED], (event) => {
+      if (event.analysis_id === analysisId) refresh();
     });
     return () => {
       active = false;
-      cleanupTauriListener(unlisten);
+      cleanup();
     };
-  }, [analysisId, onFailed, onLoaded]);
+  }, [analysisId, onFailed, onLoaded, runLatest]);
 }

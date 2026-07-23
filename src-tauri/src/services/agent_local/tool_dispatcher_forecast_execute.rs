@@ -2,7 +2,7 @@ use crate::services::forecast::types::{ForecastRequest, ForecastResult};
 use crate::services::forecast::{
     client_chronos, client_nixtla, model_manager, registry, sidecar,
 };
-use tauri::{Emitter, Manager};
+use tauri::Manager;
 use tokio_util::sync::CancellationToken;
 
 pub async fn run_cloud(
@@ -65,13 +65,4 @@ pub async fn run_local(
     };
     sidecar::schedule_idle_stop(chronos.inner());
     result
-}
-
-pub fn emit_created(analysis_id: &str, session_id: &str) {
-    if let Some(app) = super::app_handle_global::get() {
-        let _ = app.emit(
-            "forecast-analysis-created",
-            serde_json::json!({ "analysis_id": analysis_id, "session_id": session_id }),
-        );
-    }
 }

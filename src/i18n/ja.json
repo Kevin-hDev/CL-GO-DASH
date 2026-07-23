@@ -1168,6 +1168,7 @@
       "label": "選択",
       "manual": "手動",
       "auto": "Auto",
+      "allowCloud": "クラウドモデルを許可",
       "loadFailed": "Forecast の選択を読み込めませんでした。",
       "saveFailed": "Forecast の選択を保存できませんでした。"
     },
@@ -1330,6 +1331,9 @@
         "history": "履歴",
         "forecast": "予測",
         "confidence": "信頼区間",
+        "annotations": "注釈",
+        "residualAnomalies": "残差異常",
+        "dataQualityIssues": "データ品質の警告",
         "noScenarioLayers": "この分析には利用できるシナリオ層がありません。",
         "noVariableLayers": "この分析には表示できる変数がありません。",
         "noLayersYet": "現在利用できるレイヤーはありません。"

@@ -8,6 +8,7 @@ mod common;
 mod common_tests;
 mod csv;
 mod pdf;
+mod quantile_labels;
 mod report_advanced;
 mod xlsx;
 mod xlsx_advanced;

@@ -1168,6 +1168,7 @@
       "label": "Auswahl",
       "manual": "Manuell",
       "auto": "Auto",
+      "allowCloud": "Cloud-Modelle erlauben",
       "loadFailed": "Die Forecast-Auswahl konnte nicht geladen werden.",
       "saveFailed": "Die Forecast-Auswahl konnte nicht gespeichert werden."
     },
@@ -1330,6 +1331,9 @@
         "history": "Verlauf",
         "forecast": "Prognose",
         "confidence": "Konfidenzbereich",
+        "annotations": "Anmerkungen",
+        "residualAnomalies": "Residuenanomalien",
+        "dataQualityIssues": "Qualitätswarnungen",
         "noScenarioLayers": "Für diese Analyse ist keine Szenario-Ebene verfügbar.",
         "noVariableLayers": "Für diese Analyse ist keine sichtbare Variable verfügbar.",
         "noLayersYet": "Derzeit ist keine Ebene verfügbar."

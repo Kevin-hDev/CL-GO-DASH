@@ -120,7 +120,7 @@ fn clipboard_text_includes_header_and_predictions() {
     assert!(text.contains("2026-01-03"));
     assert!(text.contains("10.500000"));
     // En-tête TSV
-    assert!(text.contains("date\tseries\tprediction\tq10\tq50\tq90"));
+    assert!(text.contains("date\tseries\tprediction\tq05\tq50\tq95"));
 }
 
 #[test]

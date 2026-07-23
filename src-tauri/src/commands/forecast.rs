@@ -4,7 +4,7 @@ use crate::services::forecast::{
     notes_cleanup, registry, selected_model, sidecar, storage, validation,
 };
 use std::time::Instant;
-use tauri::State;
+use tauri::{AppHandle, State};
 
 #[tauri::command]
 pub async fn run_forecast(
@@ -126,17 +126,26 @@ pub async fn export_forecast_analysis(
 }
 
 #[tauri::command]
-pub async fn delete_forecast_analysis(id: String) -> Result<(), String> {
-    notes_cleanup::delete_analysis_notes(&id).await?;
-    storage::delete(&id).await
+pub async fn delete_forecast_analysis(app: AppHandle, id: String) -> Result<(), String> {
+    notes_cleanup::delete_analysis(&id).await?;
+    crate::services::forecast::events::emit_deleted(&app, &id);
+    Ok(())
 }
 
 #[tauri::command]
 pub async fn rename_forecast_analysis(
+    app: AppHandle,
     id: String,
     name: String,
 ) -> Result<ForecastAnalysisMeta, String> {
-    storage::rename(&id, &name).await
+    let renamed = storage::rename(&id, &name).await?;
+    crate::services::forecast::events::emit_updated_id(
+        &app,
+        &renamed.id,
+        renamed.session_id.as_deref(),
+        None,
+    );
+    Ok(renamed)
 }
 
 #[tauri::command]
@@ -146,21 +155,35 @@ pub async fn list_forecast_notes(analysis_id: String) -> Result<Vec<notes::Forec
 
 #[tauri::command]
 pub async fn create_forecast_note(
+    app: AppHandle,
     request: notes::ForecastNoteCreateRequest,
 ) -> Result<notes::ForecastNote, String> {
-    notes::create(request).await
+    let analysis_id = request.analysis_id.clone();
+    let note = notes::create(request).await?;
+    crate::services::forecast::events::emit_updated_id(&app, &analysis_id, None, None);
+    Ok(note)
 }
 
 #[tauri::command]
 pub async fn update_forecast_note(
+    app: AppHandle,
     request: notes::ForecastNoteUpdateRequest,
 ) -> Result<notes::ForecastNote, String> {
-    notes::update(request).await
+    let analysis_id = request.analysis_id.clone();
+    let note = notes::update(request).await?;
+    crate::services::forecast::events::emit_updated_id(&app, &analysis_id, None, None);
+    Ok(note)
 }
 
 #[tauri::command]
-pub async fn delete_forecast_note(analysis_id: String, note_id: String) -> Result<(), String> {
-    notes::delete(&analysis_id, &note_id).await
+pub async fn delete_forecast_note(
+    app: AppHandle,
+    analysis_id: String,
+    note_id: String,
+) -> Result<(), String> {
+    notes::delete(&analysis_id, &note_id).await?;
+    crate::services::forecast::events::emit_updated_id(&app, &analysis_id, None, None);
+    Ok(())
 }
 
 #[tauri::command]

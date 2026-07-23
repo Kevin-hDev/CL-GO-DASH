@@ -3,7 +3,7 @@ use crate::services::forecast::evaluation::BacktestRequest;
 use crate::services::forecast::sidecar::ChronosSidecar;
 use crate::services::forecast::storage;
 use serde_json::Value;
-use tauri::{Emitter, Manager};
+use tauri::Manager;
 
 pub async fn backtest(args: &Value) -> ToolResult {
     let request: BacktestRequest = match serde_json::from_value(args.clone()) {
@@ -16,10 +16,7 @@ pub async fn backtest(args: &Value) -> ToolResult {
     let chronos = app.state::<ChronosSidecar>();
     match crate::services::forecast::evaluation::run(request, chronos.inner()).await {
         Ok(analysis) => {
-            let _ = app.emit(
-                "forecast-analysis-updated",
-                serde_json::json!({ "analysis_id": analysis.id, "session_id": analysis.session_id }),
-            );
+            crate::services::forecast::events::emit_updated(app, &analysis);
             comparison_payload(&analysis)
         }
         Err(error) => ToolResult::err(error),

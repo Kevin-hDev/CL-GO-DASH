@@ -1,9 +1,12 @@
 use super::common::{rows, ExportBundle};
+use super::quantile_labels::QuantileLabels;
 use std::path::Path;
 
 pub fn write(bundle: &ExportBundle, path: &Path) -> Result<(), String> {
     let mut writer =
         csv::Writer::from_path(path).map_err(|_| "Export CSV impossible".to_string())?;
+    let labels = QuantileLabels::for_confidence(bundle.analysis.confidence_level);
+    let [lower, median, upper] = labels.table_headers();
     writer
         .write_record([
             "section",
@@ -11,9 +14,9 @@ pub fn write(bundle: &ExportBundle, path: &Path) -> Result<(), String> {
             "date",
             "series_id",
             "value",
-            "q10",
-            "q50",
-            "q90",
+            lower,
+            median,
+            upper,
             "text",
             "source",
         ])

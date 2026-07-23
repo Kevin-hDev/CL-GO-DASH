@@ -47,3 +47,24 @@ fn corrupt_duplicate_entries_are_rejected() {
 
     assert!(parse(&data).is_err());
 }
+
+#[test]
+fn inserting_past_the_limit_evicts_only_the_oldest_analysis() {
+    let mut entries = (0..MAX_STORED_ANALYSES)
+        .map(|_| {
+            let mut item = meta();
+            item.id = uuid::Uuid::new_v4().to_string();
+            item
+        })
+        .collect::<Vec<_>>();
+    let oldest_id = entries[0].id.clone();
+    let mut inserted = meta();
+    inserted.id = uuid::Uuid::new_v4().to_string();
+    let inserted_id = inserted.id.clone();
+
+    let removed = upsert_entries(&mut entries, inserted);
+
+    assert_eq!(removed, vec![oldest_id]);
+    assert_eq!(entries.len(), MAX_STORED_ANALYSES);
+    assert_eq!(entries.last().map(|item| &item.id), Some(&inserted_id));
+}

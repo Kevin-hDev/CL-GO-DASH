@@ -19,9 +19,9 @@ export function ForecastSectionRouter({
 }: ForecastSectionRouterProps) {
   switch (section) {
     case "view":
-      return <ForecastView analysisId={analysisId} layers={layers} />;
+      return <ForecastView key={analysisId} analysisId={analysisId} layers={layers} />;
     case "comparisons":
-      return <ForecastComparisons analysisId={analysisId} />;
+      return <ForecastComparisons key={analysisId} analysisId={analysisId} />;
     case "history":
       return <ForecastHistory onLoadAnalysis={onLoadAnalysis} />;
     default:

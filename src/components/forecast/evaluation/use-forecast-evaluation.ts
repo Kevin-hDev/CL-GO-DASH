@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
-import { cleanupTauriListener } from "@/lib/tauri-listen";
+import { useLatestRequest } from "@/hooks/use-latest-request";
+import {
+  FORECAST_ANALYSIS_UPDATED,
+  listenForecastAnalysisEvents,
+} from "@/lib/forecast-analysis-events";
+import { preferNewestForecast } from "../forecast-revision";
 import type { EvaluationAnalysis } from "./forecast-evaluation-types";
-
-interface ForecastUpdatedEvent {
-  analysis_id: string;
-}
 
 export function useForecastEvaluation(analysisId: string) {
   const [analysis, setAnalysis] = useState<EvaluationAnalysis | null>(null);
@@ -16,18 +16,22 @@ export function useForecastEvaluation(analysisId: string) {
   const [runFailed, setRunFailed] = useState(false);
   const [ensembleRunning, setEnsembleRunning] = useState(false);
   const [ensembleFailed, setEnsembleFailed] = useState(false);
+  const runLatest = useLatestRequest();
 
   const refresh = useCallback(async () => {
     try {
-      const next = await invoke<EvaluationAnalysis>("get_forecast_analysis", { id: analysisId });
-      setAnalysis(next);
+      const next = await runLatest(
+        () => invoke<EvaluationAnalysis>("get_forecast_analysis", { id: analysisId }),
+      );
+      if (next === undefined) return;
+      setAnalysis((current) => preferNewestForecast(current, next));
       setLoadFailed(false);
     } catch {
       setLoadFailed(true);
     } finally {
       setLoading(false);
     }
-  }, [analysisId]);
+  }, [analysisId, runLatest]);
 
   const createEnsemble = useCallback(async () => {
     setEnsembleFailed(false);
@@ -37,7 +41,7 @@ export function useForecastEvaluation(analysisId: string) {
         analysisId,
         modelIds: [],
       });
-      setAnalysis(next);
+      setAnalysis((current) => preferNewestForecast(current, next));
     } catch {
       setEnsembleFailed(true);
     } finally {
@@ -52,7 +56,7 @@ export function useForecastEvaluation(analysisId: string) {
       const next = await invoke<EvaluationAnalysis>("run_forecast_backtest", {
         request: { analysis_id: analysisId, model_ids: [], max_windows: 3 },
       });
-      setAnalysis(next);
+      setAnalysis((current) => preferNewestForecast(current, next));
       setRunFailed(false);
     } catch {
       setRunFailed(true);
@@ -64,10 +68,9 @@ export function useForecastEvaluation(analysisId: string) {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- backend hydration is intentional
     void refresh();
-    const unlisten = listen<ForecastUpdatedEvent>("forecast-analysis-updated", (event) => {
-      if (event.payload.analysis_id === analysisId) void refresh();
+    return listenForecastAnalysisEvents([FORECAST_ANALYSIS_UPDATED], (event) => {
+      if (event.analysis_id === analysisId) void refresh();
     });
-    return () => cleanupTauriListener(unlisten);
   }, [analysisId, refresh]);
 
   return {

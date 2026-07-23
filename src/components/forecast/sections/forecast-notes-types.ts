@@ -28,6 +28,10 @@ export interface ForecastNoteDraft {
   content: string;
 }
 
+export interface ForecastNotesProps {
+  analysisId: string;
+}
+
 export interface NoteRange {
   start: number;
   end: number;

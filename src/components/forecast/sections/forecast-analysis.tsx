@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { invoke } from "@tauri-apps/api/core";
+import { useForecastResult } from "../use-forecast-result";
 import { inferMetricMeta } from "../forecast-view-format";
 import { ForecastScenarioMenuSelect } from "./forecast-scenario-menu-select";
 import { ForecastAnalysisAccordion } from "./forecast-analysis-accordion";
@@ -42,31 +42,18 @@ const DEFAULT_OPEN = {
 
 export function ForecastAnalysis({ analysisId }: ForecastAnalysisProps) {
   const { t, i18n } = useTranslation();
-  const [data, setData] = useState<ForecastAnalysisData | null>(null);
+  const { data, error } = useForecastResult<ForecastAnalysisData>(
+    analysisId,
+    t("forecast.analysis.loadFailed"),
+  );
   const [selectedSeries, setSelectedSeries] = useState("");
   const [open, setOpen] = useState(DEFAULT_OPEN);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    void invoke<ForecastAnalysisData>("get_forecast_analysis", { id: analysisId })
-      .then((analysis) => {
-        if (!active) return;
-        setData(analysis);
-        setSelectedSeries(analysis.input_data.series_ids?.[0] ?? "");
-        setError(null);
-      })
-      .catch(() => {
-        if (active) setError(t("forecast.analysis.loadFailed"));
-      });
-    return () => {
-      active = false;
-    };
-  }, [analysisId, t]);
 
   const computed = useMemo(() => {
     if (!data) return null;
-    const seriesId = selectedSeries && data.input_data.series_ids?.includes(selectedSeries) ? selectedSeries : "";
+    const seriesId = selectedSeries && data.input_data.series_ids?.includes(selectedSeries)
+      ? selectedSeries
+      : data.input_data.series_ids?.[0] ?? "";
     const metric = inferMetricMeta(i18n.language, data.target_column, data.name);
     const predictions = filterAnalysisPoints(data.predictions, seriesId);
     const quantiles = filterAnalysisQuantiles(data.predictions, seriesId, data.quantiles);

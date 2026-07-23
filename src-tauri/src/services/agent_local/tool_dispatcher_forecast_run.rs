@@ -165,7 +165,6 @@ pub async fn handle(
     match super::tool_dispatcher_forecast_persist::save(
         &mut forecast,
         &request,
-        session_id,
         &cancel,
     )
     .await

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const DEFAULT_CHART_HEIGHT = 270;
 const MIN_CHART_HEIGHT = 200;
@@ -17,6 +17,32 @@ export function useForecastChartResize(options: ResizeOptions = {}) {
   const [isResizing, setIsResizing] = useState(false);
   const resizeRef = useRef<{ startY: number; startHeight: number } | null>(null);
 
+  useEffect(() => {
+    const onMove = (event: PointerEvent) => {
+      if (!resizeRef.current) return;
+      const delta = event.clientY - resizeRef.current.startY;
+      const maxHeight = Math.floor(window.innerHeight * maxWindowRatio);
+      setChartHeight(Math.max(
+        minHeight,
+        Math.min(maxHeight, resizeRef.current.startHeight + delta),
+      ));
+    };
+    const stopResize = () => {
+      resizeRef.current = null;
+      setIsResizing(false);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", stopResize);
+    window.addEventListener("pointercancel", stopResize);
+    window.addEventListener("blur", stopResize);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", stopResize);
+      window.removeEventListener("pointercancel", stopResize);
+      window.removeEventListener("blur", stopResize);
+    };
+  }, [maxWindowRatio, minHeight]);
+
   const startResize = useCallback(
     (event: React.PointerEvent) => {
       event.preventDefault();
@@ -25,33 +51,13 @@ export function useForecastChartResize(options: ResizeOptions = {}) {
         startHeight: chartHeight,
       };
       setIsResizing(true);
-
-      const onMove = (moveEvent: PointerEvent) => {
-        if (!resizeRef.current) return;
-        const delta = moveEvent.clientY - resizeRef.current.startY;
-        const maxHeight = Math.floor(window.innerHeight * maxWindowRatio);
-        setChartHeight(
-          Math.max(
-            minHeight,
-            Math.min(maxHeight, resizeRef.current.startHeight + delta)
-          )
-        );
-      };
-
-      const onUp = () => {
-        resizeRef.current = null;
-        setIsResizing(false);
-        window.removeEventListener("pointermove", onMove);
-        window.removeEventListener("pointerup", onUp);
-      };
-
-      window.addEventListener("pointermove", onMove);
-      window.addEventListener("pointerup", onUp);
     },
-    [chartHeight, maxWindowRatio, minHeight]
+    [chartHeight]
   );
 
   const resetHeight = useCallback(() => {
+    resizeRef.current = null;
+    setIsResizing(false);
     setChartHeight(defaultHeight);
   }, [defaultHeight]);
 

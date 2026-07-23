@@ -29,14 +29,25 @@ export function ForecastWorkbenchSectionContent({
       </div>
     );
   }
-  if (section === "data") return <ForecastWorkbenchData analysisId={analysisId} />;
-  if (section === "forecast") return <ForecastWorkbenchForecast analysisId={analysisId} />;
-  if (section === "scenarios") return <ForecastWorkbenchScenarios analysisId={analysisId} />;
-  if (section === "notes") return <ForecastWorkbenchNotes analysisId={analysisId} />;
-  if (section === "report") return <ForecastWorkbenchReport analysisId={analysisId} />;
+  if (section === "data") {
+    return <ForecastWorkbenchData key={analysisId} analysisId={analysisId} />;
+  }
+  if (section === "forecast") {
+    return <ForecastWorkbenchForecast key={analysisId} analysisId={analysisId} />;
+  }
+  if (section === "scenarios") {
+    return <ForecastWorkbenchScenarios key={analysisId} analysisId={analysisId} />;
+  }
+  if (section === "notes") {
+    return <ForecastWorkbenchNotes key={analysisId} analysisId={analysisId} />;
+  }
+  if (section === "report") {
+    return <ForecastWorkbenchReport key={analysisId} analysisId={analysisId} />;
+  }
   if (section === "evaluation" || section === "comparison") {
     return (
       <ForecastEvaluationView
+        key={analysisId}
         analysisId={analysisId}
         mode={section}
       />

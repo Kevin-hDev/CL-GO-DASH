@@ -238,8 +238,11 @@ Tu n'inclus pas de dataset brut dans les événements de synchronisation.
 
 Quand l'analyse active change dans le panneau Forecast, tu synchronises immédiatement
 le contexte partagé si la fenêtre est ouverte. Tu appliques directement dans la fenêtre
-le snapshot validé reçu par événement, sans attendre une seconde lecture. Si plusieurs
-sélections arrivent rapidement, tu garantis que la dernière sélection devient l'état final.
+le snapshot de contexte validé reçu par `forecast-workbench-context-changed`, sans attendre
+une seconde lecture. Ce snapshot contient uniquement les identifiants, noms, section active
+et numéros de révision nécessaires au changement de contexte, jamais le dataset ni l'analyse
+complète. Si plusieurs sélections arrivent rapidement, tu garantis que la dernière sélection
+devient l'état final.
 
 Dans le header de la fenêtre, tu affiches uniquement le nom de l'analyse et le sélecteur
 de modèle. Tu n'affiches ni libellé de session active, ni nom de session, car ces
@@ -275,7 +278,9 @@ Tu utilises des événements compacts, par exemple :
 - `forecast-models-changed` ;
 - `forecast-run-status-changed`.
 
-Tu inclus uniquement des identifiants, versions et statuts dans les événements. Tu fais relire l'objet complet par une commande dédiée.
+Les événements d'analyse restent compacts : tu inclus uniquement des identifiants, versions
+et statuts, puis tu fais relire l'analyse complète par une commande dédiée. Seul l'événement
+de contexte de la fenêtre transporte son petit snapshot validé défini en 7.4.
 
 Tu ajoutes une version ou un numéro de révision à chaque analyse afin de détecter une modification concurrente du panneau, de la fenêtre ou du LLM.
 

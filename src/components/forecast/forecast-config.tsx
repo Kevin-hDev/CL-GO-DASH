@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { ForecastDraftData } from "./forecast-data";
 import { ForecastConfigContext } from "./forecast-config-context";
 import { buildForecastContextProfile } from "./forecast-context-profile";
+import { buildForecastConfidenceControl } from "./forecast-config-confidence";
 import { buildLaunchErrorKey } from "./forecast-config-validation";
 import { FieldSelect, OptionalFieldSelect } from "./forecast-config-fields";
 import { ForecastConfigModelPicker } from "./forecast-config-model-picker";
@@ -69,20 +70,7 @@ export function ForecastConfig({
     () => models.find((entry) => entry.id === model) ?? null,
     [models, model]
   );
-  const fixedConfidenceLevels: number[] = selectedModel?.interval_capability?.mode === "fixed_grid"
-    ? selectedModel.interval_capability.supported_confidence_levels
-    : selectedModel?.interval_support === "central_60_or_80"
-      ? [0.6, 0.8]
-      : [];
-  const limitedConfidence = fixedConfidenceLevels.length > 0;
-  const fixedConfidenceMin = fixedConfidenceLevels[0] ?? 0.6;
-  const fixedConfidenceMax = fixedConfidenceLevels[fixedConfidenceLevels.length - 1] ?? 0.8;
-  const fixedConfidenceStep = fixedConfidenceLevels.length > 1
-    ? (fixedConfidenceLevels[1] ?? fixedConfidenceMax) - fixedConfidenceMin
-    : 0.01;
-  const effectiveConfidence = limitedConfidence && !fixedConfidenceLevels.includes(confidence)
-    ? fixedConfidenceMax
-    : confidence;
+  const confidenceControl = buildForecastConfidenceControl(selectedModel, confidence);
   const contextProfile = useMemo(
     () =>
       buildForecastContextProfile(
@@ -175,12 +163,12 @@ export function ForecastConfig({
           />
         </div>
         <div className="fcc-field">
-          <label className="fcc-label" htmlFor="fcc-confidence">{t("forecast.config.confidence")}: {Math.round(effectiveConfidence * 100)}%</label>
+          <label className="fcc-label" htmlFor="fcc-confidence">{t("forecast.config.confidence")}: {Math.round(confidenceControl.effective * 100)}%</label>
           <input className="fcc-range" id="fcc-confidence" type="range"
-            min={limitedConfidence ? fixedConfidenceMin : 0.5}
-            max={limitedConfidence ? fixedConfidenceMax : 0.99}
-            step={limitedConfidence ? fixedConfidenceStep : 0.01}
-            value={effectiveConfidence} onChange={(e) => setConfidence(Number(e.target.value))} />
+            min={confidenceControl.limited ? confidenceControl.min : 0.5}
+            max={confidenceControl.limited ? confidenceControl.max : 0.99}
+            step={confidenceControl.limited ? confidenceControl.step : 0.01}
+            value={confidenceControl.effective} onChange={(e) => setConfidence(Number(e.target.value))} />
         </div>
         {(configError || error) && (
           <p className="fcc-error">
@@ -198,7 +186,7 @@ export function ForecastConfig({
             horizon,
             frequency,
             model,
-            confidence: effectiveConfidence,
+            confidence: confidenceControl.effective,
           })}>
           {launching ? t("forecast.config.launching") : t("forecast.config.launch")}
         </button>

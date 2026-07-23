@@ -18,6 +18,7 @@ import {
 } from "../forecast-model-meta";
 import { useAvailableForecastModels } from "../use-available-forecast-models";
 import type { ForecastSelectionMode } from "../model-selection/forecast-selection-types";
+import { ForecastSelectionModeControl } from "./forecast-selection-mode-control";
 import "@/components/agent-local/model-selector.css";
 import "./export-dropdown.css";
 import "./forecast-model-selector.css";
@@ -25,18 +26,22 @@ import "./forecast-model-selector.css";
 interface ForecastModelSelectorProps {
   selectedModelId: string;
   selectionMode: ForecastSelectionMode;
+  allowCloudInAuto: boolean;
   selectionReady: boolean;
   onSelectModel: (modelId: string) => void;
   onModeChange: (mode: ForecastSelectionMode) => void;
+  onCloudAllowedChange: (allowed: boolean) => void;
   align?: "left" | "right";
 }
 
 export function ForecastModelSelector({
   selectedModelId,
   selectionMode,
+  allowCloudInAuto,
   selectionReady,
   onSelectModel,
   onModeChange,
+  onCloudAllowedChange,
   align = "left",
 }: ForecastModelSelectorProps) {
   const { t } = useTranslation();
@@ -129,23 +134,13 @@ export function ForecastModelSelector({
           autoFocus
         />
       </div>
-      <div className="fmsel-mode" aria-label={t("forecast.selection.label")}>
-        <span className="fmsel-mode-label">{t("forecast.selection.label")}</span>
-        <div className="fmsel-mode-options">
-          {(["manual", "auto"] as const).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              disabled={!selectionReady}
-              className={`fmsel-mode-option ${selectionMode === mode ? "is-active" : ""}`}
-              aria-pressed={selectionMode === mode}
-              onClick={() => onModeChange(mode)}
-            >
-              {t(`forecast.selection.${mode}`)}
-            </button>
-          ))}
-        </div>
-      </div>
+      <ForecastSelectionModeControl
+        mode={selectionMode}
+        allowCloud={allowCloudInAuto}
+        ready={selectionReady}
+        onModeChange={onModeChange}
+        onCloudAllowedChange={onCloudAllowedChange}
+      />
       <div className="ms-list">
         <ModelSelectorList
           groups={groups}

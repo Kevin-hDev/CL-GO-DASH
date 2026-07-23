@@ -4,15 +4,13 @@ import type { useFilePreview } from "@/hooks/use-file-preview";
 import type { useFileTree } from "@/hooks/use-file-tree";
 import type { ForecastSection, PanelMode, useForecastPanel } from "@/hooks/use-forecast-panel";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
+import {
+  FORECAST_ANALYSIS_CREATED,
+  type ForecastAnalysisEvent,
+} from "@/lib/forecast-analysis-events";
 import type { AgentLocalNavState, DeepPartial } from "@/types/navigation";
 
-const FORECAST_CREATED_EVENT = "forecast-analysis-created";
 const MAX_FORECAST_ANALYSIS_ID_LENGTH = 128;
-
-interface ForecastAnalysisCreatedEvent {
-  analysis_id: string;
-  session_id: string;
-}
 
 interface Args {
   navState: AgentLocalNavState;
@@ -74,7 +72,7 @@ export function useAgentLocalControlledPanels({
   useEffect(() => {
     if (!sessionId) return;
     let cancelled = false;
-    const unlisten = listen<ForecastAnalysisCreatedEvent>(FORECAST_CREATED_EVENT, (event) => {
+    const unlisten = listen<ForecastAnalysisEvent>(FORECAST_ANALYSIS_CREATED, (event) => {
       const { analysis_id: analysisId, session_id: eventSessionId } = event.payload;
       const validAnalysisId = typeof analysisId === "string"
         && analysisId.length > 0

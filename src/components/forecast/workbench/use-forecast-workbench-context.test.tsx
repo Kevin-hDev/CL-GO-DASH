@@ -53,4 +53,25 @@ describe("useForecastWorkbenchContext", () => {
     await waitFor(() => expect(result.current.failed).toBe(true));
     expect(result.current.snapshot).toBeNull();
   });
+
+  it("does not let initial hydration overwrite a newer event", async () => {
+    const second: ForecastWorkbenchSnapshot = {
+      ...FIRST,
+      context: { ...FIRST.context, revision: 2 },
+      analysis_name: "Prévision récente",
+    };
+    let resolveInitial!: (value: ForecastWorkbenchSnapshot) => void;
+    vi.mocked(invoke).mockReturnValue(new Promise((resolve) => {
+      resolveInitial = resolve;
+    }));
+    const { result } = renderHook(() => useForecastWorkbenchContext());
+    eventSnapshot = second;
+
+    act(() => contextChanged?.());
+    await waitFor(() => expect(result.current.snapshot).toEqual(second));
+    act(() => resolveInitial(FIRST));
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.snapshot).toEqual(second);
+  });
 });

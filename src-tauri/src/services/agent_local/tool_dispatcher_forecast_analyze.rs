@@ -3,7 +3,7 @@ use crate::services::forecast::types::MAX_ANNOTATIONS;
 use crate::services::forecast::{scenarios, sidecar, storage};
 use chrono::{DateTime, NaiveDate, NaiveDateTime};
 use serde_json::Value;
-use tauri::{Emitter, Manager};
+use tauri::Manager;
 
 const MAX_ANNOTATION_TEXT_CHARS: usize = 500;
 const MAX_ANNOTATION_DATE_CHARS: usize = 80;
@@ -166,13 +166,7 @@ fn save_scenario_result(
     match result {
         Ok(updated) => {
             if let Some(app) = super::app_handle_global::get() {
-                let _ = app.emit(
-                    "forecast-analysis-updated",
-                    serde_json::json!({
-                        "analysis_id": updated.id,
-                        "session_id": updated.session_id,
-                    }),
-                );
+                crate::services::forecast::events::emit_updated(app, &updated);
             }
             match super::tool_dispatcher_forecast_output::analysis_payload(&updated, 0, 100) {
                 Ok(json) => ToolResult::ok(json),

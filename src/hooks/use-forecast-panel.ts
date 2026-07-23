@@ -1,4 +1,9 @@
 import { useState, useCallback } from "react";
+import {
+  loadForecastPanelValue,
+  saveForecastPanelValue,
+  withBoundedPanelState,
+} from "./forecast-panel-storage";
 
 export type ForecastSection = "view" | "comparisons" | "history";
 export type PanelMode = "preview" | "forecast" | "browser";
@@ -45,32 +50,25 @@ function samePanelState(a: ForecastPanelState, b: ForecastPanelState): boolean {
     a.panelMode === b.panelMode;
 }
 
-function loadFromStorage(storageKey: string): ForecastPanelState {
-  try {
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      return normalizePanelState(JSON.parse(saved));
-    }
-  } catch { /* ignore */ }
-  return DEFAULT_PANEL_STATE;
-}
-
 export function useForecastPanel(sessionId: string | null) {
   const stateKey = sessionId ?? "__no_session__";
-  const storageKey = sessionId ? `fc-panel-${sessionId}` : null;
 
   const [states, setStates] = useState<Record<string, ForecastPanelState>>(() => {
-    const saved = storageKey ? loadFromStorage(storageKey) : DEFAULT_PANEL_STATE;
+    const saved = sessionId
+      ? normalizePanelState(loadForecastPanelValue(sessionId))
+      : DEFAULT_PANEL_STATE;
     return { [stateKey]: saved };
   });
-  const state = states[stateKey] ?? (storageKey ? loadFromStorage(storageKey) : DEFAULT_PANEL_STATE);
+  const state = states[stateKey] ?? (
+    sessionId
+      ? normalizePanelState(loadForecastPanelValue(sessionId))
+      : DEFAULT_PANEL_STATE
+  );
 
   const persist = useCallback((next: ForecastPanelState) => {
-    setStates((prev) => ({ ...prev, [stateKey]: next }));
-    if (storageKey) {
-      try { localStorage.setItem(storageKey, JSON.stringify(next)); } catch { /* ignore */ }
-    }
-  }, [stateKey, storageKey]);
+    setStates((prev) => withBoundedPanelState(prev, stateKey, next));
+    if (sessionId) saveForecastPanelValue(sessionId, next);
+  }, [sessionId, stateKey]);
 
   const setSection = useCallback((section: ForecastSection) => {
     persist({ ...state, activeSection: section, navOpen: false });

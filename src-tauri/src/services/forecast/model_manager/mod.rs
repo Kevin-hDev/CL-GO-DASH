@@ -62,13 +62,22 @@ fn has_downloaded_weights(root: &Path, model_id: &str) -> bool {
 }
 
 fn family_has_installed_model(models: &Path, family_id: &str) -> bool {
+    family_has_other_installed_model(models, family_id, None)
+}
+
+fn family_has_other_installed_model(
+    models: &Path,
+    family_id: &str,
+    excluded_model_id: Option<&str>,
+) -> bool {
     let Ok(runtime) = crate::services::forecast::sidecar_runtime::runtime_id(family_id) else {
         return false;
     };
     crate::services::forecast::catalog::FORECAST_MODELS
         .iter()
         .filter(|model| {
-            !model.is_cloud
+            Some(model.id) != excluded_model_id
+                && !model.is_cloud
                 && crate::services::forecast::sidecar_runtime::runtime_id(model.family_id)
                     .is_ok_and(|candidate| candidate == runtime)
         })

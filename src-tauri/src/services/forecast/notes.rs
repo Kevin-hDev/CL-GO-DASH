@@ -1,19 +1,14 @@
-use super::notes_files::{load_note, note_path, read_notes, sync_annotation_files, write_note};
+use super::notes_files::{
+    load_note, note_path, read_notes, remove_note, sync_annotation_files, write_note,
+};
+use super::{notes_transaction, notes_validation};
 use crate::services::forecast::storage;
 use crate::services::forecast::types::{
     Annotation, AnnotationSource, ForecastResult, MAX_ANNOTATIONS,
 };
-use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::ffi::OsStr;
 use std::process::Command;
-use std::sync::LazyLock;
-
-const MAX_NOTE_BYTES: usize = 64 * 1024;
-const MAX_TITLE_CHARS: usize = 120;
-const MAX_FIELD_CHARS: usize = 80;
-static SAFE_ID: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[a-f0-9\-]{1,64}$").unwrap());
-static SAFE_TYPE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[a-z_]{1,32}$").unwrap());
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ForecastNote {
@@ -49,13 +44,20 @@ pub struct ForecastNoteUpdateRequest {
 }
 
 pub async fn list(analysis_id: &str) -> Result<Vec<ForecastNote>, String> {
-    validate_id(analysis_id, "Identifiant d'analyse invalide")?;
+    notes_validation::id(analysis_id, "Identifiant d'analyse invalide")?;
+    let _guard = notes_transaction::lock().await;
     let analysis = storage::load(analysis_id).await?;
     sync_annotation_files(&analysis).await?;
     read_notes(analysis_id).await
 }
 
 pub async fn create(request: ForecastNoteCreateRequest) -> Result<ForecastNote, String> {
+    notes_validation::id(&request.analysis_id, "Identifiant d'analyse invalide")?;
+    let date = notes_validation::field(&request.date)?;
+    let title = notes_validation::title(&request.title)?;
+    let note_type = notes_validation::note_type(&request.note_type)?;
+    let content = notes_validation::content(&request.content)?;
+    let _guard = notes_transaction::lock().await;
     let mut analysis = storage::load(&request.analysis_id).await?;
     if analysis.annotations.len() >= MAX_ANNOTATIONS {
         return Err("Limite de notes atteinte".into());
@@ -64,54 +66,74 @@ pub async fn create(request: ForecastNoteCreateRequest) -> Result<ForecastNote, 
     let note = ForecastNote {
         id: uuid::Uuid::new_v4().to_string(),
         analysis_id: request.analysis_id,
-        date: clean_field(&request.date)?,
-        title: clean_title(&request.title)?,
-        note_type: clean_note_type(&request.note_type)?,
+        date,
+        title,
+        note_type,
         source: "user".into(),
-        content: clean_content(&request.content)?,
+        content,
         file_path: String::new(),
         created_at: now.clone(),
         updated_at: now,
     };
-    write_note(&note).await?;
     upsert_annotation(&mut analysis, &note)?;
-    storage::save(&mut analysis).await?;
+    write_note(&note).await?;
+    if let Err(error) = storage::save(&mut analysis).await {
+        return Err(notes_transaction::rollback_created(&note, error).await);
+    }
     load_note(&note.analysis_id, &note.id).await
 }
 
 pub async fn update(request: ForecastNoteUpdateRequest) -> Result<ForecastNote, String> {
-    validate_id(&request.note_id, "Identifiant de note invalide")?;
+    notes_validation::id(&request.analysis_id, "Identifiant d'analyse invalide")?;
+    notes_validation::id(&request.note_id, "Identifiant de note invalide")?;
+    let date = notes_validation::field(&request.date)?;
+    let title = notes_validation::title(&request.title)?;
+    let note_type = notes_validation::note_type(&request.note_type)?;
+    let content = notes_validation::content(&request.content)?;
+    let _guard = notes_transaction::lock().await;
     let mut current = load_note(&request.analysis_id, &request.note_id).await?;
-    current.date = clean_field(&request.date)?;
-    current.title = clean_title(&request.title)?;
-    current.note_type = clean_note_type(&request.note_type)?;
-    current.content = clean_content(&request.content)?;
+    let previous = current.clone();
+    current.date = date;
+    current.title = title;
+    current.note_type = note_type;
+    current.content = content;
     current.updated_at = chrono::Utc::now().to_rfc3339();
-    write_note(&current).await?;
     let mut analysis = storage::load(&request.analysis_id).await?;
     upsert_annotation(&mut analysis, &current)?;
-    storage::save(&mut analysis).await?;
+    write_note(&current).await?;
+    if let Err(error) = storage::save(&mut analysis).await {
+        return Err(notes_transaction::rollback_updated(&previous, error).await);
+    }
     load_note(&request.analysis_id, &request.note_id).await
 }
 
 pub async fn delete(analysis_id: &str, note_id: &str) -> Result<(), String> {
+    notes_validation::id(analysis_id, "Identifiant d'analyse invalide")?;
+    notes_validation::id(note_id, "Identifiant de note invalide")?;
+    let _guard = notes_transaction::lock().await;
     let mut analysis = storage::load(analysis_id).await?;
-    validate_id(note_id, "Identifiant de note invalide")?;
     let path = note_path(analysis_id, note_id);
-    if path.exists() {
-        tokio::fs::remove_file(&path)
-            .await
-            .map_err(|_| "Suppression échouée".to_string())?;
-    }
+    let previous = if tokio::fs::try_exists(&path)
+        .await
+        .map_err(|_| "Suppression échouée".to_string())?
+    {
+        Some(load_note(analysis_id, note_id).await?)
+    } else {
+        None
+    };
+    remove_note(analysis_id, note_id).await?;
     analysis
         .annotations
         .retain(|annotation| annotation.id != note_id);
-    storage::save(&mut analysis).await
+    if let Err(error) = storage::save(&mut analysis).await {
+        return Err(notes_transaction::rollback_deleted(previous.as_ref(), error).await);
+    }
+    Ok(())
 }
 
 pub fn open(analysis_id: &str, note_id: &str) -> Result<(), String> {
-    validate_id(analysis_id, "Identifiant d'analyse invalide")?;
-    validate_id(note_id, "Identifiant de note invalide")?;
+    notes_validation::id(analysis_id, "Identifiant d'analyse invalide")?;
+    notes_validation::id(note_id, "Identifiant de note invalide")?;
     let path = note_path(analysis_id, note_id);
     if !path.is_file() {
         return Err("Note introuvable".into());
@@ -122,44 +144,6 @@ pub fn open(analysis_id: &str, note_id: &str) -> Result<(), String> {
     return spawn_cmd("xdg-open", &[path.as_os_str()]);
     #[cfg(target_os = "windows")]
     return spawn_cmd("explorer.exe", &[path.as_os_str()]);
-}
-
-fn validate_id(id: &str, message: &str) -> Result<(), String> {
-    if !SAFE_ID.is_match(id) {
-        return Err(message.into());
-    }
-    Ok(())
-}
-
-fn clean_field(value: &str) -> Result<String, String> {
-    let trimmed = value.trim();
-    if trimmed.is_empty() || trimmed.chars().count() > MAX_FIELD_CHARS || trimmed.contains('\0') {
-        return Err("Champ de note invalide".into());
-    }
-    Ok(trimmed.replace(['\n', '\r', '"'], ""))
-}
-
-fn clean_title(value: &str) -> Result<String, String> {
-    let cleaned = clean_field(value)?;
-    if cleaned.chars().count() > MAX_TITLE_CHARS {
-        return Err("Titre de note invalide".into());
-    }
-    Ok(cleaned)
-}
-
-fn clean_note_type(value: &str) -> Result<String, String> {
-    let cleaned = value.trim();
-    if !SAFE_TYPE.is_match(cleaned) {
-        return Err("Type de note invalide".into());
-    }
-    Ok(cleaned.into())
-}
-
-fn clean_content(value: &str) -> Result<String, String> {
-    if value.len() > MAX_NOTE_BYTES || value.contains('\0') {
-        return Err("Contenu de note invalide".into());
-    }
-    Ok(value.trim().to_string())
 }
 
 fn spawn_cmd(command: &str, args: &[&OsStr]) -> Result<(), String> {

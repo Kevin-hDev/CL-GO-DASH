@@ -42,6 +42,7 @@ vi.mock("react-i18next", () => ({
       "forecast.selection.label": "Sélection",
       "forecast.selection.manual": "Manuel",
       "forecast.selection.auto": "Auto",
+      "forecast.selection.allowCloud": "Autoriser les modèles cloud",
       "agentLocal.modelSearch": "Rechercher un modèle…",
       "forecast.models.families.chronos-bolt": "Chronos Bolt",
     })[key] ?? key,
@@ -56,9 +57,11 @@ describe("ForecastModelSelector", () => {
       <ForecastModelSelector
         selectedModelId=""
         selectionMode="manual"
+        allowCloudInAuto={false}
         selectionReady={false}
         onSelectModel={vi.fn()}
         onModeChange={vi.fn()}
+        onCloudAllowedChange={vi.fn()}
       />,
     );
 
@@ -71,9 +74,11 @@ describe("ForecastModelSelector", () => {
       <ForecastModelSelector
         selectedModelId={MODEL.id}
         selectionMode="auto"
+        allowCloudInAuto={false}
         selectionReady
         onSelectModel={vi.fn()}
         onModeChange={onModeChange}
+        onCloudAllowedChange={vi.fn()}
       />,
     );
 
@@ -97,9 +102,11 @@ describe("ForecastModelSelector", () => {
       <ForecastModelSelector
         selectedModelId={MODEL.id}
         selectionMode="manual"
+        allowCloudInAuto={false}
         selectionReady
         onSelectModel={onSelectModel}
         onModeChange={vi.fn()}
+        onCloudAllowedChange={vi.fn()}
       />,
     );
 
@@ -107,5 +114,27 @@ describe("ForecastModelSelector", () => {
     fireEvent.click(screen.getAllByText(MODEL.display_name)[1]);
 
     expect(onSelectModel).toHaveBeenCalledWith(MODEL.id);
+  });
+
+  it("lets the user explicitly authorize cloud models in Auto", () => {
+    const onCloudAllowedChange = vi.fn();
+    render(
+      <ForecastModelSelector
+        selectedModelId={MODEL.id}
+        selectionMode="auto"
+        allowCloudInAuto={false}
+        selectionReady
+        onSelectModel={vi.fn()}
+        onModeChange={vi.fn()}
+        onCloudAllowedChange={onCloudAllowedChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("Auto"));
+    fireEvent.click(screen.getByRole("switch", {
+      name: "Autoriser les modèles cloud",
+    }));
+
+    expect(onCloudAllowedChange).toHaveBeenCalledWith(true);
   });
 });

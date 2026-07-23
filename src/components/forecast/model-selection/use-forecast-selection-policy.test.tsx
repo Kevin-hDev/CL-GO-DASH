@@ -11,6 +11,14 @@ const MANUAL: ForecastSelectionPolicy = {
   allow_cloud_in_auto: false,
 };
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
+
 describe("useForecastSelectionPolicy", () => {
   beforeEach(() => {
     vi.mocked(invoke).mockReset();
@@ -43,5 +51,43 @@ describe("useForecastSelectionPolicy", () => {
 
     expect(result.current.policy.mode).toBe("manual");
     expect(result.current.selectedModelId).toBe("");
+  });
+
+  it("persists explicit cloud authorization for Auto", async () => {
+    const allowed = { ...MANUAL, mode: "auto" as const, allow_cloud_in_auto: true };
+    vi.mocked(invoke).mockImplementation((command) => {
+      if (command === "get_forecast_selection_policy") return Promise.resolve(MANUAL);
+      if (command === "set_forecast_auto_cloud_allowed") return Promise.resolve(allowed);
+      return Promise.reject(new Error("unexpected-command"));
+    });
+    const { result } = renderHook(() => useForecastSelectionPolicy());
+    await waitFor(() => expect(result.current.ready).toBe(true));
+
+    act(() => result.current.setCloudAllowed(true));
+
+    await waitFor(() => expect(result.current.policy.allow_cloud_in_auto).toBe(true));
+    expect(invoke).toHaveBeenCalledWith("set_forecast_auto_cloud_allowed", {
+      allowed: true,
+    });
+  });
+
+  it("ne laisse pas le chargement initial écraser un événement plus récent", async () => {
+    const initial = deferred<ForecastSelectionPolicy>();
+    const auto = { ...MANUAL, mode: "auto" as const };
+    let changed: ((event: { payload: ForecastSelectionPolicy }) => void) | undefined;
+    vi.mocked(invoke).mockReturnValue(initial.promise);
+    vi.mocked(listen).mockImplementation((_name, handler) => {
+      changed = handler as typeof changed;
+      return Promise.resolve(() => {});
+    });
+    const { result } = renderHook(() => useForecastSelectionPolicy());
+    await waitFor(() => expect(invoke).toHaveBeenCalledOnce());
+
+    act(() => changed?.({ payload: auto }));
+    await waitFor(() => expect(result.current.policy).toEqual(auto));
+    initial.resolve(MANUAL);
+    await act(async () => initial.promise);
+
+    expect(result.current.policy).toEqual(auto);
   });
 });

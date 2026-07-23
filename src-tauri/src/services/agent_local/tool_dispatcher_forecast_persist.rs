@@ -5,7 +5,6 @@ use tokio_util::sync::CancellationToken;
 pub async fn save(
     forecast: &mut ForecastResult,
     request: &ForecastRequest,
-    session_id: &str,
     cancel: &CancellationToken,
 ) -> Result<String, String> {
     ensure_active(cancel)?;
@@ -24,7 +23,9 @@ pub async fn save(
             .map_err(|_| "Annulation de la prévision incomplète".to_string())?;
         return Err("Annulé".to_string());
     }
-    super::tool_dispatcher_forecast_execute::emit_created(&forecast.id, session_id);
+    if let Some(app) = super::app_handle_global::get() {
+        crate::services::forecast::events::emit_created(app, forecast);
+    }
     super::tool_dispatcher_forecast_output::created_payload(forecast)
 }
 

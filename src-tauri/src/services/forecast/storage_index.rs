@@ -3,9 +3,7 @@ use std::collections::BTreeSet;
 use tokio::sync::Mutex;
 
 use super::limits::{MAX_ANALYSIS_INDEX_BYTES, MAX_BACKTEST_RESULTS, MAX_STORED_ANALYSES};
-use super::storage_paths::{
-    analysis_path_for_read, index_path, validate_analysis_id, validate_analysis_name,
-};
+use super::storage_paths::{index_path, validate_analysis_id, validate_analysis_name};
 use super::types::ForecastAnalysisMeta;
 
 const INDEX_SCHEMA_VERSION: u32 = 1;
@@ -45,7 +43,7 @@ pub(super) async fn entries() -> Result<Vec<ForecastAnalysisMeta>, String> {
     Ok(read().await?.entries)
 }
 
-pub(super) async fn upsert(meta: ForecastAnalysisMeta) -> Result<(), String> {
+pub(super) async fn upsert(meta: ForecastAnalysisMeta) -> Result<Vec<String>, String> {
     validate_entry(&meta)?;
     let _guard = INDEX_LOCK.lock().await;
     let mut state = read().await?;
@@ -55,16 +53,7 @@ pub(super) async fn upsert(meta: ForecastAnalysisMeta) -> Result<(), String> {
     let mut entries = state.entries;
     let removed_ids = upsert_entries(&mut entries, meta);
     write(&entries).await?;
-    for id in removed_ids {
-        validate_analysis_id(&id)?;
-        let path = analysis_path_for_read(&id)
-            .await
-            .map_err(|_| "Nettoyage des analyses échoué".to_string())?;
-        tokio::fs::remove_file(path)
-            .await
-            .map_err(|_| "Nettoyage des analyses échoué".to_string())?;
-    }
-    Ok(())
+    Ok(removed_ids)
 }
 
 pub(super) async fn remove(id: &str) -> Result<(), String> {

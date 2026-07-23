@@ -19,6 +19,9 @@ interface LayerMatrixInput {
   scenarioLayers: ForecastLayerItem[];
   comparisonLayers: ForecastLayerItem[];
   covariateNames: string[];
+  eventLayers?: ForecastLayerItem[];
+  anomalyLayers?: ForecastLayerItem[];
+  qualityLayers?: ForecastLayerItem[];
 }
 
 export function createInitialLayerState(): ForecastLayerState {
@@ -61,15 +64,15 @@ export function buildForecastLayerGroups(
       items: input.covariateNames.map((name) => interactiveItem(`variable-${name}`, name)),
       emptyKey: "forecast.view.filters.noVariableLayers",
     },
-    emptyGroup("events"),
+    dynamicGroup("events", input.eventLayers),
     {
       id: "comparisons",
       titleKey: "forecast.view.filters.comparisons",
       items: input.comparisonLayers,
       emptyKey: "forecast.view.filters.noLayersYet",
     },
-    emptyGroup("anomalies"),
-    emptyGroup("quality"),
+    dynamicGroup("anomalies", input.anomalyLayers),
+    dynamicGroup("quality", input.qualityLayers),
   ];
 }
 
@@ -77,11 +80,11 @@ function interactiveItem(id: string, label: string): ForecastLayerItem {
   return { id, label, interactive: true };
 }
 
-function emptyGroup(id: string): ForecastLayerGroup {
+function dynamicGroup(id: string, items?: ForecastLayerItem[]): ForecastLayerGroup {
   return {
     id,
     titleKey: `forecast.view.filters.${id}`,
-    items: [],
+    items: items ?? [],
     emptyKey: "forecast.view.filters.noLayersYet",
   };
 }
