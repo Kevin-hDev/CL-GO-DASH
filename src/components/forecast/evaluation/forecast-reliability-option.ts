@@ -15,7 +15,7 @@ export function buildReliabilityOption(
 ): EChartsOption {
   return {
     animation: false,
-    grid: { left: 12, right: 16, top: 16, bottom: 24, containLabel: true },
+    grid: { left: 12, right: 16, top: 34, bottom: 24, containLabel: true },
     tooltip: {
       trigger: "axis",
       backgroundColor: palette.tooltipBg,

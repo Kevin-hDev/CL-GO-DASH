@@ -64,6 +64,8 @@ export function buildSeries(
           show: true,
           formatter: labels.today,
           position: "insideEndTop" as const,
+          rotate: 0,
+          distance: 6,
           color: palette.inkMuted,
           fontSize: 11,
         },

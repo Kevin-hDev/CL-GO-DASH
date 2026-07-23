@@ -1,4 +1,8 @@
 .fcrd-card {
+  /* Never let a flex column stack compress cards: they must keep their
+     natural height so the stack overflows and scrolls instead of
+     clipping chart content via overflow: hidden. */
+  flex: none;
   overflow: hidden;
   border: 1px solid var(--edge);
   border-radius: var(--radius-md);
