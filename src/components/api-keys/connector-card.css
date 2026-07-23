@@ -114,7 +114,7 @@
 
 .ak-connector-card:hover:not(:disabled) .ak-connector-card-action {
   background: var(--pulse);
-  color: white;
+  color: var(--ink-on-pulse);
 }
 
 .ak-connector-card-action.done {

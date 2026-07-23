@@ -93,7 +93,7 @@
 
 .wk-confirm-delete:hover {
   background: var(--signal-error);
-  color: white;
+  color: var(--ink-on-pulse);
 }
 
 @keyframes wk-confirm-pulse {

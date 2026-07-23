@@ -19,7 +19,7 @@ export function HardwareAccelControl({
       {changed && (
         <button disabled={restarting} onClick={onRestart} style={{
           padding: "6px 12px", borderRadius: "var(--radius-md)", border: "none",
-          background: "var(--accent)", color: "#fff", fontSize: "var(--text-xs)",
+          background: "var(--accent)", color: "var(--ink-on-pulse)", fontSize: "var(--text-xs)",
           cursor: restarting ? "wait" : "pointer", whiteSpace: "nowrap",
           opacity: restarting ? 0.6 : 1,
         }}>

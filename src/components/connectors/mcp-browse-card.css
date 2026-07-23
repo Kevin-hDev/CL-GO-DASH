@@ -68,7 +68,7 @@
   cursor: default;
 }
 
-.mcbc-card:hover .mcbc-action:not(.done):not(:disabled) { background: var(--pulse); color: white; }
+.mcbc-card:hover .mcbc-action:not(.done):not(:disabled) { background: var(--pulse); color: var(--ink-on-pulse); }
 
 .mcbc-action.done {
   background: var(--signal-ok-bg);
