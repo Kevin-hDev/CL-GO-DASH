@@ -1,11 +1,14 @@
 .fcwe-root {
   container-type: inline-size;
+  width: 100%;
+  min-width: 0;
   max-width: var(--forecast-workbench-content-width);
   margin-top: var(--space-xl);
 }
 
 .fcwe-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-lg);
@@ -79,7 +82,7 @@
 }
 
 .fcwe-table {
-  overflow: hidden;
+  overflow-x: auto;
   border: 1px solid var(--edge);
   border-radius: var(--radius-md);
   background: var(--surface);
@@ -90,6 +93,7 @@
   grid-template-columns: minmax(0, 1.5fr) repeat(5, minmax(0, 0.7fr)) minmax(0, 1fr);
   align-items: center;
   gap: var(--space-sm);
+  min-width: var(--forecast-evaluation-table-min-width);
   min-height: var(--nav-item-height);
   padding: var(--space-sm) var(--space-md);
   border-top: 1px solid var(--edge);
@@ -176,19 +180,5 @@
 @container (max-width: 48rem) {
   .fcwe-toolbar {
     align-items: flex-start;
-  }
-
-  .fcwe-table-head {
-    display: none;
-  }
-
-  .fcwe-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    padding: var(--space-md);
-  }
-
-  .fcwe-model,
-  .fcwe-status {
-    grid-column: 1 / -1;
   }
 }

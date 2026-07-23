@@ -12,6 +12,7 @@ import "../forecast-sections.css";
 import "./forecast-scenario-menu.css";
 import "./forecast-notes.css";
 import "./forecast-notes-detail.css";
+import "./forecast-notes-markdown.css";
 
 interface ForecastNotesProps {
   analysisId: string;

@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown } from "@/components/ui/icons";
 import { useTranslation } from "react-i18next";
+import {
+  floatingMenuPortalRoot,
+  useFloatingMenuPosition,
+} from "@/hooks/use-floating-menu-position";
 import { focusLocalListItem, useLocalListNavigation, type LocalListNavItem } from "@/hooks/use-local-list-navigation";
 import type {
   ForecastLayerGroup,
@@ -24,13 +29,18 @@ export function ForecastViewFilters({
   const [open, setOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<string[]>([]);
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const panelRef = useRef<HTMLDivElement | null>(null);
   const pendingFocusDirection = useRef<1 | -1>(1);
+  const { anchorRef, floatingRef, floatingStyle } =
+    useFloatingMenuPosition(open, "right", 6, "auto");
 
   useEffect(() => {
     if (!open) return;
     const handlePointerDown = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        !rootRef.current?.contains(target)
+        && !floatingRef.current?.contains(target)
+      ) {
         setOpen(false);
         setOpenGroups([]);
       }
@@ -47,7 +57,7 @@ export function ForecastViewFilters({
       window.removeEventListener("mousedown", handlePointerDown);
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open]);
+  }, [floatingRef, open]);
 
   const toggleGroup = useCallback((groupId: string) => {
     setOpenGroups((current) =>
@@ -86,14 +96,60 @@ export function ForecastViewFilters({
   });
 
   useEffect(() => {
-    if (open) focusLocalListItem(panelRef.current, pendingFocusDirection.current);
-  }, [open]);
+    if (open) focusLocalListItem(floatingRef.current, pendingFocusDirection.current);
+  }, [floatingRef, open]);
+
+  const panel = open ? (
+    <div
+      ref={floatingRef}
+      className="fcf-panel"
+      role="menu"
+      tabIndex={-1}
+      style={floatingStyle}
+      data-keyboard-scope="local"
+      onKeyDown={nav.listProps.onKeyDown}
+    >
+      {groups.map((group) => (
+        <FilterGroup
+          key={group.id}
+          groupId={group.id}
+          open={openGroups.includes(group.id)}
+          title={t(group.titleKey)}
+          onToggle={toggleGroup}
+          nav={nav}
+        >
+          {group.items.length > 0 ? (
+            group.items.map((item) => (
+              <FilterItem
+                key={item.id}
+                navId={`item:${item.id}`}
+                label={item.label}
+                checked={Boolean(layers[item.id])}
+                disabled={!item.interactive}
+                nav={nav}
+                onToggle={() =>
+                  item.interactive
+                    ? onChange({ ...layers, [item.id]: !layers[item.id] })
+                    : undefined
+                }
+              />
+            ))
+          ) : (
+            <div className="fcf-empty">{group.emptyKey ? t(group.emptyKey) : ""}</div>
+          )}
+        </FilterGroup>
+      ))}
+    </div>
+  ) : null;
 
   return (
     <div ref={rootRef} className="fcf-root" data-keyboard-scope="local">
       <button
-        className={`fcf-trigger ${open ? "is-open" : ""}`}
+        ref={(node) => { anchorRef.current = node; }}
+        className={`btn btn-sm btn-secondary fcf-trigger ${open ? "is-open" : ""}`}
         type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
         onClick={() => {
           setOpen((current) => {
             const next = !current;
@@ -106,47 +162,14 @@ export function ForecastViewFilters({
           event.preventDefault();
           event.stopPropagation();
           pendingFocusDirection.current = event.key === "ArrowDown" ? 1 : -1;
-          if (open) focusLocalListItem(panelRef.current, pendingFocusDirection.current);
+          if (open) focusLocalListItem(floatingRef.current, pendingFocusDirection.current);
           else setOpen(true);
         }}
       >
         <span>{t("forecast.view.filters.button")}</span>
         <ChevronDown size="var(--icon-sm)" className={`fcf-chevron ${open ? "is-open" : ""}`} />
       </button>
-      <div ref={panelRef} className={`fcf-panel ${open ? "is-open" : ""}`} role="menu" tabIndex={-1} onKeyDown={nav.listProps.onKeyDown}>
-        {groups.map((group) => (
-          <FilterGroup
-            key={group.id}
-            groupId={group.id}
-            open={openGroups.includes(group.id)}
-            title={t(group.titleKey)}
-            onToggle={toggleGroup}
-            nav={nav}
-          >
-            {group.items.length > 0 ? (
-              <>
-                {group.items.map((item) => (
-                  <FilterItem
-                    key={item.id}
-                    navId={`item:${item.id}`}
-                    label={item.label}
-                    checked={Boolean(layers[item.id])}
-                    disabled={!item.interactive}
-                    nav={nav}
-                    onToggle={() =>
-                      item.interactive
-                        ? onChange({ ...layers, [item.id]: !layers[item.id] })
-                        : undefined
-                    }
-                  />
-                ))}
-              </>
-            ) : (
-              <div className="fcf-empty">{group.emptyKey ? t(group.emptyKey) : ""}</div>
-            )}
-          </FilterGroup>
-        ))}
-      </div>
+      {panel ? createPortal(panel, floatingMenuPortalRoot()) : null}
     </div>
   );
 }

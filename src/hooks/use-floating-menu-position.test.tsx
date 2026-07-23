@@ -15,6 +15,19 @@ function FloatingFixture() {
   );
 }
 
+function MatchingWidthFixture() {
+  const { anchorRef, floatingRef, floatingStyle } =
+    useFloatingMenuPosition(true, "left", 4, "below", true);
+  return (
+    <>
+      <button ref={(node) => { anchorRef.current = node; }} data-anchor>
+        anchor
+      </button>
+      <div ref={floatingRef} style={floatingStyle}>matching menu</div>
+    </>
+  );
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -47,6 +60,26 @@ describe("useFloatingMenuPosition", () => {
       left: "12px",
       maxWidth: "276px",
       maxHeight: "186px",
+      visibility: "visible",
+    }));
+  });
+
+  it("can keep a selector menu at least as wide as its trigger", async () => {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockReturnValue({
+        x: 20, y: 20, top: 20, right: 180, bottom: 48, left: 20,
+        width: 160, height: 28, toJSON: () => ({}),
+      });
+    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(80);
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(100);
+    vi.stubGlobal("innerWidth", 600);
+    vi.stubGlobal("innerHeight", 400);
+
+    render(<MatchingWidthFixture />);
+
+    await waitFor(() => expect(screen.getByText("matching menu")).toHaveStyle({
+      left: "20px",
+      minWidth: "160px",
       visibility: "visible",
     }));
   });

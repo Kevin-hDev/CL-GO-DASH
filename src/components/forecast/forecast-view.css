@@ -21,22 +21,12 @@
   letter-spacing: 0.04em;
 }
 
-.fc-view-toolbar-select {
-  min-width: 180px;
-  height: 28px;
-  padding: 0 10px;
-  border: 1px solid var(--edge);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--ink);
-  font-size: var(--text-sm);
-  font-family: var(--font-sans);
-  outline: none;
+.fc-view-toolbar-menu {
+  min-width: var(--forecast-series-menu-width);
 }
 
-.fc-view-toolbar-select option {
-  background: var(--shell-opaque);
-  color: var(--ink);
+.fc-view-toolbar-menu .fcs-menu-trigger {
+  background: var(--surface);
 }
 
 .fc-kpi-row {

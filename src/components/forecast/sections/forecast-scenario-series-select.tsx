@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { ForecastScenarioMenuSelect } from "./forecast-scenario-menu-select";
 
 interface ForecastScenarioSeriesSelectProps {
   seriesIds: string[];
@@ -16,21 +17,18 @@ export function ForecastScenarioSeriesSelect({
 
   return (
     <div className="fcs-series-bar">
-      <label className="fcs-series-label" htmlFor="fcs-series-select">
+      <span className="fcs-series-label">
         {t("forecast.view.series")}
-      </label>
-      <select
-        id="fcs-series-select"
-        className="fcs-series-select"
+      </span>
+      <ForecastScenarioMenuSelect
+        className="fcs-series-menu"
         value={selectedSeries || seriesIds[0]}
-        onChange={(event) => onSelectedSeriesChange(event.target.value)}
-      >
-        {seriesIds.map((seriesId) => (
-          <option key={seriesId} value={seriesId}>
-            {seriesId}
-          </option>
-        ))}
-      </select>
+        options={seriesIds.map((seriesId) => ({
+          value: seriesId,
+          label: seriesId,
+        }))}
+        onChange={onSelectedSeriesChange}
+      />
     </div>
   );
 }

@@ -81,9 +81,16 @@
 
 .fcn-form-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 122px 102px;
+  grid-template-columns:
+    minmax(0, 1fr)
+    var(--forecast-note-date-width)
+    var(--forecast-note-type-width);
   gap: var(--chrome-3);
   margin-bottom: var(--chrome-3);
+}
+
+.fcn-type-menu {
+  min-width: var(--forecast-note-type-width);
 }
 
 .fcn-type-menu .fcs-menu-trigger {
@@ -165,31 +172,12 @@
   color: var(--ink);
 }
 
-.fcn-markdown {
-  max-width: 860px;
-  color: var(--ink);
-  font-size: var(--text-sm);
-  line-height: 1.7;
-}
+@container (max-width: 48rem) {
+  .fcn-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 
-.fcn-markdown p,
-.fcn-markdown ul,
-.fcn-markdown ol,
-.fcn-markdown pre {
-  margin: 0 0 var(--chrome-4);
-}
-
-.fcn-markdown code {
-  border-radius: var(--radius-sm);
-  background: var(--shell);
-  padding: 1px 6px;
-  font-family: var(--font-mono);
-}
-
-.fcn-markdown pre {
-  overflow-x: auto;
-  border: 1px solid var(--edge);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  padding: 12px;
+  .fcn-type-menu {
+    width: 100%;
+  }
 }

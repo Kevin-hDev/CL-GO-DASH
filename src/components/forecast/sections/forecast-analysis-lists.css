@@ -3,7 +3,7 @@
   overflow: hidden;
   padding: 0 12px;
   opacity: 0;
-  transition: padding 700ms ease, opacity 500ms ease;
+  transition: padding var(--ease-smooth), opacity var(--ease-smooth);
 }
 
 .fca-accordion.is-open .fca-accordion-content {

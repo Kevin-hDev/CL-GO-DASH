@@ -16,6 +16,7 @@ import { ForecastDocsWindow } from "@/components/forecast-docs/forecast-docs-win
 import { ForecastWorkbenchApp } from "@/components/forecast/workbench/forecast-workbench-app";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import { useStartupGate } from "@/hooks/use-startup-gate";
+import { usePlatformBodyClass } from "@/hooks/use-platform-body-class";
 import type { TabId } from "@/components/layout/sidebar";
 import "./App.css";
 import {
@@ -26,6 +27,8 @@ import {
 } from "@/types/navigation";
 
 export default function App() {
+  usePlatformBodyClass();
+
   if (window.location.hash === "#/forecast-docs") return <ForecastDocsApp />;
   if (window.location.hash === "#/forecast-workbench") return <ForecastWorkbenchApp />;
   return <MainApp />;

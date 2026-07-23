@@ -7,6 +7,7 @@ import { useForecastChartResize } from "../use-forecast-chart-resize";
 import { KpiRow, PeriodCell, ValueCell } from "../forecast-view-widgets";
 import { buildForecastVariableLines } from "../forecast-variable-lines";
 import { useForecastResult } from "../use-forecast-result";
+import { ForecastScenarioMenuSelect } from "./forecast-scenario-menu-select";
 import "../forecast-view.css";
 import "../forecast-view-table.css";
 
@@ -83,21 +84,18 @@ export function ForecastView({ analysisId, layers }: ForecastViewProps) {
       {data.metrics && <KpiRow metrics={data.metrics} />}
       {data.input_data.series_ids && data.input_data.series_ids.length > 1 && (
         <div className="fc-view-toolbar">
-          <label className="fc-view-toolbar-label" htmlFor="fc-view-series">
+          <span className="fc-view-toolbar-label">
             {t("forecast.view.series")}
-          </label>
-          <select
-            id="fc-view-series"
-            className="fc-view-toolbar-select"
+          </span>
+          <ForecastScenarioMenuSelect
+            className="fc-view-toolbar-menu"
             value={activeSeries}
-            onChange={(event) => setSelectedSeries(event.target.value)}
-          >
-            {data.input_data.series_ids.map((seriesId) => (
-              <option key={seriesId} value={seriesId}>
-                {seriesId}
-              </option>
-            ))}
-          </select>
+            options={data.input_data.series_ids.map((seriesId) => ({
+              value: seriesId,
+              label: seriesId,
+            }))}
+            onChange={setSelectedSeries}
+          />
         </div>
       )}
       <div

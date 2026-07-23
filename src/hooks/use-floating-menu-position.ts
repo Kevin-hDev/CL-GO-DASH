@@ -19,6 +19,7 @@ export function useFloatingMenuPosition(
   align: FloatingAlign = "left",
   gap = 4,
   placement: FloatingPlacement = "above",
+  matchAnchorWidth = false,
 ) {
   const anchorRef = useRef<HTMLElement | null>(null);
   const floatingRef = useRef<HTMLDivElement | null>(null);
@@ -30,7 +31,10 @@ export function useFloatingMenuPosition(
     if (!open || !anchor || !floating) return;
 
     const anchorRect = anchor.getBoundingClientRect();
-    const width = floating.offsetWidth;
+    const width = Math.max(
+      floating.offsetWidth,
+      matchAnchorWidth ? anchorRect.width : 0,
+    );
     const height = floating.offsetHeight;
     const maxWidth = Math.max(0, window.innerWidth - (VIEWPORT_PADDING * 2));
     const boundedWidth = Math.min(width, maxWidth);
@@ -56,12 +60,13 @@ export function useFloatingMenuPosition(
       left,
       maxWidth,
       maxHeight,
+      minWidth: matchAnchorWidth ? anchorRect.width : undefined,
       right: "auto",
       bottom: "auto",
       visibility: "visible",
       zIndex: 1000,
     });
-  }, [align, gap, open, placement]);
+  }, [align, gap, matchAnchorWidth, open, placement]);
 
   useLayoutEffect(() => {
     if (!open) return;

@@ -21,28 +21,12 @@
   letter-spacing: 0.04em;
 }
 
-.fcs-series-select {
-  min-width: 180px;
-  height: 28px;
-  padding: 0 10px;
-  border: 1px solid var(--edge);
-  border-radius: var(--radius-sm);
+.fcs-series-menu {
+  min-width: var(--forecast-series-menu-width);
+}
+
+.fcs-series-menu .fcs-menu-trigger {
   background: var(--fc-chart-bg);
-  color: var(--ink);
-  font-size: var(--text-sm);
-  font-family: var(--font-sans);
-  outline: none;
-}
-
-.fcs-series-select option {
-  background: var(--shell-opaque);
-  color: var(--ink);
-}
-
-.fcs-series-select:hover,
-.fcs-series-select:focus {
-  border-color: var(--edge);
-  background: var(--fcs-hover-bg);
 }
 
 .fcs-preview {

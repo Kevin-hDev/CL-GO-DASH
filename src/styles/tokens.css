@@ -82,6 +82,11 @@
   --forecast-workbench-copy-width: 42rem;
   --forecast-workbench-content-width: 64rem;
   --forecast-workbench-table-cell-width: 18rem;
+  --forecast-filter-menu-width: 13.75rem;
+  --forecast-note-date-width: 7.5rem;
+  --forecast-note-type-width: 8rem;
+  --forecast-series-menu-width: 10rem;
+  --forecast-evaluation-table-min-width: 48rem;
 
   --settings-content-max-width: 37.5rem;
   --settings-editor-min-height: 20rem;

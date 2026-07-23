@@ -74,7 +74,7 @@ function buildXAxis(locale: string, edge: string, inkMuted: string, chartWidth: 
   return {
     type: "time" as const,
     boundaryGap: ["0%", "0%"] as [string, string],
-    splitNumber: xAxisSplitNumber(chartWidth),
+    splitNumber: forecastXAxisSplitNumber(chartWidth),
     axisLine: { lineStyle: { color: edge } },
     axisTick: { show: false },
     axisLabel: {
@@ -87,7 +87,7 @@ function buildXAxis(locale: string, edge: string, inkMuted: string, chartWidth: 
   };
 }
 
-function xAxisSplitNumber(chartWidth: number): number {
+export function forecastXAxisSplitNumber(chartWidth: number): number {
   if (!Number.isFinite(chartWidth) || chartWidth <= 0) return 4;
   return Math.max(3, Math.min(8, Math.floor(chartWidth / 135)));
 }
