@@ -89,7 +89,7 @@ describe("wheel ownership", () => {
       height: 400,
     });
     chart.setOption(buildForecastChartOption(buildArgs()));
-    const target = (dom.firstElementChild ?? dom) as Element;
+    const target = dom.firstElementChild ?? dom;
     let events = 0;
     chart.on("datazoom", () => {
       events += 1;

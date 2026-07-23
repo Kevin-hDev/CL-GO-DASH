@@ -54,9 +54,19 @@ export function ForecastWorkbenchForecast({ analysisId }: { analysisId: string }
     analysisId,
     t("forecast.noAnalysis"),
   );
-  const filtered = data
-    ? filterForecastSeriesData(data, data.input_data.series_ids?.[0] ?? "", [])
-    : null;
+  // Active series shared by the main chart and both companion charts, so
+  // every card always shows the SAME series.
+  const [selectedSeries, setSelectedSeries] = useState("");
+  const seriesIds = data?.input_data.series_ids ?? [];
+  const activeSeries =
+    selectedSeries && seriesIds.includes(selectedSeries)
+      ? selectedSeries
+      : seriesIds[0] ?? "";
+  const cardTitle = (key: string) =>
+    seriesIds.length > 1
+      ? t("forecast.chartCard.withSeries", { title: t(key), series: activeSeries })
+      : t(key);
+  const filtered = data ? filterForecastSeriesData(data, activeSeries, []) : null;
 
   return (
     <div className="fcwf-root">
@@ -73,13 +83,15 @@ export function ForecastWorkbenchForecast({ analysisId }: { analysisId: string }
           <ForecastView
             analysisId={analysisId}
             layers={layers}
+            selectedSeries={selectedSeries}
+            onSelectedSeriesChange={setSelectedSeries}
             onZoomWindowChange={handleMainZoomWindow}
             zoomJump={mainJump}
           />
         </ForecastChartCard>
         {filtered && filtered.predictions.length > 0 ? (
           <ForecastChartCard
-            title={t("forecast.chartCard.fan")}
+            title={cardTitle("forecast.chartCard.fan")}
             onExpanded={handleFanExpanded}
             headerCenter={
               <ForecastZoomJumpBars window={fanZoomWindow} onJump={handleFanJump} />
@@ -87,6 +99,7 @@ export function ForecastWorkbenchForecast({ analysisId }: { analysisId: string }
           >
             <ForecastFanChart
               analysisId={analysisId}
+              seriesId={activeSeries}
               resizeSignal={fanResize}
               onZoomWindowChange={handleFanZoomWindow}
               zoomJump={fanJump}
@@ -95,11 +108,12 @@ export function ForecastWorkbenchForecast({ analysisId }: { analysisId: string }
         ) : null}
         {filtered && filtered.history.length > SEASONALITY_MIN_HISTORY ? (
           <ForecastChartCard
-            title={t("forecast.chartCard.seasonality")}
+            title={cardTitle("forecast.chartCard.seasonality")}
             onExpanded={() => setSeasonalityResize((value) => value + 1)}
           >
             <ForecastSeasonalityChart
               analysisId={analysisId}
+              seriesId={activeSeries}
               resizeSignal={seasonalityResize}
             />
           </ForecastChartCard>

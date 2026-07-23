@@ -1198,7 +1198,8 @@
       "main": "Main chart",
       "fan": "Zoomed horizon",
       "seasonality": "Seasonality",
-      "reliability": "Reliability (backtest)",
+      "reliability": "Backtest error (sMAPE)",
+      "withSeries": "{{title}} — {{series}}",
       "collapse": "Collapse card",
       "expand": "Expand card"
     },

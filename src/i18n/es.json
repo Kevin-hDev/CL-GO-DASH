@@ -1182,7 +1182,8 @@
       "main": "Gráfico principal",
       "fan": "Horizonte ampliado",
       "seasonality": "Estacionalidad",
-      "reliability": "Fiabilidad (backtest)",
+      "reliability": "Error del backtest (sMAPE)",
+      "withSeries": "{{title}} — {{series}}",
       "collapse": "Contraer la tarjeta",
       "expand": "Expandir la tarjeta"
     },

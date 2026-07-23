@@ -1182,7 +1182,8 @@
       "main": "メインチャート",
       "fan": "予測期間の拡大",
       "seasonality": "季節性",
-      "reliability": "信頼性（バックテスト）",
+      "reliability": "バックテスト誤差（sMAPE）",
+      "withSeries": "{{title}} — {{series}}",
       "collapse": "カードを折りたたむ",
       "expand": "カードを展開"
     },

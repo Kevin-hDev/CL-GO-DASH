@@ -11,6 +11,8 @@ const FAN_LAYERS = { history: true, forecast: true, confidence: true };
 
 interface ForecastFanChartProps {
   analysisId: string;
+  /** Active series; falls back to the first series when absent/unknown. */
+  seriesId?: string;
   /** Bumped by the card after an expand transition completes. */
   resizeSignal?: number;
   onZoomWindowChange?: (window: { start: number; end: number }) => void;
@@ -19,6 +21,7 @@ interface ForecastFanChartProps {
 
 export function ForecastFanChart({
   analysisId,
+  seriesId,
   resizeSignal = 0,
   onZoomWindowChange,
   zoomJump,
@@ -34,11 +37,9 @@ export function ForecastFanChart({
     return <div className="fc-loading"><div className="fc-skeleton" /></div>;
   }
 
-  const filtered = filterForecastSeriesData(
-    data,
-    data.input_data.series_ids?.[0] ?? "",
-    [],
-  );
+  const ids = data.input_data.series_ids ?? [];
+  const activeSeries = seriesId && ids.includes(seriesId) ? seriesId : ids[0] ?? "";
+  const filtered = filterForecastSeriesData(data, activeSeries, []);
   if (!filtered.predictions.length) {
     return (
       <div className="fcwf-companion-empty">

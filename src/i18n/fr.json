@@ -1246,7 +1246,8 @@
       "main": "Graphe principal",
       "fan": "Horizon zoomé",
       "seasonality": "Saisonnalité",
-      "reliability": "Fiabilité (backtest)",
+      "reliability": "Erreur du backtest (sMAPE)",
+      "withSeries": "{{title}} — {{series}}",
       "collapse": "Replier la carte",
       "expand": "Déplier la carte"
     },

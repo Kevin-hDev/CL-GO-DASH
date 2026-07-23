@@ -1182,7 +1182,8 @@
       "main": "Grafico principale",
       "fan": "Orizzonte ingrandito",
       "seasonality": "Stagionalità",
-      "reliability": "Affidabilità (backtest)",
+      "reliability": "Errore del backtest (sMAPE)",
+      "withSeries": "{{title}} — {{series}}",
       "collapse": "Comprimi la scheda",
       "expand": "Espandi la scheda"
     },

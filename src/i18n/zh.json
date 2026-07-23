@@ -1182,7 +1182,8 @@
       "main": "主图表",
       "fan": "放大预测区间",
       "seasonality": "季节性",
-      "reliability": "可靠性（回测）",
+      "reliability": "回测误差（sMAPE）",
+      "withSeries": "{{title}} — {{series}}",
       "collapse": "折叠卡片",
       "expand": "展开卡片"
     },

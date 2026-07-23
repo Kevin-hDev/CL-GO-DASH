@@ -20,14 +20,26 @@ import "../forecast-view-table.css";
 interface ForecastViewProps {
   analysisId: string;
   layers: ForecastLayerState;
+  /** Controlled series selection (workbench); falls back to internal state. */
+  selectedSeries?: string;
+  onSelectedSeriesChange?: (seriesId: string) => void;
   onZoomWindowChange?: (window: { start: number; end: number }) => void;
   zoomJump?: { start: number; seq: number } | null;
 }
 
-export function ForecastView({ analysisId, layers, onZoomWindowChange, zoomJump }: ForecastViewProps) {
+export function ForecastView({
+  analysisId,
+  layers,
+  selectedSeries: controlledSeries,
+  onSelectedSeriesChange,
+  onZoomWindowChange,
+  zoomJump,
+}: ForecastViewProps) {
   const { t, i18n } = useTranslation();
   const { data, error } = useForecastResult<ForecastViewResult>(analysisId, t("forecast.noAnalysis"));
-  const [selectedSeries, setSelectedSeries] = useState("");
+  const [internalSeries, setInternalSeries] = useState("");
+  const selectedSeries = controlledSeries ?? internalSeries;
+  const setSelectedSeries = onSelectedSeriesChange ?? setInternalSeries;
   const [tableOpen, setTableOpen] = useState(false);
   const chart = useForecastChartResize();
 

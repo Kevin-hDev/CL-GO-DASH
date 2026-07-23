@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as echarts from "echarts/core";
 import type { EChartsType } from "echarts/core";
 import { LineChart } from "echarts/charts";
@@ -37,12 +37,15 @@ echarts.use([
 
 interface ForecastSeasonalityChartProps {
   analysisId: string;
+  /** Active series; falls back to the first series when absent/unknown. */
+  seriesId?: string;
   /** Bump to request a resize after the card expand transition. */
   resizeSignal?: number;
 }
 
 export function ForecastSeasonalityChart({
   analysisId,
+  seriesId,
   resizeSignal = 0,
 }: ForecastSeasonalityChartProps) {
   const { t, i18n } = useTranslation();
@@ -55,22 +58,25 @@ export function ForecastSeasonalityChart({
   const lastKeyRef = useRef("");
   const [toggled, setToggled] = useState<{ signature: string; visible: number[] } | null>(null);
 
-  const model = data
-    ? buildSeasonalityModel(
-        filterForecastSeriesData(data, data.input_data.series_ids?.[0] ?? "", [])
-          .history,
-        i18n.language,
-      )
-    : null;
+  const model = useMemo(() => {
+    if (!data) return null;
+    const ids = data.input_data.series_ids ?? [];
+    const active = seriesId && ids.includes(seriesId) ? seriesId : ids[0] ?? "";
+    const filtered = filterForecastSeriesData(data, active, []);
+    return buildSeasonalityModel(filtered.history, i18n.language);
+  }, [data, seriesId, i18n.language]);
   const signature = model?.years.map((year) => year.year).join(",") ?? "";
-  const visibleYears = model
-    ? toggled && toggled.signature === signature
-      ? toggled.visible
-      : defaultVisibleYears(model.years)
-    : [];
+  const visibleYears = useMemo(
+    () =>
+      model
+        ? toggled && toggled.signature === signature
+          ? toggled.visible
+          : defaultVisibleYears(model.years)
+        : [],
+    [model, toggled, signature],
+  );
 
-  const applyOptionRef = useRef((_replace: boolean) => {});
-  applyOptionRef.current = (replace: boolean) => {
+  const applyOption = useCallback((replace: boolean) => {
     if (!chartRef.current || !containerRef.current || !model) return;
     const root = getComputedStyle(containerRef.current);
     chartRef.current.setOption(
@@ -79,7 +85,14 @@ export function ForecastSeasonalityChart({
       }),
       replace,
     );
-  };
+  }, [model, visibleYears, t]);
+
+  // The mount-only init effect reads the latest apply through a ref
+  // (written inside an effect, never during render).
+  const applyRef = useRef(applyOption);
+  useEffect(() => {
+    applyRef.current = applyOption;
+  }, [applyOption]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -88,7 +101,7 @@ export function ForecastSeasonalityChart({
       if (chartRef.current) return;
       if (container.clientWidth <= 0 || container.clientHeight <= 0) return;
       chartRef.current = echarts.init(container, undefined, { renderer: "canvas" });
-      applyOptionRef.current(true);
+      applyRef.current(true);
     };
     const observer = new ResizeObserver(() => {
       if (!chartRef.current) ensureChart();
@@ -107,8 +120,8 @@ export function ForecastSeasonalityChart({
     const key = `${signature}|${visibleYears.join(",")}`;
     const replace = lastKeyRef.current !== key;
     lastKeyRef.current = key;
-    applyOptionRef.current(replace);
-  });
+    applyOption(replace);
+  }, [signature, visibleYears, applyOption]);
 
   useEffect(() => {
     if (resizeSignal > 0) chartRef.current?.resize();

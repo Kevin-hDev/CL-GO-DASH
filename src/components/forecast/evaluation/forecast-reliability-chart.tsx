@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import * as echarts from "echarts/core";
 import type { EChartsType } from "echarts/core";
 import { BarChart } from "echarts/charts";
@@ -45,22 +45,31 @@ export function ForecastReliabilityChart({
   const chartRef = useRef<EChartsType | null>(null);
   const lastBarsRef = useRef<ReliabilityBar[] | null>(null);
 
-  const bars = buildReliabilityBars(results, currentModel);
+  const bars = useMemo(
+    () => buildReliabilityBars(results, currentModel),
+    [results, currentModel],
+  );
+  const mean = useMemo(() => reliabilityMean(bars), [bars]);
+  const labels = useMemo(
+    () => ({ mean: t("forecast.companion.mean"), resolveModel }),
+    [t, resolveModel],
+  );
 
-  const applyOptionRef = useRef((_replace: boolean) => {});
-  applyOptionRef.current = (replace: boolean) => {
+  const applyOption = useCallback((replace: boolean) => {
     if (!chartRef.current || !containerRef.current || !bars.length) return;
     const root = getComputedStyle(containerRef.current);
     chartRef.current.setOption(
-      buildReliabilityOption(
-        bars,
-        reliabilityMean(bars),
-        buildForecastChartPalette(root),
-        { mean: t("forecast.companion.mean"), resolveModel },
-      ),
+      buildReliabilityOption(bars, mean, buildForecastChartPalette(root), labels),
       replace,
     );
-  };
+  }, [bars, mean, labels]);
+
+  // The mount-only init effect reads the latest apply through a ref
+  // (written inside an effect, never during render).
+  const applyRef = useRef(applyOption);
+  useEffect(() => {
+    applyRef.current = applyOption;
+  }, [applyOption]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -69,7 +78,7 @@ export function ForecastReliabilityChart({
       if (chartRef.current) return;
       if (container.clientWidth <= 0 || container.clientHeight <= 0) return;
       chartRef.current = echarts.init(container, undefined, { renderer: "canvas" });
-      applyOptionRef.current(true);
+      applyRef.current(true);
     };
     const observer = new ResizeObserver(() => {
       if (!chartRef.current) ensureChart();
@@ -87,8 +96,8 @@ export function ForecastReliabilityChart({
   useEffect(() => {
     const replace = lastBarsRef.current !== bars;
     lastBarsRef.current = bars;
-    applyOptionRef.current(replace);
-  });
+    applyOption(replace);
+  }, [bars, applyOption]);
 
   useEffect(() => {
     if (resizeSignal > 0) chartRef.current?.resize();

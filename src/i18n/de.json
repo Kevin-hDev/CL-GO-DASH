@@ -1182,7 +1182,8 @@
       "main": "Hauptdiagramm",
       "fan": "Vergrößerter Horizont",
       "seasonality": "Saisonalität",
-      "reliability": "Zuverlässigkeit (Backtest)",
+      "reliability": "Backtest-Fehler (sMAPE)",
+      "withSeries": "{{title}} — {{series}}",
       "collapse": "Karte einklappen",
       "expand": "Karte ausklappen"
     },
