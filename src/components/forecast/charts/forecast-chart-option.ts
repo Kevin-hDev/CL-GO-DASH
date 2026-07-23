@@ -56,7 +56,7 @@ export function buildForecastChartOption(args: ForecastChartOptionArgs): ECharts
         filterMode: "none",
         zoomOnMouseWheel: true,
         moveOnMouseWheel: false,
-        moveOnMouseMove: true,
+        moveOnMouseMove: false,
       },
     ],
     series: buildSeries(

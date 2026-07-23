@@ -1193,6 +1193,10 @@
       "showAll": "すべて",
       "showNone": "なし"
     },
+    "zoomJump": {
+      "goTo": "{{count}} 個中 {{index}} 番目へ移動",
+      "label": "ズームジャンプ"
+    },
     "title": "予測",
     "noAnalysis": "分析が進行中ではありません",
     "selection": {

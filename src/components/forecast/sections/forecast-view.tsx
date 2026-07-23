@@ -20,9 +20,11 @@ import "../forecast-view-table.css";
 interface ForecastViewProps {
   analysisId: string;
   layers: ForecastLayerState;
+  onZoomWindowChange?: (window: { start: number; end: number }) => void;
+  zoomJump?: { start: number; seq: number } | null;
 }
 
-export function ForecastView({ analysisId, layers }: ForecastViewProps) {
+export function ForecastView({ analysisId, layers, onZoomWindowChange, zoomJump }: ForecastViewProps) {
   const { t, i18n } = useTranslation();
   const { data, error } = useForecastResult<ForecastViewResult>(analysisId, t("forecast.noAnalysis"));
   const [selectedSeries, setSelectedSeries] = useState("");
@@ -106,6 +108,8 @@ export function ForecastView({ analysisId, layers }: ForecastViewProps) {
             }}
             layers={layers}
             mode="main"
+            onZoomWindowChange={onZoomWindowChange}
+            zoomJump={zoomJump}
           />
         </div>
       </div>

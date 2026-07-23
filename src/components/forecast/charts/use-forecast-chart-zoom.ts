@@ -1,5 +1,5 @@
 import type { EChartsType } from "echarts/core";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   clampForecastZoomWindow,
   FORECAST_CHART_MIN_ZOOM_SPAN,
@@ -11,12 +11,14 @@ interface UseForecastChartZoomArgs {
   signature: string;
   chartRef: React.RefObject<EChartsType | null>;
   onZoomChange: (window: ForecastZoomWindow) => void;
+  jump?: { start: number; seq: number } | null;
 }
 
 export function useForecastChartZoom({
   signature,
   chartRef,
   onZoomChange,
+  jump,
 }: UseForecastChartZoomArgs) {
   const shellRef = useRef<HTMLDivElement | null>(null);
   const controlsRef = useRef<HTMLDivElement | null>(null);
@@ -56,6 +58,16 @@ export function useForecastChartZoom({
     );
     onZoomChange(next);
   }, [onZoomChange, signature]);
+
+  const lastJumpSeqRef = useRef(0);
+  useEffect(() => {
+    if (!jump || jump.seq === lastJumpSeqRef.current) return;
+    lastJumpSeqRef.current = jump.seq;
+    const span = zoomWindow.end - zoomWindow.start;
+    const next = clampForecastZoomWindow(jump.start, jump.start + span);
+    chartRef.current?.dispatchAction({ type: "dataZoom", ...next });
+    syncZoomState(next);
+  }, [jump, zoomWindow, chartRef, syncZoomState]);
 
   const handleDataZoom = useCallback(() => {
     if (dragRef.current.active) return;

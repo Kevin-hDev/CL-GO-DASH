@@ -1209,6 +1209,10 @@
       "showAll": "All",
       "showNone": "None"
     },
+    "zoomJump": {
+      "goTo": "Jump to position {{index}} of {{count}}",
+      "label": "Zoom jumps"
+    },
     "title": "Forecast",
     "noAnalysis": "No analysis in progress",
     "selection": {

@@ -1193,6 +1193,10 @@
       "showAll": "Tutto",
       "showNone": "Niente"
     },
+    "zoomJump": {
+      "goTo": "Vai alla posizione {{index}} di {{count}}",
+      "label": "Scorciatoie di zoom"
+    },
     "title": "Previsione",
     "noAnalysis": "Nessuna analisi in corso",
     "selection": {

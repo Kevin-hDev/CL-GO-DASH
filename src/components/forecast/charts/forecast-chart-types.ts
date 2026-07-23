@@ -107,4 +107,6 @@ export interface ForecastChartProps {
   fallbackName?: string;
   labels: ForecastChartOptionArgs["labels"];
   layers: ForecastLayerState;
+  onZoomWindowChange?: (window: { start: number; end: number }) => void;
+  zoomJump?: { start: number; seq: number } | null;
 }

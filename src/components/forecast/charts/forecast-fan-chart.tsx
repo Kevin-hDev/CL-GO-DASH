@@ -13,11 +13,15 @@ interface ForecastFanChartProps {
   analysisId: string;
   /** Bumped by the card after an expand transition completes. */
   resizeSignal?: number;
+  onZoomWindowChange?: (window: { start: number; end: number }) => void;
+  zoomJump?: { start: number; seq: number } | null;
 }
 
 export function ForecastFanChart({
   analysisId,
   resizeSignal = 0,
+  onZoomWindowChange,
+  zoomJump,
 }: ForecastFanChartProps) {
   const { t, i18n } = useTranslation();
   const { data, error } = useForecastResult<ForecastViewResult>(
@@ -71,6 +75,8 @@ export function ForecastFanChart({
         }}
         layers={FAN_LAYERS}
         mode="main"
+        onZoomWindowChange={onZoomWindowChange}
+        zoomJump={zoomJump}
       />
     </div>
   );

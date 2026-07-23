@@ -1257,6 +1257,10 @@
       "showAll": "Tout",
       "showNone": "Rien"
     },
+    "zoomJump": {
+      "goTo": "Aller à la position {{index}} sur {{count}}",
+      "label": "Raccourcis de zoom"
+    },
     "title": "Forecast",
     "noAnalysis": "Aucune analyse en cours",
     "selection": {

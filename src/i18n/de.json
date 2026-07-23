@@ -1193,6 +1193,10 @@
       "showAll": "Alle",
       "showNone": "Keine"
     },
+    "zoomJump": {
+      "goTo": "Zu Position {{index}} von {{count}} springen",
+      "label": "Zoom-Sprünge"
+    },
     "title": "Prognose",
     "noAnalysis": "Keine laufende Analyse",
     "selection": {

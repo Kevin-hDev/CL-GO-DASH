@@ -10,6 +10,7 @@ interface ForecastChartCardProps {
   defaultOpen?: boolean;
   /** Fired once the expand transition has finished (charts resize then). */
   onExpanded?: () => void;
+  headerCenter?: ReactNode;
   children: ReactNode;
 }
 
@@ -17,6 +18,7 @@ export function ForecastChartCard({
   title,
   defaultOpen = true,
   onExpanded,
+  headerCenter,
   children,
 }: ForecastChartCardProps) {
   const { t } = useTranslation();
@@ -62,6 +64,7 @@ export function ForecastChartCard({
     <section className={`fcrd-card ${open ? "is-open" : ""}`}>
       <div className="fcrd-bar">
         <span className="fcrd-title">{title}</span>
+        {headerCenter ? <div className="fcrd-center">{headerCenter}</div> : null}
         <button
           type="button"
           className="fcrd-toggle"

@@ -60,6 +60,18 @@
   transform: rotate(180deg);
 }
 
+.fcrd-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.fcrd-card:not(.is-open) .fcrd-center {
+  display: none;
+}
+
 .fcrd-body {
   display: grid;
   grid-template-rows: 0fr;

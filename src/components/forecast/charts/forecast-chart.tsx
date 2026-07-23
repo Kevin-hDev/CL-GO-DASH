@@ -28,6 +28,7 @@ import type { ForecastChartProps } from "./forecast-chart-types";
 import {
   buildForecastZoomSignature,
   forecastZoomSliderValue,
+  sameForecastZoomWindow,
   FORECAST_CHART_MIN_ZOOM_SPAN,
 } from "./forecast-chart-zoom-utils";
 import { useForecastChartZoom } from "./use-forecast-chart-zoom";
@@ -51,7 +52,11 @@ export function ForecastChart(props: ForecastChartProps) {
   const widthBucketRef = useRef(0);
   const zoomSignature = buildForecastZoomSignature(props);
   const handleZoomRefChange = useCallback((window: { start: number; end: number }) => {
+    const previous = zoomWindowRef.current;
     zoomWindowRef.current = window;
+    if (!sameForecastZoomWindow(previous, window)) {
+      propsRef.current.onZoomWindowChange?.(window);
+    }
   }, []);
   const {
     shellRef,
@@ -67,6 +72,7 @@ export function ForecastChart(props: ForecastChartProps) {
     signature: zoomSignature,
     chartRef,
     onZoomChange: handleZoomRefChange,
+    jump: props.zoomJump,
   });
   const sliderValue = forecastZoomSliderValue(zoomSpan);
 
@@ -166,8 +172,7 @@ export function ForecastChart(props: ForecastChartProps) {
       className={`fcc-chart-shell fcc-chart-${props.mode ?? "main"} ${props.compact ? "is-compact" : ""} ${zoomSpan < 100 ? "is-draggable" : ""}`}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
-      onPointerUp={stopDrag}
-      onPointerLeave={stopDrag}
+      onPointerUp={stopDrag} onPointerLeave={stopDrag} onPointerCancel={stopDrag}
     >
       <div ref={containerRef} className="fcc-chart-root" />
       {!props.compact && (

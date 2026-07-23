@@ -1193,6 +1193,10 @@
       "showAll": "全部",
       "showNone": "无"
     },
+    "zoomJump": {
+      "goTo": "跳转到第 {{index}}/{{count}} 个位置",
+      "label": "缩放跳转"
+    },
     "title": "预测",
     "noAnalysis": "没有正在进行的分析",
     "selection": {
