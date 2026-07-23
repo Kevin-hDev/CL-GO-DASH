@@ -40,6 +40,20 @@ async fn missing_note_file_is_rebuilt_without_losing_metadata() {
 }
 
 #[tokio::test]
+async fn listing_an_analysis_without_notes_creates_no_empty_directory() {
+    let mut analysis = analysis();
+    storage::save(&mut analysis).await.unwrap();
+
+    let result = notes::list(&analysis.id).await.unwrap();
+
+    assert!(result.notes.is_empty());
+    assert!(notes_paths::directory_if_exists(&analysis.id)
+        .await
+        .unwrap()
+        .is_none());
+}
+
+#[tokio::test]
 async fn corrupted_note_fails_closed_without_panicking() {
     let mut analysis = analysis();
     storage::save(&mut analysis).await.unwrap();

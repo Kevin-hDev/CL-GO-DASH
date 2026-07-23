@@ -77,7 +77,7 @@ fn fmt_returns_empty_for_non_finite() {
 
 /// Construit un ForecastResult minimal via serde (les champs default rendent
 /// la construction tolérante).
-fn minimal_result() -> ForecastResult {
+pub(super) fn minimal_result() -> ForecastResult {
     serde_json::from_value(serde_json::json!({
         "id": "test-1",
         "name": "Test Forecast",

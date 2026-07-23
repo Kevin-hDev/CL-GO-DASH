@@ -10,7 +10,9 @@ use std::path::PathBuf;
 const MAX_NOTE_DIRECTORY_ENTRIES: usize = 512;
 
 pub(crate) async fn read_notes(analysis_id: &str) -> Result<Vec<ForecastNote>, String> {
-    let directory = notes_paths::directory_for_write(analysis_id).await?;
+    let Some(directory) = notes_paths::directory_if_exists(analysis_id).await? else {
+        return Ok(Vec::new());
+    };
     let mut entries = tokio::fs::read_dir(&directory)
         .await
         .map_err(|_| "Impossible de lire les notes".to_string())?;
@@ -92,6 +94,9 @@ pub(crate) async fn existing_note_path(
 }
 
 pub(crate) async fn sync_annotation_files(analysis: &ForecastResult) -> Result<(), String> {
+    if analysis.annotations.is_empty() {
+        return Ok(());
+    }
     notes_paths::directory_for_write(&analysis.id).await?;
     for annotation in &analysis.annotations {
         if notes_validation::id(&annotation.id, "Note invalide").is_err() {

@@ -16,6 +16,8 @@ mod spreadsheet_text;
 mod xlsx;
 mod xlsx_advanced;
 mod xlsx_input;
+#[cfg(test)]
+mod xlsx_security_tests;
 mod xlsx_style;
 
 use super::{notes, storage};
