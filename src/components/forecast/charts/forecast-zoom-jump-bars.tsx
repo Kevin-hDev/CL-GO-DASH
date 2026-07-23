@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   zoomJumpBarCount,
@@ -18,12 +18,24 @@ const HOVER_HEIGHTS = [20, 15, 12.5];
 
 export function ForecastZoomJumpBars({ window, onJump }: ForecastZoomJumpBarsProps) {
   const { t } = useTranslation();
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const [hovered, setHovered] = useState<number | null>(null);
   const span = window ? window.end - window.start : 100;
   const start = window?.start ?? 0;
   const visible = zoomJumpVisible(span);
   const count = zoomJumpBarCount(span);
   const current = zoomJumpCurrentIndex(start, span, count);
+
+  // Strip-level hover: the wave follows the nearest bar and never drops
+  // while the cursor travels through the inter-bar gaps.
+  const handleStripPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const root = rootRef.current;
+    if (!root || count <= 0) return;
+    const rect = root.getBoundingClientRect();
+    const ratio = (event.clientX - rect.left) / (rect.width || 1);
+    const index = Math.round(ratio * (count - 1));
+    setHovered(Math.min(count - 1, Math.max(0, index)));
+  };
 
   const bars = Array.from({ length: count }, (_, index) => {
     const dist = hovered === null ? null : Math.abs(index - hovered);
@@ -42,8 +54,6 @@ export function ForecastZoomJumpBars({ window, onJump }: ForecastZoomJumpBarsPro
         tabIndex={visible ? 0 : -1}
         aria-label={t("forecast.zoomJump.goTo", { index: index + 1, count })}
         onClick={() => onJump(zoomJumpTarget(index, count, span))}
-        onMouseEnter={() => setHovered(index)}
-        onMouseLeave={() => setHovered(null)}
         onFocus={() => setHovered(index)}
         onBlur={() => setHovered(null)}
       />
@@ -52,9 +62,12 @@ export function ForecastZoomJumpBars({ window, onJump }: ForecastZoomJumpBarsPro
 
   return (
     <div
+      ref={rootRef}
       className={`fzjb-root ${visible ? "is-visible" : ""}`}
       role="group"
       aria-label={t("forecast.zoomJump.label")}
+      onPointerMove={handleStripPointerMove}
+      onPointerLeave={() => setHovered(null)}
     >
       {bars}
     </div>

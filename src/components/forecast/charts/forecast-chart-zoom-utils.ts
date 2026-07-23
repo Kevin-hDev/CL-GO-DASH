@@ -24,6 +24,24 @@ export function sameForecastZoomWindow(left: ForecastZoomWindow, right: Forecast
   return Math.abs(left.start - right.start) < 0.001 && Math.abs(left.end - right.end) < 0.001;
 }
 
+export const FULL_EXTENT_ZOOM_WINDOW: ForecastZoomWindow = { start: 0, end: 100 };
+
+export function isFullExtentZoomWindow(window: ForecastZoomWindow): boolean {
+  return sameForecastZoomWindow(window, FULL_EXTENT_ZOOM_WINDOW);
+}
+
+// ECharts anchors inside-dataZoom wheel zoom at the cursor. Zooming OUT at
+// full extent is already a no-op (the expanded window clamps back), but
+// zooming IN contracts the window toward the cursor, which reads as a silent
+// pan (e.g. sliding right with the right edge pinned). Roam gestures at full
+// extent are therefore ignored entirely; only span < 100 keeps wheel zoom.
+export function shouldIgnoreRoamAtFullExtent(
+  current: ForecastZoomWindow,
+  next: ForecastZoomWindow,
+): boolean {
+  return isFullExtentZoomWindow(current) && !isFullExtentZoomWindow(next);
+}
+
 export function forecastZoomSliderValue(span: number): number {
   const max = 100 - FORECAST_CHART_MIN_ZOOM_SPAN;
   if (!Number.isFinite(span)) return 0;

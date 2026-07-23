@@ -4,6 +4,7 @@ import {
   clampForecastZoomWindow,
   FORECAST_CHART_MIN_ZOOM_SPAN,
   sameForecastZoomWindow,
+  shouldIgnoreRoamAtFullExtent,
   type ForecastZoomWindow,
 } from "./forecast-chart-zoom-utils";
 
@@ -23,6 +24,9 @@ export function useForecastChartZoom({
   const shellRef = useRef<HTMLDivElement | null>(null);
   const controlsRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef({ active: false, x: 0, start: 0, end: 100 });
+  // Last window synced to React state; lets handleDataZoom know the window
+  // before a roam gesture without depending on re-renders.
+  const syncedRef = useRef({ signature, start: 0, end: 100 });
   const [zoomState, setZoomState] = useState({
     signature,
     start: 0,
@@ -49,6 +53,7 @@ export function useForecastChartZoom({
 
   const syncZoomState = useCallback((nextWindow: ForecastZoomWindow) => {
     const next = clampForecastZoomWindow(nextWindow.start, nextWindow.end);
+    syncedRef.current = { signature, ...next };
     setZoomState((current) =>
       current.signature === signature &&
       current.start === next.start &&
@@ -69,16 +74,30 @@ export function useForecastChartZoom({
     syncZoomState(next);
   }, [jump, zoomWindow, chartRef, syncZoomState]);
 
-  const handleDataZoom = useCallback(() => {
+  const handleDataZoom = useCallback((event?: unknown) => {
     if (dragRef.current.active) return;
     const raw = readChartZoom();
     if (!raw) return;
     const next = clampForecastZoomWindow(raw.start, raw.end);
+    const synced = syncedRef.current;
+    const current = synced.signature === signature
+      ? { start: synced.start, end: synced.end }
+      : { start: 0, end: 100 };
+    // Wheel/roam events carry `batch`; our own dispatchAction calls do not.
+    // At full extent the wheel must be a complete no-op: ECharts anchors
+    // wheel zoom-in at the cursor, which contracts the window toward it and
+    // reads as a silent pan. Revert and leave state untouched. Our controls
+    // (slider/jump/reset/drag) sync state directly, so they are unaffected.
+    const isRoam = Array.isArray((event as { batch?: unknown } | undefined)?.batch);
+    if (isRoam && shouldIgnoreRoamAtFullExtent(current, next)) {
+      chartRef.current?.dispatchAction({ type: "dataZoom", start: 0, end: 100 });
+      return;
+    }
     if (!sameForecastZoomWindow(raw, next)) {
       chartRef.current?.dispatchAction({ type: "dataZoom", ...next });
     }
     syncZoomState(next);
-  }, [chartRef, readChartZoom, syncZoomState]);
+  }, [chartRef, readChartZoom, signature, syncZoomState]);
 
   const handleResetZoom = useCallback(() => {
     chartRef.current?.dispatchAction({ type: "dataZoom", start: 0, end: 100 });
@@ -86,16 +105,14 @@ export function useForecastChartZoom({
   }, [chartRef, syncZoomState]);
 
   const handleZoomSlider = useCallback((nextSpan: number) => {
-    setZoomState((current) => {
-      const center =
-        current.signature === signature ? (current.start + current.end) / 2 : 50;
-      const span = Math.max(FORECAST_CHART_MIN_ZOOM_SPAN, Math.min(100, nextSpan));
-      const next = clampForecastZoomWindow(center - span / 2, center + span / 2);
-      chartRef.current?.dispatchAction({ type: "dataZoom", ...next });
-      onZoomChange(next);
-      return { signature, ...next };
-    });
-  }, [chartRef, onZoomChange, signature]);
+    const synced = syncedRef.current;
+    const center =
+      synced.signature === signature ? (synced.start + synced.end) / 2 : 50;
+    const span = Math.max(FORECAST_CHART_MIN_ZOOM_SPAN, Math.min(100, nextSpan));
+    const next = clampForecastZoomWindow(center - span / 2, center + span / 2);
+    chartRef.current?.dispatchAction({ type: "dataZoom", ...next });
+    syncZoomState(next);
+  }, [chartRef, signature, syncZoomState]);
 
   const handlePointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     if (zoomSpan >= 100 || controlsRef.current?.contains(event.target as Node)) return;
