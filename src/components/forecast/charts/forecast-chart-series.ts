@@ -6,6 +6,10 @@ import type {
   TimelineEntry,
   VariableLine,
 } from "./forecast-chart-types";
+import {
+  FORECAST_CHART_LINE_MONOTONE_AXIS,
+  FORECAST_CHART_LINE_SMOOTHING,
+} from "./forecast-chart-line-style";
 
 export function buildSeries(
   timeline: TimelineEntry[],
@@ -118,6 +122,8 @@ function seriesLine(
     symbol: "circle" as const,
     showSymbol: Boolean(showSymbol),
     symbolSize: 5,
+    smooth: FORECAST_CHART_LINE_SMOOTHING,
+    smoothMonotone: FORECAST_CHART_LINE_MONOTONE_AXIS,
     connectNulls: false,
     lineStyle,
     areaStyle: areaColor ? { color: areaColor } : undefined,

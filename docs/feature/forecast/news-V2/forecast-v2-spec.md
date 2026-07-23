@@ -407,6 +407,13 @@ Tu limites la densité visuelle :
 - tu évites les rangées de boutons uniquement composées d'icônes ambiguës ;
 - tu conserves une largeur lisible pour les libellés et les valeurs.
 
+Tu affiches les séries temporelles continues avec un lissage monotone sur
+l'axe du temps. La courbe passe par chaque valeur réelle, ne relie pas les
+données manquantes et ne crée pas de pic entre deux points. Tu appliques le
+même lissage aux bandes d'incertitude, aux scénarios et aux variables. Une
+série réellement discrète ou en paliers peut explicitement conserver un tracé
+droit.
+
 ### 9.5 Responsive
 
 Tu utilises des container queries pour le panneau et la fenêtre.
