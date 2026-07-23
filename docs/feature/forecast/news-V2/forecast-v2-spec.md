@@ -291,6 +291,17 @@ Tu reprends l'identité de CL-GO-DASH : surfaces sobres, hiérarchie discrète, 
 
 Tu ne crées pas une esthétique de dashboard générique avec une accumulation de cartes identiques.
 
+Tu structures la fenêtre en deux surfaces distinctes :
+
+- une sidebar vitrée sur toute la hauteur, qui regroupe le nom de l'analyse,
+  le sélecteur de modèle et la navigation Forecast ;
+- un espace de travail sombre, opaque, arrondi et séparé de la sidebar par
+  une marge constante.
+
+Tu n'ajoutes aucun header transversal au-dessus de ces deux surfaces. Sur une
+largeur réduite, la sidebar devient une bande supérieure compacte et l'espace
+de travail conserve sa propre surface et son propre défilement.
+
 Tu privilégies :
 
 - une hiérarchie claire ;

@@ -31,16 +31,25 @@ vi.mock("./forecast-workbench-section", () => ({
 }));
 
 describe("ForecastWorkbenchWindow", () => {
-  it("keeps only the analysis name and model selector in the header", () => {
+  it("keeps the analysis controls and navigation inside the glass sidebar", () => {
     const { container } = render(<ForecastWorkbenchWindow />);
 
-    const header = container.querySelector(".fcw-header");
+    const sidebar = container.querySelector(".fcw-sidebar");
+    const header = sidebar?.querySelector(".fcw-sidebar-header");
     expect(header).not.toBeNull();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
       "Forecast RSAFS",
     );
-    expect(header?.querySelector(".fcw-kicker")).toBeNull();
-    expect(header?.querySelector(".fcw-session")).toBeNull();
-    expect(screen.getByRole("button", { name: "Auto" })).toBeInTheDocument();
+    expect(header).toContainElement(screen.getByRole("button", { name: "Auto" }));
+    expect(sidebar).toContainElement(screen.getByRole("navigation"));
+  });
+
+  it("renders the active section in a detached workspace", () => {
+    const { container } = render(<ForecastWorkbenchWindow />);
+
+    const workspace = container.querySelector(".fcw-workspace");
+    expect(workspace).not.toBeNull();
+    expect(workspace).toContainElement(screen.getByText("Contenu"));
+    expect(workspace?.closest(".fcw-sidebar")).toBeNull();
   });
 });

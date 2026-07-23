@@ -10,6 +10,7 @@ import type {
 import { useForecastWorkbenchContext } from "./use-forecast-workbench-context";
 import { ForecastWorkbenchSectionContent } from "./forecast-workbench-section";
 import "./forecast-workbench.css";
+import "./forecast-workbench-responsive.css";
 
 export function ForecastWorkbenchWindow() {
   const { t } = useTranslation();
@@ -40,15 +41,15 @@ function ForecastWorkbenchContent({ snapshot }: { snapshot: ForecastWorkbenchSna
 
   return (
     <main className="fcw-shell">
-      <header className="fcw-header">
-        <div className="fcw-heading">
+      <aside className="fcw-sidebar">
+        <header className="fcw-sidebar-header">
           <h1>{snapshot.analysis_name ?? t("forecast.workbench.newAnalysis")}</h1>
-        </div>
-        <ForecastWorkbenchModelControl />
-      </header>
-      <div className="fcw-layout">
+          <ForecastWorkbenchModelControl />
+        </header>
         <ForecastWorkbenchNav active={section} onChange={(next) => void changeSection(next)} />
-        <section className="fcw-content" aria-labelledby="fcw-section-title">
+      </aside>
+      <section className="fcw-workspace">
+        <div className="fcw-content" aria-labelledby="fcw-section-title">
           {saveFailed ? (
             <p className="fcw-inline-error" role="alert">
               {t("forecast.workbench.draftSaveFailed")}
@@ -60,8 +61,8 @@ function ForecastWorkbenchContent({ snapshot }: { snapshot: ForecastWorkbenchSna
             <p>{t(`forecast.workbench.sectionDescriptions.${section}`)}</p>
           </div>
           <ForecastWorkbenchSectionContent section={section} snapshot={snapshot} />
-        </section>
-      </div>
+        </div>
+      </section>
     </main>
   );
 }

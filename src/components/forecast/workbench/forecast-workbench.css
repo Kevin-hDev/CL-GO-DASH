@@ -1,28 +1,74 @@
 .fcw-shell {
   container-type: inline-size;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: var(--forecast-workbench-nav-width) minmax(0, 1fr);
+  gap: var(--chrome-1);
   min-width: 0;
   height: 100vh;
+  padding: var(--chrome-1);
   overflow: hidden;
-  background: var(--void);
+  background: transparent;
   color: var(--ink);
   font-family: var(--font-sans);
 }
 
-.fcw-header {
+.fcw-sidebar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-lg);
-  min-height: var(--forecast-workbench-header-height);
-  padding: var(--chrome-2) var(--chrome-4);
-  border-bottom: 1px solid var(--edge);
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-panel);
+  background: var(--shell-translucent);
+  backdrop-filter: var(--popover-backdrop-filter, none);
+  -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
+}
+
+.os-mac .fcw-sidebar {
+  animation: fcw-keep-compositing 1s linear infinite;
+}
+
+.os-other .fcw-sidebar {
   background: var(--shell-opaque);
 }
 
-.fcw-heading {
+@keyframes fcw-keep-compositing {
+  0%,
+  100% {
+    transform: translateZ(0);
+  }
+  50% {
+    transform: translateZ(0.1px);
+  }
+}
+
+.fcw-sidebar-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--chrome-3);
   min-width: 0;
+  padding: var(--chrome-5) var(--chrome-4) var(--chrome-4);
+  border-bottom: 1px solid var(--edge);
+}
+
+.fcw-sidebar-header h1,
+.fcw-content-heading h2 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.fcw-sidebar-header h1 {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: var(--text-lg);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fcw-sidebar-header .fmsel-wrapper {
+  max-width: 100%;
 }
 
 .fcw-step {
@@ -34,34 +80,13 @@
   text-transform: uppercase;
 }
 
-.fcw-heading h1,
-.fcw-content-heading h2 {
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-.fcw-heading h1 {
-  margin: 0;
-  overflow: hidden;
-  font-size: var(--text-lg);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.fcw-layout {
-  display: grid;
-  grid-template-columns: var(--forecast-workbench-nav-width) minmax(0, 1fr);
-  min-height: 0;
-  flex: 1;
-}
-
 .fcw-nav {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: var(--chrome-1);
+  min-height: 0;
   padding: var(--chrome-4) var(--chrome-3);
-  border-right: 1px solid var(--edge);
-  background: var(--shell-opaque);
 }
 
 .fcw-nav-item {
@@ -93,21 +118,34 @@
   outline-offset: 1px;
 }
 
+.fcw-workspace {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-panel);
+  background: var(--void);
+  box-shadow: var(--shadow-lg);
+}
+
 .fcw-content {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  height: 100%;
   min-width: 0;
   min-height: 0;
   overflow: auto;
   padding: var(--space-xl);
 }
 
-.fcw-content-heading {
+.fcw-content-heading,
+.fcw-inline-error,
+.fcw-foundation {
   max-width: var(--forecast-workbench-copy-width);
 }
 
 .fcw-inline-error {
-  max-width: var(--forecast-workbench-copy-width);
   margin: 0 0 var(--space-lg);
   color: var(--signal-error);
   font-size: var(--text-sm);
@@ -127,7 +165,6 @@
 }
 
 .fcw-foundation {
-  max-width: var(--forecast-workbench-copy-width);
   margin-top: var(--space-xl);
   padding: var(--space-lg);
   border: 1px solid var(--edge);
@@ -152,33 +189,4 @@
 
 .fcw-state-error {
   color: var(--signal-error);
-}
-
-@container (max-width: 48rem) {
-  .fcw-header {
-    align-items: center;
-  }
-
-  .fcw-layout {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto minmax(0, 1fr);
-  }
-
-  .fcw-nav {
-    flex-direction: row;
-    align-items: center;
-    overflow-x: auto;
-    padding: var(--chrome-2) var(--chrome-3);
-    border-right: 0;
-    border-bottom: 1px solid var(--edge);
-  }
-
-  .fcw-nav-item {
-    flex: 0 0 auto;
-    height: var(--nav-item-height);
-  }
-
-  .fcw-content {
-    padding: var(--space-lg);
-  }
 }
