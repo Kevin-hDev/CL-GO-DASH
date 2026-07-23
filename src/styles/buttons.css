@@ -46,7 +46,7 @@
 
 .btn-danger {
   background: var(--signal-error);
-  color: var(--ink-on-pulse);
+  color: var(--ink-on-danger);
 }
 
 .btn-danger:hover:not(:disabled) {

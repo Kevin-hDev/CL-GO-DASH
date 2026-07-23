@@ -17,6 +17,7 @@
   --pulse: #4ee07a;
   --pulse-muted: rgba(78, 224, 122, 0.15);
   --ink-on-pulse: #062318;
+  --ink-on-danger: #062318;
   --switch-track-off: var(--select-bg);
   --switch-track-border: var(--edge);
   --switch-track-hover: var(--ink-faint);

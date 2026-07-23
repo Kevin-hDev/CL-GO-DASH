@@ -90,7 +90,7 @@
   border: 1px solid var(--signal-error);
   border-radius: var(--radius-sm);
   background: var(--signal-error);
-  color: var(--ink-on-pulse);
+  color: var(--ink-on-danger);
   font-size: var(--text-sm);
   font-weight: 500;
   white-space: nowrap;
