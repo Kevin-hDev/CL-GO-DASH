@@ -32,11 +32,13 @@ pub fn created_payload(forecast: &ForecastResult) -> Result<String, String> {
         "input_points": forecast.input_summary.points,
         "predictions_count": forecast.predictions.len(),
         "covariates_used": forecast.covariates_used,
+        "advanced_analysis": advanced_summary(forecast),
+        "ensemble": ensemble_summary(forecast),
         "preview": {
             "first_prediction": forecast.predictions.first(),
             "last_prediction": forecast.predictions.last()
         },
-        "next_step": "Call forecast_backtest with this analysis_id to compare the model with baselines, then use forecast_compare_models for the compact ranking or forecast_read for predictions."
+        "next_step": "Call forecast_read to inspect the saved residual anomalies, decomposition, variable importance and drift summary. Then call forecast_backtest to compare the model with baselines."
     }))
 }
 
@@ -105,6 +107,8 @@ pub fn analysis_payload(
                 "warning": result.warning,
             })).collect::<Vec<_>>()
         })),
+        "advanced_analysis": advanced_summary(analysis),
+        "ensemble": ensemble_summary(analysis),
         "annotations": analysis.annotations.iter().take(MAX_TOOL_ANNOTATIONS).collect::<Vec<_>>(),
         "annotations_truncated": analysis.annotations.len() > MAX_TOOL_ANNOTATIONS,
         "scenarios": scenarios
@@ -128,6 +132,46 @@ fn slice_values(values: &[f64], start: usize, end: usize) -> &[f64] {
         return &[];
     }
     &values[start..end]
+}
+
+fn advanced_summary(analysis: &ForecastResult) -> Value {
+    let Some(advanced) = &analysis.advanced_analytics else {
+        return Value::Null;
+    };
+    json!({
+        "generated_at": advanced.generated_at,
+        "decomposition": advanced.decomposition.iter().map(|item| json!({
+            "series_id": item.series_id,
+            "status": item.status,
+            "method": item.method,
+            "period": item.period,
+            "seasonal_strength": item.seasonal_strength,
+        })).collect::<Vec<_>>(),
+        "residual_anomalies": {
+            "count": advanced.anomalies.len(),
+            "top": advanced.anomalies.iter().take(10).collect::<Vec<_>>(),
+            "truncated": advanced.anomalies.len() > 10,
+        },
+        "variable_importance": advanced.variable_importance,
+        "drift": advanced.drift,
+        "interpretation": "Anomalies are robust residual anomalies, not global z-scores. Variable importance is chronological permutation importance and must be reported with its reliability. Drift compares bounded reference and recent windows."
+    })
+}
+
+fn ensemble_summary(analysis: &ForecastResult) -> Value {
+    let Some(ensemble) = &analysis.ensemble else {
+        return Value::Null;
+    };
+    json!({
+        "created_at": ensemble.created_at,
+        "method": ensemble.method,
+        "validation_status": ensemble.validation_status,
+        "members": ensemble.members,
+        "predictions_count": ensemble.predictions.len(),
+        "first_prediction": ensemble.predictions.first(),
+        "last_prediction": ensemble.predictions.last(),
+        "warning": "Member models were backtested, but the weighted ensemble itself was not independently backtested. Do not call it better than its members without a dedicated evaluation."
+    })
 }
 
 fn to_pretty(value: Value) -> Result<String, String> {

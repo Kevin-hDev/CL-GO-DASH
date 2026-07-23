@@ -16,3 +16,23 @@ pub async fn run_forecast_backtest(
     );
     Ok(analysis)
 }
+
+#[tauri::command]
+pub async fn create_forecast_ensemble(
+    app: AppHandle,
+    analysis_id: String,
+    model_ids: Vec<String>,
+    chronos: State<'_, ChronosSidecar>,
+) -> Result<ForecastResult, String> {
+    let analysis = crate::services::forecast::advanced::ensemble::create(
+        &analysis_id,
+        &model_ids,
+        Some(chronos.inner()),
+    )
+    .await?;
+    let _ = app.emit(
+        "forecast-analysis-updated",
+        serde_json::json!({ "analysis_id": analysis.id, "session_id": analysis.session_id }),
+    );
+    Ok(analysis)
+}

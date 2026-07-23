@@ -102,6 +102,8 @@ fn historical_analysis() -> ForecastResult {
         covariates_used: vec![],
         metrics: None,
         evaluation: None,
+        advanced_analytics: None,
+        ensemble: None,
         annotations: vec![],
         scenarios: vec![],
         provenance: Default::default(),

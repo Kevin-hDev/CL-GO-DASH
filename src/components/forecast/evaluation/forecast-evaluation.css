@@ -69,6 +69,15 @@
   font-size: var(--text-sm);
 }
 
+.fcwe-ensemble-status {
+  margin: 0 0 var(--space-md);
+  border-left: var(--chrome-1) solid var(--pulse);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--pulse-muted);
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+}
+
 .fcwe-table {
   overflow: hidden;
   border: 1px solid var(--edge);

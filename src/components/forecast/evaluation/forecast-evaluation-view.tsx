@@ -10,9 +10,14 @@ interface ForecastEvaluationViewProps {
 
 export function ForecastEvaluationView({ analysisId, mode }: ForecastEvaluationViewProps) {
   const { t } = useTranslation();
-  const { analysis, loading, running, loadFailed, runFailed, run } =
+  const {
+    analysis, loading, running, loadFailed, runFailed, run,
+    ensembleRunning, ensembleFailed, createEnsemble,
+  } =
     useForecastEvaluation(analysisId);
   const evaluation = analysis?.evaluation;
+  const successfulModels = evaluation?.results.filter((result) =>
+    result.kind === "model" && result.metrics !== null) ?? [];
 
   if (loading) {
     return <div className="fcwe-state">{t("forecast.workbench.evaluation.loading")}</div>;
@@ -25,6 +30,11 @@ export function ForecastEvaluationView({ analysisId, mode }: ForecastEvaluationV
       {runFailed ? (
         <p className="fcwe-error" role="alert">
           {t("forecast.workbench.evaluation.runFailed")}
+        </p>
+      ) : null}
+      {ensembleFailed ? (
+        <p className="fcwe-error" role="alert">
+          {t("forecast.workbench.evaluation.ensembleFailed")}
         </p>
       ) : null}
       <div className="fcwe-toolbar">
@@ -49,8 +59,26 @@ export function ForecastEvaluationView({ analysisId, mode }: ForecastEvaluationV
               ? t("forecast.workbench.evaluation.running")
               : t("forecast.workbench.evaluation.run")}
           </button>
+        ) : successfulModels.length >= 2 ? (
+          <button
+            className="fcwe-run"
+            type="button"
+            disabled={ensembleRunning}
+            onClick={() => void createEnsemble()}
+          >
+            {ensembleRunning
+              ? t("forecast.workbench.evaluation.ensembleRunning")
+              : t("forecast.workbench.evaluation.createEnsemble")}
+          </button>
         ) : null}
       </div>
+      {analysis.ensemble ? (
+        <p className="fcwe-ensemble-status">
+          {t("forecast.workbench.evaluation.ensembleReady", {
+            count: analysis.ensemble.members.length,
+          })}
+        </p>
+      ) : null}
       {evaluation?.warning ? (
         <p className="fcwe-warning">
           {t(`forecast.workbench.evaluation.planWarnings.${evaluation.warning}`, {

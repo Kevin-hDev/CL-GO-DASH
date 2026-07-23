@@ -59,6 +59,8 @@ fn result(request: &ForecastRequest) -> ForecastResult {
         covariates_used: Vec::new(),
         metrics: None,
         evaluation: None,
+        advanced_analytics: None,
+        ensemble: None,
         annotations: Vec::new(),
         scenarios: Vec::new(),
         provenance: Default::default(),

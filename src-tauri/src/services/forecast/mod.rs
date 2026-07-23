@@ -1,3 +1,4 @@
+pub mod advanced;
 pub mod auto_selection;
 pub mod auto_selection_ui;
 pub mod catalog;

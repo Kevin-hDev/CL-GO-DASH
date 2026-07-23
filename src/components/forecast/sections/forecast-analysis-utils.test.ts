@@ -3,7 +3,6 @@ import {
   buildTrendCards,
   buildUncertaintyCards,
   buildHighlightEvents,
-  buildAnomalyEvents,
   filterAnalysisPoints,
 } from "./forecast-analysis-utils";
 import { inferMetricMeta } from "../forecast-view-format";
@@ -110,89 +109,6 @@ describe("buildHighlightEvents", () => {
     const highEvent = events.find((e) => e.id === "high");
 
     expect(highEvent?.value).toContain("200");
-  });
-});
-
-// --- buildAnomalyEvents (z-score) ------------------------------------------
-
-describe("buildAnomalyEvents", () => {
-  it("détecte un point aberrant (z-score >= 1.8)", () => {
-    // Série autour de 100 avec un pic à 500 (clairement aberrant).
-    const points = [
-      pt("d1", 100),
-      pt("d2", 102),
-      pt("d3", 98),
-      pt("d4", 101),
-      pt("d5", 500), // anomalie
-    ];
-    const anomalies = buildAnomalyEvents(points, "fr-FR", metric, t);
-
-    expect(anomalies.length).toBeGreaterThan(0);
-    expect(anomalies[0].value).toContain("500");
-  });
-
-  it("retourne un tableau vide si l'écart-type est nul (valeurs constantes)", () => {
-    const points = [pt("d1", 100), pt("d2", 100), pt("d3", 100)];
-    const anomalies = buildAnomalyEvents(points, "fr-FR", metric, t);
-
-    expect(anomalies).toEqual([]);
-  });
-
-  it("retourne un tableau vide si aucune valeur n'est aberrante", () => {
-    // Distribution normale serrée, aucun z-score >= 1.8.
-    const points = [pt("d1", 100), pt("d2", 101), pt("d3", 99), pt("d4", 100)];
-    const anomalies = buildAnomalyEvents(points, "fr-FR", metric, t);
-
-    expect(anomalies).toEqual([]);
-  });
-
-  it("limite à 5 anomalies maximum", () => {
-    // Beaucoup de points aberrants : doit tronquer à 5.
-    const points = Array.from({ length: 20 }, (_, i) =>
-      pt(`d${i}`, i % 2 === 0 ? 100 : 1000),
-    );
-    const anomalies = buildAnomalyEvents(points, "fr-FR", metric, t);
-
-    expect(anomalies.length).toBeLessThanOrEqual(5);
-  });
-
-  it("classe la sévérité medium selon le z-score (>= 2.1)", () => {
-    // Avec 7 points, le z-score max théorique est √6 ≈ 2.449 → medium (>= 2.1).
-    const points = [
-      pt("d1", 100),
-      pt("d2", 101),
-      pt("d3", 99),
-      pt("d4", 100),
-      pt("d5", 102),
-      pt("d6", 98),
-      pt("d7", 5000),
-    ];
-    const anomalies = buildAnomalyEvents(points, "fr-FR", metric, t);
-
-    expect(anomalies.length).toBeGreaterThan(0);
-    expect(anomalies[0].severity).toBe("medium");
-  });
-
-  it("classe la sévérité high avec un z-score très élevé (>= 2.6)", () => {
-    // Avec 12 points, le z-score max théorique est √11 ≈ 3.317 → high possible.
-    const points = [
-      pt("d1", 100),
-      pt("d2", 100),
-      pt("d3", 101),
-      pt("d4", 99),
-      pt("d5", 100),
-      pt("d6", 102),
-      pt("d7", 98),
-      pt("d8", 100),
-      pt("d9", 101),
-      pt("d10", 99),
-      pt("d11", 100),
-      pt("d12", 10000),
-    ];
-    const anomalies = buildAnomalyEvents(points, "fr-FR", metric, t);
-
-    expect(anomalies.length).toBeGreaterThan(0);
-    expect(anomalies[0].severity).toBe("high");
   });
 });
 

@@ -10,7 +10,16 @@ pub async fn rerun(
     rows: Vec<Value>,
     chronos: Option<&sidecar::ChronosSidecar>,
 ) -> Result<ForecastResult, String> {
-    let mut request = build_forecast_request(analysis, rows)?;
+    rerun_with_model(analysis, rows, &analysis.model, chronos).await
+}
+
+pub async fn rerun_with_model(
+    analysis: &ForecastResult,
+    rows: Vec<Value>,
+    model_id: &str,
+    chronos: Option<&sidecar::ChronosSidecar>,
+) -> Result<ForecastResult, String> {
+    let mut request = build_forecast_request(analysis, rows, model_id)?;
     validation::validate_request(&request)?;
     let profile = super::data_quality::validate_and_bind(&mut request)?;
     let model_id = validation::model_id(&request)?;
@@ -34,6 +43,8 @@ pub async fn rerun(
     if !model_manager::is_ready(model_id) {
         return Err("Modèle non installé".into());
     }
+    let spec = super::catalog::find_model(model_id).ok_or("Modèle inconnu")?;
+    super::hardware_profile::validate_model_resources(spec)?;
     let chronos = chronos.ok_or("Service de prédiction indisponible")?;
     let _prediction_guard = chronos.lock_prediction().await;
     let endpoint = sidecar::start(chronos, model_id, runtime.family_id)
@@ -53,6 +64,7 @@ pub async fn rerun(
 fn build_forecast_request(
     analysis: &ForecastResult,
     rows: Vec<Value>,
+    model_id: &str,
 ) -> Result<ForecastRequest, String> {
     let date_column = analysis
         .input_data
@@ -72,7 +84,7 @@ fn build_forecast_request(
         covariate_columns: analysis.covariates_used.clone(),
         horizon: analysis.horizon,
         frequency: analysis.frequency.clone(),
-        model: Some(analysis.model.clone()),
+        model: Some(model_id.to_string()),
         confidence_level: analysis.confidence_level,
         selection_id: None,
         selection_source: None,

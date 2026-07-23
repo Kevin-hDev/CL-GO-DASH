@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { ForecastEvaluationView } from "../evaluation/forecast-evaluation-view";
+import { ForecastWorkbenchReport } from "./forecast-workbench-report";
 import type {
   ForecastWorkbenchSection,
   ForecastWorkbenchSnapshot,
@@ -15,6 +16,17 @@ export function ForecastWorkbenchSectionContent({
   snapshot,
 }: ForecastWorkbenchSectionProps) {
   const { t } = useTranslation();
+  if (section === "report" && snapshot.context.analysis_id) {
+    return <ForecastWorkbenchReport analysisId={snapshot.context.analysis_id} />;
+  }
+  if (section === "report") {
+    return (
+      <div className="fcw-foundation">
+        <span>{t("forecast.workbench.evaluation.noAnalysis")}</span>
+        <p>{t("forecast.workbench.evaluation.noAnalysisDescription")}</p>
+      </div>
+    );
+  }
   if ((section === "evaluation" || section === "comparison") && snapshot.context.analysis_id) {
     return (
       <ForecastEvaluationView

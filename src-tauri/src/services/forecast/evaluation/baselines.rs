@@ -57,7 +57,7 @@ impl Baseline {
     }
 }
 
-pub(super) fn seasonal_period(frequency: &str) -> usize {
+pub(crate) fn seasonal_period(frequency: &str) -> usize {
     let normalized = frequency.trim().to_uppercase();
     match normalized.as_str() {
         "S" => 60,

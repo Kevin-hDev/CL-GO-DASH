@@ -17,6 +17,7 @@ export interface ForecastLayerGroup {
 
 interface LayerMatrixInput {
   scenarioLayers: ForecastLayerItem[];
+  comparisonLayers: ForecastLayerItem[];
   covariateNames: string[];
 }
 
@@ -61,7 +62,12 @@ export function buildForecastLayerGroups(
       emptyKey: "forecast.view.filters.noVariableLayers",
     },
     emptyGroup("events"),
-    emptyGroup("comparisons"),
+    {
+      id: "comparisons",
+      titleKey: "forecast.view.filters.comparisons",
+      items: input.comparisonLayers,
+      emptyKey: "forecast.view.filters.noLayersYet",
+    },
     emptyGroup("anomalies"),
     emptyGroup("quality"),
   ];

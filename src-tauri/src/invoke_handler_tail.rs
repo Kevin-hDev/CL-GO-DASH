@@ -106,6 +106,7 @@ macro_rules! generate_tail {
             crate::commands::list_forecast_analyses,
             crate::commands::get_forecast_analysis,
             crate::commands::run_forecast_backtest,
+            crate::commands::create_forecast_ensemble,
             crate::commands::export_forecast_analysis,
             crate::commands::create_forecast_scenario,
             crate::commands::update_forecast_scenario,

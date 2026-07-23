@@ -25,7 +25,8 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
              For contextual scenarios, params.scenario_kind='context_adjustment' and params.covariate_adjustments are required. \
              Use action 'scenario_update' with params.scenario_id to edit one scenario. \
              Use action 'scenario_delete' with params.scenario_id to delete one scenario. \
-             Do not use this tool for decomposition, anomalies, or feature importance yet.",
+             Use action 'ensemble' only after a successful multi-model backtest; optionally pass params.model_ids with two to four successful model ids. The result is weighted by inverse MASE and is explicitly marked as not independently backtested. \
+             Decomposition, residual anomalies, variable importance and drift are computed automatically; read them with forecast_read instead of fabricating them.",
             serde_json::json!({
                 "type": "object",
                 "properties": {
@@ -87,6 +88,13 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
                             "scenario_id": {
                                 "type": "string",
                                 "description": "Existing scenario id for scenario_update or scenario_delete."
+                            },
+                            "model_ids": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": crate::services::forecast::limits::MAX_ENSEMBLE_MODELS,
+                                "items": {"type": "string", "maxLength": 80},
+                                "description": "Optional successful backtested model ids for action ensemble. Omit to use the top successful model results."
                             }
                         }
                     }
@@ -96,7 +104,7 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
         ),
         super::tool_definitions::tool_def(
             "forecast_read",
-            "Read saved forecast analyses. Omit analysis_id to list a bounded set. Provide analysis_id to read one bounded predictions page. Use offset and limit for later pages.",
+            "Read saved forecast analyses. Omit analysis_id to list a bounded set. Provide analysis_id to read one bounded predictions page plus compact advanced analytics: decomposition, residual anomalies, chronological permutation importance and drift. Use offset and limit for later prediction pages. Treat unavailable or low-reliability analytics honestly and never replace them with a global z-score or variable amplitude.",
             serde_json::json!({
                 "type": "object",
                 "properties": {

@@ -41,4 +41,8 @@ export interface EvaluationAnalysis {
   id: string;
   model: string;
   evaluation?: ForecastEvaluation | null;
+  ensemble?: {
+    validation_status: string;
+    members: Array<{ model_id: string; weight: number; backtest_mase: number }>;
+  } | null;
 }

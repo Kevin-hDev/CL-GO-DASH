@@ -70,6 +70,8 @@ fn parse_response(
         covariates_used: request.covariate_columns.clone(),
         metrics: None,
         evaluation: None,
+        advanced_analytics: None,
+        ensemble: None,
         annotations: Vec::new(),
         scenarios: Vec::new(),
         provenance: Default::default(),

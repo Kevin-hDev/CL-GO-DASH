@@ -34,6 +34,9 @@ interface ForecastResult {
     name: string;
     predictions: { date: string; value: number; series_id?: string | null }[];
   }[];
+  ensemble?: {
+    predictions: { date: string; value: number; series_id?: string | null }[];
+  } | null;
   metrics: { mape: number | null; mae: number | null; crps: number | null; bias: number | null } | null;
 }
 
@@ -56,7 +59,15 @@ export function ForecastView({ analysisId, layers }: ForecastViewProps) {
     selectedSeries && data.input_data.series_ids?.includes(selectedSeries)
       ? selectedSeries
       : data.input_data.series_ids?.[0] ?? "";
-  const filtered = filterSeriesData(data, activeSeries);
+  const scenarioLines = [
+    ...(data.scenarios ?? []),
+    ...(data.ensemble ? [{
+      id: "ensemble",
+      name: t("forecast.view.ensembleSeries"),
+      predictions: data.ensemble.predictions,
+    }] : []),
+  ];
+  const filtered = filterSeriesData(data, activeSeries, scenarioLines);
   const variables = buildForecastVariableLines({
     rows: data.input_data.rows ?? [],
     covariates: data.covariates_used ?? [],
@@ -149,12 +160,16 @@ export function ForecastView({ analysisId, layers }: ForecastViewProps) {
   );
 }
 
-function filterSeriesData(data: ForecastResult, selectedSeries: string) {
+function filterSeriesData(
+  data: ForecastResult,
+  selectedSeries: string,
+  scenarios: ForecastResult["scenarios"],
+) {
   if (!data.input_data.series_ids || data.input_data.series_ids.length <= 1) {
     return {
       history: data.input_data.history,
       predictions: data.predictions,
-      scenarios: data.scenarios ?? [],
+      scenarios,
       q10: data.quantiles.q10,
       q90: data.quantiles.q90,
     };
@@ -171,7 +186,7 @@ function filterSeriesData(data: ForecastResult, selectedSeries: string) {
   return {
     history: data.input_data.history.filter((point) => point.series_id === seriesId),
     predictions,
-    scenarios: (data.scenarios ?? []).map((scenario) => ({
+    scenarios: scenarios.map((scenario) => ({
       ...scenario,
       predictions: scenario.predictions.filter((point) => point.series_id === seriesId),
     })),

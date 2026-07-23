@@ -14,6 +14,8 @@ export function useForecastEvaluation(analysisId: string) {
   const [running, setRunning] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
   const [runFailed, setRunFailed] = useState(false);
+  const [ensembleRunning, setEnsembleRunning] = useState(false);
+  const [ensembleFailed, setEnsembleFailed] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -24,6 +26,22 @@ export function useForecastEvaluation(analysisId: string) {
       setLoadFailed(true);
     } finally {
       setLoading(false);
+    }
+  }, [analysisId]);
+
+  const createEnsemble = useCallback(async () => {
+    setEnsembleFailed(false);
+    setEnsembleRunning(true);
+    try {
+      const next = await invoke<EvaluationAnalysis>("create_forecast_ensemble", {
+        analysisId,
+        modelIds: [],
+      });
+      setAnalysis(next);
+    } catch {
+      setEnsembleFailed(true);
+    } finally {
+      setEnsembleRunning(false);
     }
   }, [analysisId]);
 
@@ -52,5 +70,15 @@ export function useForecastEvaluation(analysisId: string) {
     return () => cleanupTauriListener(unlisten);
   }, [analysisId, refresh]);
 
-  return { analysis, loading, running, loadFailed, runFailed, run };
+  return {
+    analysis,
+    loading,
+    running,
+    loadFailed,
+    runFailed,
+    ensembleRunning,
+    ensembleFailed,
+    run,
+    createEnsemble,
+  };
 }

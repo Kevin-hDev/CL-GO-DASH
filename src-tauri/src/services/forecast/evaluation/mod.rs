@@ -12,5 +12,6 @@ pub(crate) mod ranking;
 mod runner;
 pub mod types;
 
+pub(crate) use baselines::seasonal_period;
 pub use runner::run;
 pub use types::BacktestRequest;

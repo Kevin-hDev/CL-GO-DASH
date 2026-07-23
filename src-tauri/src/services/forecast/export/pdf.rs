@@ -58,6 +58,7 @@ fn report_lines(bundle: &ExportBundle) -> Vec<String> {
             q(&a.quantiles.q90, idx)
         ));
     }
+    lines.extend(super::report_advanced::lines(bundle));
     if !a.scenarios.is_empty() {
         lines.push(String::new());
         lines.push("SCENARIOS".into());

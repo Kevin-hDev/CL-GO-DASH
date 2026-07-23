@@ -1,3 +1,6 @@
+mod advanced_rows;
+#[cfg(test)]
+mod advanced_rows_tests;
 mod chart;
 mod chart_data;
 mod common;
@@ -5,7 +8,9 @@ mod common;
 mod common_tests;
 mod csv;
 mod pdf;
+mod report_advanced;
 mod xlsx;
+mod xlsx_advanced;
 mod xlsx_input;
 mod xlsx_style;
 

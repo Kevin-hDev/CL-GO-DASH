@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 pub const MAX_ANNOTATIONS: usize = 200;
 pub const MAX_SCENARIOS: usize = 50;
-pub const CURRENT_SCHEMA_VERSION: u32 = 2;
+pub const CURRENT_SCHEMA_VERSION: u32 = 3;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ForecastRequest {
@@ -66,6 +66,10 @@ pub struct ForecastResult {
     pub metrics: Option<ForecastMetrics>,
     #[serde(default)]
     pub evaluation: Option<ForecastEvaluation>,
+    #[serde(default)]
+    pub advanced_analytics: Option<super::advanced::AdvancedAnalytics>,
+    #[serde(default)]
+    pub ensemble: Option<super::advanced::ForecastEnsemble>,
     #[serde(default)]
     pub annotations: Vec<Annotation>,
     #[serde(default)]

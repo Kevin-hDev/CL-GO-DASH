@@ -41,3 +41,19 @@ fn model_tool_explains_that_candidates_are_already_confidence_safe() {
     assert!(description.contains("confidence"));
     assert!(description.contains("candidates"));
 }
+
+#[test]
+fn analyze_tool_exposes_a_bounded_backtest_driven_ensemble() {
+    let definition = definition_for_tool("forecast_analyze").unwrap();
+    let model_ids = &definition["function"]["parameters"]["properties"]["params"]
+        ["properties"]["model_ids"];
+    let description = definition["function"]["description"].as_str().unwrap();
+
+    assert_eq!(model_ids["minItems"], 2);
+    assert_eq!(
+        model_ids["maxItems"],
+        crate::services::forecast::limits::MAX_ENSEMBLE_MODELS
+    );
+    assert!(description.contains("inverse MASE"));
+    assert!(description.contains("not independently backtested"));
+}

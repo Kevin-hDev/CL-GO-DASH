@@ -45,6 +45,7 @@ pub async fn run(
         warning: plan.warning,
         results,
     });
+    analysis.ensemble = None;
     crate::services::forecast::storage::save(&mut analysis).await?;
     Ok(analysis)
 }

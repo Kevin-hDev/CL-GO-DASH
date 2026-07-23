@@ -60,6 +60,7 @@ pub fn complete(
         duration_ms,
         status: ForecastRunStatus::Complete,
     };
+    result.advanced_analytics = Some(super::advanced::analyze(result));
     Ok(())
 }
 

@@ -44,3 +44,33 @@ fn list_payload_keeps_a_bounded_latest_slice() {
     assert_eq!(payload["analyses"].as_array().unwrap().len(), 100);
     assert_eq!(payload["truncated"], true);
 }
+
+#[test]
+fn analysis_payload_exposes_compact_advanced_evidence() {
+    let mut analysis = analysis(2);
+    analysis.advanced_analytics = serde_json::from_value(json!({
+        "schema_version": 1,
+        "generated_at": "2026-07-23T00:00:00Z",
+        "decomposition": [{
+            "status": "ready", "method": "classical_additive", "period": 7,
+            "seasonal_strength": 0.8,
+            "points": [{"date": "2026-01-01", "observed": 10.0, "trend": 9.0, "seasonal": 0.5, "residual": 0.5}]
+        }],
+        "anomalies": [{
+            "id": "series-1:0", "date": "2026-01-01", "observed": 10.0,
+            "expected": 9.5, "residual": 0.5, "score": 4.0,
+            "severity": "medium", "method": "seasonal_robust_residual"
+        }],
+        "variable_importance": {
+            "status": "not_applicable", "method": "chronological_permutation_on_naive_residual",
+            "reliability": "unavailable", "validation_points": 0, "items": []
+        },
+        "drift": []
+    })).ok();
+
+    let payload: Value = serde_json::from_str(&analysis_payload(&analysis, 0, 100).unwrap()).unwrap();
+
+    assert_eq!(payload["advanced_analysis"]["residual_anomalies"]["count"], 1);
+    assert_eq!(payload["advanced_analysis"]["decomposition"][0]["period"], 7);
+    assert!(payload["advanced_analysis"]["decomposition"][0].get("points").is_none());
+}

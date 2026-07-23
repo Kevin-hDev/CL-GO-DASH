@@ -28,8 +28,9 @@ pub async fn handle(args: &Value) -> ToolResult {
         "scenario" => scenario_create(analysis_id, &args["params"]).await,
         "scenario_update" => scenario_update(analysis_id, &args["params"]).await,
         "scenario_delete" => scenario_delete(analysis_id, &args["params"]).await,
+        "ensemble" => ensemble_create(analysis_id, &args["params"]).await,
         _ => ToolResult::err(format!(
-            "Action '{action}' pas encore implémentée. Actions disponibles: annotate, scenario, scenario_update, scenario_delete"
+            "Action '{action}' pas encore implémentée. Actions disponibles: annotate, scenario, scenario_update, scenario_delete, ensemble"
         )),
     }
 }
@@ -130,6 +131,33 @@ async fn scenario_delete(analysis_id: &str, params: &Value) -> ToolResult {
         return ToolResult::err("Paramètres de scénario manquants. Utiliser params.scenario_id.");
     }
     save_scenario_result(scenarios::delete(analysis_id, scenario_id).await)
+}
+
+async fn ensemble_create(analysis_id: &str, params: &Value) -> ToolResult {
+    let model_ids = match params.get("model_ids") {
+        None | Some(Value::Null) => Vec::new(),
+        Some(Value::Array(values)) if values.len() <= crate::services::forecast::limits::MAX_ENSEMBLE_MODELS => {
+            let Some(ids) = values.iter().map(Value::as_str).collect::<Option<Vec<_>>>() else {
+                return ToolResult::err("Liste de modèles d'ensemble invalide");
+            };
+            if ids.iter().any(|id| {
+                id.chars().count() > crate::services::forecast::limits::MAX_MODEL_ID_CHARS
+            }) {
+                return ToolResult::err("Liste de modèles d'ensemble invalide");
+            }
+            ids.into_iter().map(str::to_string).collect()
+        }
+        _ => return ToolResult::err("Liste de modèles d'ensemble invalide"),
+    };
+    let chronos = forecast_chronos();
+    save_scenario_result(
+        crate::services::forecast::advanced::ensemble::create(
+            analysis_id,
+            &model_ids,
+            chronos.as_deref(),
+        )
+        .await,
+    )
 }
 
 fn save_scenario_result(

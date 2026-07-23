@@ -8,14 +8,18 @@ import { ForecastAnalysisCardGrid } from "./forecast-analysis-card-grid";
 import { ForecastAnalysisEventList } from "./forecast-analysis-event-list";
 import { ForecastAnalysisVariableList } from "./forecast-analysis-variable-list";
 import {
-  buildAnomalyEvents,
   buildHighlightEvents,
   buildTrendCards,
   buildUncertaintyCards,
   filterAnalysisQuantiles,
-  buildVariableInsights,
   filterAnalysisPoints,
 } from "./forecast-analysis-utils";
+import {
+  buildAdvancedVariableInsights,
+  buildDecompositionCards,
+  buildDriftCards,
+  buildResidualAnomalyEvents,
+} from "./forecast-advanced-analysis-utils";
 import type { ForecastAnalysisData } from "./forecast-analysis-types";
 import "../forecast-sections.css";
 import "./forecast-scenario-menu.css";
@@ -28,9 +32,11 @@ interface ForecastAnalysisProps {
 
 const DEFAULT_OPEN = {
   trend: true,
+  decomposition: false,
   uncertainty: true,
   highlights: true,
   anomalies: false,
+  drift: false,
   variables: false,
 };
 
@@ -63,18 +69,18 @@ export function ForecastAnalysis({ analysisId }: ForecastAnalysisProps) {
     const seriesId = selectedSeries && data.input_data.series_ids?.includes(selectedSeries) ? selectedSeries : "";
     const metric = inferMetricMeta(i18n.language, data.target_column, data.name);
     const predictions = filterAnalysisPoints(data.predictions, seriesId);
-    const history = filterAnalysisPoints(data.input_data.history, seriesId);
     const quantiles = filterAnalysisQuantiles(data.predictions, seriesId, data.quantiles);
     return {
       seriesId,
       metric,
       predictions,
-      history,
       trendCards: buildTrendCards(predictions, i18n.language, metric, t),
+      decompositionCards: buildDecompositionCards(data.advanced_analytics, seriesId, t),
       uncertaintyCards: buildUncertaintyCards(quantiles, predictions, i18n.language, metric),
       highlights: buildHighlightEvents(predictions, data.input_summary.end, data.frequency, i18n.language, metric, t),
-      anomalies: buildAnomalyEvents([...history, ...predictions], i18n.language, metric, t),
-      variables: buildVariableInsights(data, seriesId, t),
+      anomalies: buildResidualAnomalyEvents(data.advanced_analytics, seriesId, i18n.language, metric, t),
+      driftCards: buildDriftCards(data.advanced_analytics, seriesId, t),
+      variables: buildAdvancedVariableInsights(data.advanced_analytics, t),
     };
   }, [data, i18n.language, selectedSeries, t]);
 
@@ -106,6 +112,18 @@ export function ForecastAnalysis({ analysisId }: ForecastAnalysisProps) {
           <ForecastAnalysisCardGrid cards={computed.trendCards} t={t} />
         </ForecastAnalysisAccordion>
         <ForecastAnalysisAccordion
+          title={t("forecast.analysis.decomposition")}
+          subtitle={t("forecast.analysis.decompositionSub")}
+          open={open.decomposition}
+          onToggle={() => setOpen((current) => ({ ...current, decomposition: !current.decomposition }))}
+        >
+          {computed.decompositionCards.length ? (
+            <ForecastAnalysisCardGrid cards={computed.decompositionCards} t={t} />
+          ) : (
+            <p className="fca-empty-line">{t("forecast.analysis.noDecomposition")}</p>
+          )}
+        </ForecastAnalysisAccordion>
+        <ForecastAnalysisAccordion
           title={t("forecast.analysis.uncertainty")}
           subtitle={t("forecast.analysis.uncertaintySub")}
           open={open.uncertainty}
@@ -128,6 +146,18 @@ export function ForecastAnalysis({ analysisId }: ForecastAnalysisProps) {
           onToggle={() => setOpen((current) => ({ ...current, anomalies: !current.anomalies }))}
         >
           <ForecastAnalysisEventList events={computed.anomalies} emptyKey="forecast.analysis.noAnomalies" t={t} />
+        </ForecastAnalysisAccordion>
+        <ForecastAnalysisAccordion
+          title={t("forecast.analysis.drift")}
+          subtitle={t("forecast.analysis.driftSub")}
+          open={open.drift}
+          onToggle={() => setOpen((current) => ({ ...current, drift: !current.drift }))}
+        >
+          {computed.driftCards.length ? (
+            <ForecastAnalysisCardGrid cards={computed.driftCards} t={t} />
+          ) : (
+            <p className="fca-empty-line">{t("forecast.analysis.noDriftData")}</p>
+          )}
         </ForecastAnalysisAccordion>
         <ForecastAnalysisAccordion
           title={t("forecast.analysis.variables")}

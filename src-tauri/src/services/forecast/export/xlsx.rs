@@ -20,6 +20,15 @@ pub fn write(bundle: &ExportBundle, path: &Path) -> Result<(), String> {
     )?;
     write_scenarios(workbook.add_worksheet(), bundle)?;
     write_annotations(workbook.add_worksheet(), bundle)?;
+    super::xlsx_advanced::write(workbook.add_worksheet(), bundle)?;
+    if let Some(ensemble) = &bundle.analysis.ensemble {
+        write_points(
+            workbook.add_worksheet(),
+            "Ensemble",
+            &ensemble.predictions,
+            Some(&ensemble.quantiles),
+        )?;
+    }
     super::xlsx_input::write(workbook.add_worksheet(), bundle)?;
     workbook
         .save(path)

@@ -82,6 +82,7 @@ pub fn rows(bundle: &ExportBundle) -> Vec<TableRow> {
             source: note.source.clone(),
         });
     }
+    rows.extend(super::advanced_rows::rows(bundle));
     rows
 }
 
@@ -116,6 +117,7 @@ pub fn clipboard_text(bundle: &ExportBundle) -> String {
             q(&a.quantiles.q90, idx)
         ));
     }
+    lines.extend(super::report_advanced::lines(bundle));
     lines.join("\n")
 }
 
