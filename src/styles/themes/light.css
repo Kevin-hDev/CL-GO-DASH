@@ -2,11 +2,11 @@
 [data-theme="light"] {
   color-scheme: light;
 
-  --void: #f7f7f9;
-  --app-frame: #d8d8dc;
-  --shell: #eaeaed;
-  --shell-opaque: #eaeaed;
-  --shell-translucent: rgba(234, 234, 237, 0.80);
+  --void: #f7f6f3;
+  --app-frame: #d8d5cf;
+  --shell: #eae8e3;
+  --shell-opaque: #eae8e3;
+  --shell-translucent: rgba(234, 232, 227, 0.80);
   --surface: #ffffff;
   --surface-hover: #faf8f5;
   --edge: #e5e2dd;
@@ -18,7 +18,7 @@
   --pulse-muted: rgba(249, 115, 22, 0.12);
   --ink-on-pulse: #1c1c1e;
   --ink-on-danger: #ffffff;
-  --switch-track-off: #d8d8dc;
+  --switch-track-off: #d8d5cf;
   --switch-track-border: #cbc8c3;
   --switch-track-hover: #aaa6a0;
   --switch-track-on: var(--pulse);
@@ -58,13 +58,13 @@
   --btn-inner-highlight: rgba(255, 255, 255, 0.6);
 
   /* Surface variants */
-  --surface-glass: rgba(220, 220, 225, 0.55);
-  --surface-overlay: rgba(220, 220, 225, 0.70);
+  --surface-glass: rgba(220, 218, 212, 0.55);
+  --surface-overlay: rgba(220, 218, 212, 0.70);
   --tooltip-bg: #ffffff;
   --tooltip-border: rgba(0, 0, 0, 0.12);
   --tooltip-text: var(--ink);
   --tooltip-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-  --chat-composer-bg: rgba(215, 215, 220, 0.40);
+  --chat-composer-bg: rgba(215, 213, 208, 0.40);
   --chat-composer-border: var(--tooltip-border);
   --chat-composer-edge-highlight: rgba(255, 255, 255, 0.65);
   --chat-composer-edge-shade: rgba(0, 0, 0, 0.10);
@@ -76,13 +76,13 @@
   /* Signal backgrounds (alpha) */
   --signal-ok-bg: rgba(22, 163, 74, 0.12);
   --signal-error-bg: rgba(220, 38, 38, 0.12);
-  --signal-warning: #eab308;
-  --signal-warning-bg: rgba(234, 179, 8, 0.12);
+  --signal-warning: #a16207;
+  --signal-warning-bg: rgba(161, 98, 7, 0.12);
   --signal-info: #3b82f6;
   --signal-info-bg: rgba(59, 130, 246, 0.12);
 
   /* Toast — discret, style tool-bubble */
-  --toast-bg: #eaeaed;
+  --toast-bg: #eae8e3;
   --toast-error-text: #991b1b;
   --toast-ok-text: #166534;
 
