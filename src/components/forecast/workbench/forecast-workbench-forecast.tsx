@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   buildForecastLayerGroups,
@@ -31,23 +31,24 @@ export function ForecastWorkbenchForecast({ analysisId }: { analysisId: string }
   const [mainJump, setMainJump] = useState<{ start: number; seq: number } | null>(null);
   const [fanJump, setFanJump] = useState<{ start: number; seq: number } | null>(null);
   // Bail on no-op updates so setOption -> datazoom events cannot loop.
-  const handleMainZoomWindow = (window: { start: number; end: number }) =>
+  // useCallback keeps the chart props stable across zoom-state re-renders.
+  const handleMainZoomWindow = useCallback((window: { start: number; end: number }) =>
     setMainZoomWindow((current) =>
       sameForecastZoomWindow(current, window) ? current : window,
-    );
-  const handleFanZoomWindow = (window: { start: number; end: number }) =>
+    ), []);
+  const handleFanZoomWindow = useCallback((window: { start: number; end: number }) =>
     setFanZoomWindow((current) =>
       sameForecastZoomWindow(current, window) ? current : window,
-    );
-  const handleMainJump = (start: number) =>
-    setMainJump((jump) => ({ start, seq: (jump?.seq ?? 0) + 1 }));
-  const handleFanJump = (start: number) =>
-    setFanJump((jump) => ({ start, seq: (jump?.seq ?? 0) + 1 }));
+    ), []);
+  const handleMainJump = useCallback((start: number) =>
+    setMainJump((jump) => ({ start, seq: (jump?.seq ?? 0) + 1 })), []);
+  const handleFanJump = useCallback((start: number) =>
+    setFanJump((jump) => ({ start, seq: (jump?.seq ?? 0) + 1 })), []);
   // The fan chart remounts on expand (key bump), so its zoom resets to full.
-  const handleFanExpanded = () => {
+  const handleFanExpanded = useCallback(() => {
     setFanResize((value) => value + 1);
     setFanZoomWindow({ start: 0, end: 100 });
-  };
+  }, []);
   const { sources } = useForecastLayerSources(analysisId, setLayers);
   const groups = buildForecastLayerGroups(sources, t);
   const { data } = useForecastResult<ForecastViewResult>(
@@ -66,7 +67,10 @@ export function ForecastWorkbenchForecast({ analysisId }: { analysisId: string }
     seriesIds.length > 1
       ? t("forecast.chartCard.withSeries", { title: t(key), series: activeSeries })
       : t(key);
-  const filtered = data ? filterForecastSeriesData(data, activeSeries, []) : null;
+  const filtered = useMemo(
+    () => (data ? filterForecastSeriesData(data, activeSeries, []) : null),
+    [data, activeSeries],
+  );
 
   return (
     <div className="fcwf-root">

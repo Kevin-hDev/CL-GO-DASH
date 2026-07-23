@@ -13,12 +13,7 @@ import { CanvasRenderer } from "echarts/renderers";
 import { ArrowsClockwise } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
 import i18n from "@/i18n";
-import {
-  dateKey,
-  readDataIndex,
-  readFirstAnnotationId,
-  readSeriesId,
-} from "./forecast-chart-events";
+import { dateKey, readDataIndex, readFirstAnnotationId, readSeriesId } from "./forecast-chart-events";
 import {
   buildForecastChartOption,
   forecastXAxisSplitNumber,
@@ -32,6 +27,7 @@ import {
   FORECAST_CHART_MIN_ZOOM_SPAN,
 } from "./forecast-chart-zoom-utils";
 import { useForecastChartZoom } from "./use-forecast-chart-zoom";
+import { useForecastChartOptionInput } from "./use-forecast-chart-option-input";
 import "./forecast-chart.css";
 echarts.use([
   CanvasRenderer,
@@ -153,18 +149,19 @@ export function ForecastChart(props: ForecastChartProps) {
     };
   }, [handleChartClick, handleDataZoom]);
 
+  const optionInput = useForecastChartOptionInput(props);
   useEffect(() => {
     if (!chartRef.current || !containerRef.current) return;
     const root = getComputedStyle(containerRef.current);
     chartRef.current.setOption(buildForecastChartOption({
-      ...props,
+      ...optionInput,
       palette: buildForecastChartPalette(root),
-      annotations: props.annotations ?? [],
-      compact: Boolean(props.compact),
+      annotations: optionInput.annotations ?? [],
+      compact: Boolean(optionInput.compact),
       chartWidth: containerRef.current.clientWidth,
       zoomWindow: zoomWindowRef.current,
     }), true); // resize() is handled by the ResizeObserver above
-  }, [props]);
+  }, [optionInput]);
 
   return (
     <div

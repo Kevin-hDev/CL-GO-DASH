@@ -3,8 +3,10 @@ import {
   clampForecastZoomWindow,
   computeWheelZoomWindow,
   forecastZoomSliderValue,
+  normalizeWheelDelta,
   zoomAnchorRatio,
   FORECAST_CHART_MIN_ZOOM_SPAN,
+  FORECAST_WHEEL_TICK_THRESHOLD,
   type ForecastZoomWindow,
 } from "../forecast-chart-zoom-utils";
 
@@ -98,6 +100,25 @@ describe("computeWheelZoomWindow ticks repetes", () => {
       expect(window.end).toBeLessThanOrEqual(100);
     }
     expect(window).toEqual({ start: 0, end: 100 });
+  });
+});
+
+describe("normalizeWheelDelta", () => {
+  it("convertit les modes ligne et page en pixels", () => {
+    expect(normalizeWheelDelta(3, 0)).toBe(3);
+    expect(normalizeWheelDelta(3, 1)).toBe(48);
+    expect(normalizeWheelDelta(-1, 2)).toBe(-400);
+  });
+
+  it("ignore les deltas invalides", () => {
+    expect(normalizeWheelDelta(Number.NaN, 0)).toBe(0);
+    expect(normalizeWheelDelta(0, 1)).toBe(0);
+  });
+
+  it("garde un seuil de tick en pixels coherent", () => {
+    // A classic 120px wheel notch must cross the threshold exactly once.
+    expect(120 / FORECAST_WHEEL_TICK_THRESHOLD).toBeGreaterThanOrEqual(1);
+    expect(FORECAST_WHEEL_TICK_THRESHOLD).toBeLessThanOrEqual(120);
   });
 });
 

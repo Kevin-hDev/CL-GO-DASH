@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   filterForecastSeriesData,
@@ -5,9 +6,15 @@ import {
 } from "../sections/forecast-view-data";
 import { useForecastResult } from "../use-forecast-result";
 import { ForecastChart } from "./forecast-chart";
+import { useForecastChartLabels } from "./use-forecast-chart-labels";
+import type { ForecastChartProps } from "./forecast-chart-types";
 
 const FAN_HISTORY_WINDOW = 18;
 const FAN_LAYERS = { history: true, forecast: true, confidence: true };
+// Stable empty lists: fresh literals would defeat the chart option memo.
+const NO_SCENARIOS: ForecastChartProps["scenarios"] = [];
+const NO_VARIABLES: ForecastChartProps["variables"] = [];
+const NO_ANNOTATIONS: NonNullable<ForecastChartProps["annotations"]> = [];
 
 interface ForecastFanChartProps {
   analysisId: string;
@@ -31,15 +38,30 @@ export function ForecastFanChart({
     analysisId,
     t("forecast.noAnalysis"),
   );
+  const labels = useForecastChartLabels();
+
+  // Memoized chart inputs: fan zoom-state re-renders (workbench) must not
+  // rebuild the whole ECharts option on every wheel frame.
+  const ids = data?.input_data.series_ids ?? [];
+  const activeSeries = seriesId && ids.includes(seriesId) ? seriesId : ids[0] ?? "";
+  const filtered = useMemo(
+    () => (data ? filterForecastSeriesData(data, activeSeries, []) : null),
+    [data, activeSeries],
+  );
+  const history = useMemo(
+    () => filtered?.history.slice(-FAN_HISTORY_WINDOW) ?? [],
+    [filtered],
+  );
+  const quantiles = useMemo(
+    () => ({ q10: filtered?.q10 ?? [], q90: filtered?.q90 ?? [] }),
+    [filtered],
+  );
 
   if (error) return <div className="fcwf-companion-empty">{error}</div>;
-  if (!data) {
+  if (!data || !filtered) {
     return <div className="fc-loading"><div className="fc-skeleton" /></div>;
   }
 
-  const ids = data.input_data.series_ids ?? [];
-  const activeSeries = seriesId && ids.includes(seriesId) ? seriesId : ids[0] ?? "";
-  const filtered = filterForecastSeriesData(data, activeSeries, []);
   if (!filtered.predictions.length) {
     return (
       <div className="fcwf-companion-empty">
@@ -55,25 +77,18 @@ export function ForecastFanChart({
           chart at full size. Full (non-compact) mode for the zoom controls. */}
       <ForecastChart
         key={resizeSignal}
-        history={filtered.history.slice(-FAN_HISTORY_WINDOW)}
+        history={history}
         predictions={filtered.predictions}
-        scenarios={[]}
-        variables={[]}
-        annotations={[]}
-        quantiles={{ q10: filtered.q10, q90: filtered.q90 }}
+        scenarios={NO_SCENARIOS}
+        variables={NO_VARIABLES}
+        annotations={NO_ANNOTATIONS}
+        quantiles={quantiles}
         frequency={data.frequency}
         endDate={data.input_summary.end}
         locale={i18n.language}
         targetColumn={data.target_column}
         fallbackName={data.name}
-        labels={{
-          history: t("forecast.view.historySeries"),
-          forecast: t("forecast.view.forecastSeries"),
-          confidence: t("forecast.view.confidenceRange"),
-          forecastStart: t("forecast.chart.forecastStart"),
-          annotationUser: t("forecast.notes.userSource"),
-          annotationLlm: t("forecast.notes.llmSource"),
-        }}
+        labels={labels}
         layers={FAN_LAYERS}
         mode="main"
         onZoomWindowChange={onZoomWindowChange}

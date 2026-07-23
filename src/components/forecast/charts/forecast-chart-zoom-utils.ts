@@ -27,6 +27,19 @@ export function sameForecastZoomWindow(left: ForecastZoomWindow, right: Forecast
 // Wheel zoom factor per tick: span is multiplied (out) or divided (in) by it.
 export const FORECAST_WHEEL_ZOOM_FACTOR = 1.12;
 
+// Accumulated pixel-equivalent delta needed to trigger one wheel tick:
+// trackpads fire many small deltas per gesture, so raw per-event ticks
+// cause zoom storms. 40px matches a small trackpad swipe.
+export const FORECAST_WHEEL_TICK_THRESHOLD = 40;
+
+// Normalizes WheelEvent deltas to pixel equivalents:
+// deltaMode 0 = pixel, 1 = line (~16px), 2 = page (~400px).
+export function normalizeWheelDelta(deltaY: number, deltaMode: number): number {
+  if (!Number.isFinite(deltaY)) return 0;
+  const unit = deltaMode === 1 ? 16 : deltaMode === 2 ? 400 : 1;
+  return deltaY * unit;
+}
+
 function shiftZoomWindowIntoBounds(start: number, span: number): ForecastZoomWindow {
   if (start < 0) return { start: 0, end: span };
   if (start + span > 100) return { start: 100 - span, end: 100 };

@@ -2,9 +2,11 @@ import type { EChartsType } from "echarts/core";
 import { useEffect } from "react";
 import {
   computeWheelZoomWindow,
+  normalizeWheelDelta,
   sameForecastZoomWindow,
   zoomAnchorRatio,
   FORECAST_CHART_MIN_ZOOM_SPAN,
+  FORECAST_WHEEL_TICK_THRESHOLD,
   type ForecastZoomWindow,
 } from "./forecast-chart-zoom-utils";
 
@@ -32,9 +34,10 @@ function readChartGridRect(chart: EChartsType): { x: number; width: number } | n
 // Owns the wheel zoom pipeline: ECharts inside-roam wheel handling is
 // disabled (zoomOnMouseWheel: false) because its cursor-anchored zoom-in
 // contracts the window toward the cursor and reads as a silent pan, and
-// patching it event-by-event proved unreliable. Here every wheel tick
-// computes the next window with computeWheelZoomWindow and applies it via
-// the same dispatch + syncZoomState path used by the slider and jump bars.
+// patching it event-by-event proved unreliable. Here wheel gestures are
+// normalized to pixel deltas, accumulated into discrete ticks, and applied
+// at most once per animation frame via computeWheelZoomWindow + the same
+// dispatch + syncZoomState path used by the slider and jump bars.
 export function useForecastWheelZoom({
   shellRef,
   chartRef,
@@ -45,37 +48,92 @@ export function useForecastWheelZoom({
   useEffect(() => {
     const shell = shellRef.current;
     if (!shell) return undefined;
-    const onWheel = (event: WheelEvent) => {
-      // Never let the wheel scroll the page/panel while over the chart.
-      event.preventDefault();
-      if (event.deltaY === 0) return;
-      const chart = chartRef.current;
-      if (!chart) return;
+    let accumulator = 0;
+    let lastDirection = 0;
+    let queuedTicks = 0;
+    let lastAnchor = 0.5;
+    let frameId = 0;
+
+    const readCurrent = (): ForecastZoomWindow => {
       const synced = syncedRef.current;
-      const current = synced.signature === signature
+      return synced.signature === signature
         ? { start: synced.start, end: synced.end }
         : { start: 0, end: 100 };
-      const dom = chart.getDom();
-      const rect = dom.getBoundingClientRect();
+    };
+
+    const readAnchor = (chart: EChartsType, clientX: number): number => {
+      const rect = chart.getDom().getBoundingClientRect();
       const gridRect = readChartGridRect(chart);
-      const anchor = zoomAnchorRatio(
-        event.clientX - rect.left,
+      return zoomAnchorRatio(
+        clientX - rect.left,
         gridRect?.x ?? 0,
         gridRect?.width ?? rect.width,
       );
-      const next = computeWheelZoomWindow(
-        current,
-        event.deltaY > 0 ? 1 : -1,
-        anchor,
-        FORECAST_CHART_MIN_ZOOM_SPAN,
-      );
-      if (sameForecastZoomWindow(current, next)) return;
+    };
+
+    const applyQueuedTicks = () => {
+      frameId = 0;
+      const chart = chartRef.current;
+      const ticks = queuedTicks;
+      queuedTicks = 0;
+      if (!chart || ticks === 0) return;
+      const direction = ticks > 0 ? 1 : -1;
+      let next = readCurrent();
+      const start = next;
+      for (let step = 0; step < Math.abs(ticks); step += 1) {
+        next = computeWheelZoomWindow(
+          next,
+          direction,
+          lastAnchor,
+          FORECAST_CHART_MIN_ZOOM_SPAN,
+        );
+      }
+      if (sameForecastZoomWindow(start, next)) return;
       chart.dispatchAction({ type: "dataZoom", ...next });
       syncZoomState(next);
+    };
+
+    const onWheel = (event: WheelEvent) => {
+      const delta = normalizeWheelDelta(event.deltaY, event.deltaMode);
+      if (delta === 0) return;
+      const chart = chartRef.current;
+      if (!chart) return;
+      const direction = delta > 0 ? 1 : -1;
+      const anchor = readAnchor(chart, event.clientX);
+      // preventDefault only when the window can actually change: at full
+      // extent (zoom-out) or min span (zoom-in) the event stays free to
+      // scroll the page/panel instead of being swallowed.
+      const wouldChange = !sameForecastZoomWindow(
+        readCurrent(),
+        computeWheelZoomWindow(readCurrent(), direction, anchor, FORECAST_CHART_MIN_ZOOM_SPAN),
+      );
+      if (!wouldChange) {
+        accumulator = 0;
+        lastDirection = 0;
+        return;
+      }
+      event.preventDefault();
+      if (direction !== lastDirection) {
+        accumulator = 0;
+        lastDirection = direction;
+      }
+      accumulator += delta;
+      if (Math.abs(accumulator) < FORECAST_WHEEL_TICK_THRESHOLD) return;
+      // One tick per event max; momentum carries at most one near-tick.
+      accumulator = Math.sign(accumulator) * Math.min(
+        Math.abs(accumulator) - FORECAST_WHEEL_TICK_THRESHOLD,
+        FORECAST_WHEEL_TICK_THRESHOLD,
+      );
+      queuedTicks += direction;
+      lastAnchor = anchor;
+      if (!frameId) frameId = requestAnimationFrame(applyQueuedTicks);
     };
     // Capture + non-passive: runs before zrender's bubble-phase listener and
     // is allowed to preventDefault (React onWheel cannot).
     shell.addEventListener("wheel", onWheel, { passive: false, capture: true });
-    return () => shell.removeEventListener("wheel", onWheel, { capture: true });
+    return () => {
+      shell.removeEventListener("wheel", onWheel, { capture: true });
+      if (frameId) cancelAnimationFrame(frameId);
+    };
   }, [shellRef, chartRef, signature, syncedRef, syncZoomState]);
 }
