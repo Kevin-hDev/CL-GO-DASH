@@ -31,6 +31,8 @@ export const FORECAST_WHEEL_ZOOM_FACTOR = 1.12;
 // trackpads fire many small deltas per gesture, so raw per-event ticks
 // cause zoom storms. 40px matches a small trackpad swipe.
 export const FORECAST_WHEEL_TICK_THRESHOLD = 40;
+/** A pause beyond this duration starts a new physical trackpad gesture. */
+export const FORECAST_WHEEL_GESTURE_IDLE_MS = 160;
 
 // Normalizes WheelEvent deltas to pixel equivalents:
 // deltaMode 0 = pixel, 1 = line (~16px), 2 = page (~400px).

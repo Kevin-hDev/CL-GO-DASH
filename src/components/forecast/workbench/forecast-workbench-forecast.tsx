@@ -18,7 +18,10 @@ import { ForecastFanChart } from "../charts/forecast-fan-chart";
 import { ForecastZoomJumpBars } from "../charts/forecast-zoom-jump-bars";
 import { sameForecastZoomWindow } from "../charts/forecast-chart-zoom-utils";
 import { ForecastSeasonalityChart } from "../charts/forecast-seasonality-chart";
-import { SEASONALITY_MIN_HISTORY } from "../charts/forecast-seasonality-data";
+import {
+  SEASONALITY_MIN_HISTORY,
+  supportsSeasonalityFrequency,
+} from "../charts/forecast-seasonality-data";
 import "./forecast-workbench-forecast.css";
 
 export function ForecastWorkbenchForecast({ analysisId }: { analysisId: string }) {
@@ -110,7 +113,9 @@ export function ForecastWorkbenchForecast({ analysisId }: { analysisId: string }
             />
           </ForecastChartCard>
         ) : null}
-        {filtered && filtered.history.length > SEASONALITY_MIN_HISTORY ? (
+        {filtered &&
+        filtered.history.length > SEASONALITY_MIN_HISTORY &&
+        supportsSeasonalityFrequency(data?.frequency) ? (
           <ForecastChartCard
             title={cardTitle("forecast.chartCard.seasonality")}
             onExpanded={() => setSeasonalityResize((value) => value + 1)}

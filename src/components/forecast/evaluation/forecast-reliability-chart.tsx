@@ -10,6 +10,7 @@ import {
 import { CanvasRenderer } from "echarts/renderers";
 import { useTranslation } from "react-i18next";
 import { buildForecastChartPalette } from "../charts/forecast-chart-palette";
+import { useForecastThemeRevision } from "../charts/use-forecast-theme-revision";
 import type { ModelBacktestResult } from "./forecast-evaluation-types";
 import {
   buildReliabilityBars,
@@ -44,6 +45,8 @@ export function ForecastReliabilityChart({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<EChartsType | null>(null);
   const lastBarsRef = useRef<ReliabilityBar[] | null>(null);
+  const themeRevision = useForecastThemeRevision();
+  const lastThemeRevisionRef = useRef(themeRevision);
 
   const bars = useMemo(
     () => buildReliabilityBars(results, currentModel),
@@ -94,10 +97,13 @@ export function ForecastReliabilityChart({
   }, []);
 
   useEffect(() => {
-    const replace = lastBarsRef.current !== bars;
+    const replace =
+      lastBarsRef.current !== bars ||
+      lastThemeRevisionRef.current !== themeRevision;
     lastBarsRef.current = bars;
+    lastThemeRevisionRef.current = themeRevision;
     applyOption(replace);
-  }, [bars, applyOption]);
+  }, [bars, themeRevision, applyOption]);
 
   useEffect(() => {
     if (resizeSignal > 0) chartRef.current?.resize();

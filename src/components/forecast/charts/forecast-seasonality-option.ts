@@ -45,7 +45,7 @@ export function buildSeasonalityOption(
     },
     xAxis: {
       type: "category",
-      data: model.months,
+      data: model.periods,
       boundaryGap: false,
       axisLine: { lineStyle: { color: palette.edge } },
       axisTick: { show: false },

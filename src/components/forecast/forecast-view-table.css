@@ -2,7 +2,7 @@
   flex: 1 1 auto;
   min-height: 0;
   /* Cap long horizons: the body scrolls instead of stretching the card. */
-  max-height: 340px;
+  max-height: var(--forecast-predictions-table-max-height);
   overflow: auto;
   border-top: 1px solid var(--edge);
   scrollbar-width: thin;

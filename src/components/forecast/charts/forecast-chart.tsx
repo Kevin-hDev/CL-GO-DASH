@@ -28,6 +28,7 @@ import {
 } from "./forecast-chart-zoom-utils";
 import { useForecastChartZoom } from "./use-forecast-chart-zoom";
 import { useForecastChartOptionInput } from "./use-forecast-chart-option-input";
+import { useForecastThemeRevision } from "./use-forecast-theme-revision";
 import "./forecast-chart.css";
 echarts.use([
   CanvasRenderer,
@@ -150,6 +151,7 @@ export function ForecastChart(props: ForecastChartProps) {
   }, [handleChartClick, handleDataZoom]);
 
   const optionInput = useForecastChartOptionInput(props);
+  const themeRevision = useForecastThemeRevision();
   useEffect(() => {
     if (!chartRef.current || !containerRef.current) return;
     const root = getComputedStyle(containerRef.current);
@@ -161,7 +163,7 @@ export function ForecastChart(props: ForecastChartProps) {
       chartWidth: containerRef.current.clientWidth,
       zoomWindow: zoomWindowRef.current,
     }), true); // resize() is handled by the ResizeObserver above
-  }, [optionInput]);
+  }, [optionInput, themeRevision]);
 
   return (
     <div

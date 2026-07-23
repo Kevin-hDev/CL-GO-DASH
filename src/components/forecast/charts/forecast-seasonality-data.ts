@@ -11,7 +11,7 @@ export interface SeasonalityYear {
 }
 
 export interface SeasonalityModel {
-  months: string[];
+  periods: string[];
   years: SeasonalityYear[];
 }
 
@@ -20,9 +20,15 @@ export const SEASONALITY_MIN_YEAR_POINTS = 3;
 export const SEASONALITY_MIN_HISTORY = 24;
 /** Complete years shown by default (plus the current partial year). */
 export const SEASONALITY_DEFAULT_VISIBLE_YEARS = 5;
-const COMPLETE_YEAR_POINTS = 12;
-/** Frequencies at or above one observation per month. */
-const MONTHLY_OR_LONGER = new Set(["M", "Q", "Y"]);
+const MONTHS_PER_YEAR = 12;
+const QUARTERS_PER_YEAR = 4;
+
+interface SeasonalityCadence {
+  periods: string[];
+  completePoints: number;
+  aggregateAll: boolean;
+  bucketForMonth: (month: number) => number;
+}
 
 /**
  * Calendar year/month of an observation. Date-only strings ("YYYY-MM-DD")
@@ -62,51 +68,75 @@ export function toggleVisibleYear(visible: number[], year: number): number[] {
   return [...visible, year].sort((left, right) => left - right);
 }
 
+export function supportsSeasonalityFrequency(frequency?: string): boolean {
+  return frequency?.toUpperCase() !== "Y";
+}
+
+function resolveCadence(locale: string, frequency?: string): SeasonalityCadence | null {
+  const normalized = frequency?.toUpperCase();
+  if (normalized === "Y") return null;
+  if (normalized === "Q") {
+    return {
+      periods: ["Q1", "Q2", "Q3", "Q4"],
+      completePoints: QUARTERS_PER_YEAR,
+      aggregateAll: false,
+      bucketForMonth: (month) => Math.floor(month / 3),
+    };
+  }
+  return {
+    periods: monthNames(locale),
+    completePoints: MONTHS_PER_YEAR,
+    aggregateAll: frequency != null && normalized !== "M",
+    bucketForMonth: (month) => month,
+  };
+}
+
 /**
  * Groups history by calendar year and normalizes each year to its first
- * available month (= 100), so recurring patterns line up on one axis.
+ * available period (= 100), so recurring patterns line up on one axis.
  * Years with fewer than SEASONALITY_MIN_YEAR_POINTS points are skipped.
- * Sub-monthly frequencies (everything but M/Q/Y) aggregate ALL daily-or-
- * finer observations of a month by mean; monthly inputs keep one value
- * per month.
+ * Sub-monthly frequencies aggregate observations of a month by mean.
+ * Quarterly inputs use four quarter buckets. Annual inputs are unsupported:
+ * one observation per year cannot reveal within-year seasonality.
  */
 export function buildSeasonalityModel(
   points: SeasonalityPoint[],
   locale: string,
   frequency?: string,
 ): SeasonalityModel | null {
-  const aggregateAll =
-    frequency != null && !MONTHLY_OR_LONGER.has(frequency.toUpperCase());
+  const cadence = resolveCadence(locale, frequency);
+  if (!cadence) return null;
   const byYear = new Map<number, Map<number, number[]>>();
   for (const point of points) {
     if (!Number.isFinite(point.value)) continue;
     const yearMonth = parseYearMonth(point.date);
     if (!yearMonth) continue;
     const entry = byYear.get(yearMonth.year) ?? new Map<number, number[]>();
-    const bucket = entry.get(yearMonth.month) ?? [];
+    const period = cadence.bucketForMonth(yearMonth.month);
+    const bucket = entry.get(period) ?? [];
     bucket.push(point.value);
-    entry.set(yearMonth.month, bucket);
+    entry.set(period, bucket);
     byYear.set(yearMonth.year, entry);
   }
 
   const years: SeasonalityYear[] = [];
-  for (const [year, months] of [...byYear.entries()].sort((a, b) => a[0] - b[0])) {
-    if (months.size < SEASONALITY_MIN_YEAR_POINTS) continue;
+  for (const [year, periods] of [...byYear.entries()].sort((a, b) => a[0] - b[0])) {
+    if (periods.size < SEASONALITY_MIN_YEAR_POINTS) continue;
     const resolve = (bucket: number[]) =>
-      aggregateAll
+      cadence.aggregateAll
         ? bucket.reduce((sum, value) => sum + value, 0) / bucket.length
         : bucket[0];
-    const ordered = [...months.entries()].sort((a, b) => a[0] - b[0]);
+    const ordered = [...periods.entries()].sort((a, b) => a[0] - b[0]);
     const base = resolve(ordered[0][1]);
     if (!Number.isFinite(base) || base === 0) continue;
-    const values = Array.from({ length: 12 }, (_, month) => {
-      const bucket = months.get(month);
+    const values = Array.from({ length: cadence.periods.length }, (_, period) => {
+      const bucket = periods.get(period);
       return bucket == null ? null : (resolve(bucket) / base) * 100;
     });
     years.push({
       year,
       values,
-      complete: months.size >= COMPLETE_YEAR_POINTS,
+      complete: periods.size >= cadence.completePoints,
       emphasized: false,
     });
   }
@@ -116,7 +146,7 @@ export function buildSeasonalityModel(
     [...years].reverse().find((entry) => entry.complete) ?? years[years.length - 1];
   emphasized.emphasized = true;
 
-  return { months: monthNames(locale), years };
+  return { periods: cadence.periods, years };
 }
 
 export function monthNames(locale: string): string[] {

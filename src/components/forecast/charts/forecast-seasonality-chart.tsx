@@ -25,6 +25,7 @@ import {
   buildSeasonalityOption,
   seasonalityChipToken,
 } from "./forecast-seasonality-option";
+import { useForecastThemeRevision } from "./use-forecast-theme-revision";
 import "./forecast-seasonality-chart.css";
 
 echarts.use([
@@ -56,6 +57,7 @@ export function ForecastSeasonalityChart({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<EChartsType | null>(null);
   const lastKeyRef = useRef("");
+  const themeRevision = useForecastThemeRevision();
   const [toggled, setToggled] = useState<{ signature: string; visible: number[] } | null>(null);
 
   const model = useMemo(() => {
@@ -117,11 +119,11 @@ export function ForecastSeasonalityChart({
   }, []);
 
   useEffect(() => {
-    const key = `${signature}|${visibleYears.join(",")}`;
+    const key = `${signature}|${visibleYears.join(",")}|${themeRevision}`;
     const replace = lastKeyRef.current !== key;
     lastKeyRef.current = key;
     applyOption(replace);
-  }, [signature, visibleYears, applyOption]);
+  }, [signature, visibleYears, themeRevision, applyOption]);
 
   useEffect(() => {
     if (resizeSignal > 0) chartRef.current?.resize();

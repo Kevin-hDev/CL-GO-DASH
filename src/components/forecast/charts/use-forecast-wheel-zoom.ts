@@ -6,6 +6,7 @@ import {
   sameForecastZoomWindow,
   zoomAnchorRatio,
   FORECAST_CHART_MIN_ZOOM_SPAN,
+  FORECAST_WHEEL_GESTURE_IDLE_MS,
   FORECAST_WHEEL_TICK_THRESHOLD,
   type ForecastZoomWindow,
 } from "./forecast-chart-zoom-utils";
@@ -53,6 +54,19 @@ export function useForecastWheelZoom({
     let queuedTicks = 0;
     let lastAnchor = 0.5;
     let frameId = 0;
+    let gestureTimer = 0;
+
+    const clearGesture = () => {
+      accumulator = 0;
+      lastDirection = 0;
+      if (gestureTimer) window.clearTimeout(gestureTimer);
+      gestureTimer = 0;
+    };
+
+    const scheduleGestureReset = () => {
+      if (gestureTimer) window.clearTimeout(gestureTimer);
+      gestureTimer = window.setTimeout(clearGesture, FORECAST_WHEEL_GESTURE_IDLE_MS);
+    };
 
     const readCurrent = (): ForecastZoomWindow => {
       const synced = syncedRef.current;
@@ -108,8 +122,7 @@ export function useForecastWheelZoom({
         computeWheelZoomWindow(readCurrent(), direction, anchor, FORECAST_CHART_MIN_ZOOM_SPAN),
       );
       if (!wouldChange) {
-        accumulator = 0;
-        lastDirection = 0;
+        clearGesture();
         return;
       }
       event.preventDefault();
@@ -118,6 +131,7 @@ export function useForecastWheelZoom({
         lastDirection = direction;
       }
       accumulator += delta;
+      scheduleGestureReset();
       if (Math.abs(accumulator) < FORECAST_WHEEL_TICK_THRESHOLD) return;
       // One tick per event max; momentum carries at most one near-tick.
       accumulator = Math.sign(accumulator) * Math.min(
@@ -134,6 +148,7 @@ export function useForecastWheelZoom({
     return () => {
       shell.removeEventListener("wheel", onWheel, { capture: true });
       if (frameId) cancelAnimationFrame(frameId);
+      clearGesture();
     };
   }, [shellRef, chartRef, signature, syncedRef, syncZoomState]);
 }

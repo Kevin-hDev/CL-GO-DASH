@@ -5,7 +5,10 @@
 import { act, cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ForecastChart } from "../forecast-chart";
-import { FORECAST_WHEEL_TICK_THRESHOLD } from "../forecast-chart-zoom-utils";
+import {
+  FORECAST_WHEEL_GESTURE_IDLE_MS,
+  FORECAST_WHEEL_TICK_THRESHOLD,
+} from "../forecast-chart-zoom-utils";
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const flush = (ms: number) => act(() => wait(ms));
@@ -140,6 +143,19 @@ describe("wheel preventDefault contract", () => {
     const shell = renderChart();
     await flush(20);
     wheel(shell, -3, 1); // 3 lines * 16px = 48px > threshold
+    await flush(30);
+    expect(sliderValue()).toBeGreaterThan(0);
+  });
+
+  it("ne cumule pas deux gestes trackpad separes", async () => {
+    const shell = renderChart();
+    await flush(20);
+    wheel(shell, -20);
+    await flush(FORECAST_WHEEL_GESTURE_IDLE_MS + 20);
+    wheel(shell, -20);
+    await flush(30);
+    expect(sliderValue()).toBe(0);
+    wheel(shell, -20);
     await flush(30);
     expect(sliderValue()).toBeGreaterThan(0);
   });
