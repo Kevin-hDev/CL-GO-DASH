@@ -21,13 +21,10 @@
 }
 
 .wk-btn-secondary {
-  background: var(--surface);
-  border-color: var(--edge);
+  background: var(--btn-secondary-bg);
+  border-color: var(--edge-strong);
   color: var(--ink-muted);
-}
-
-[data-theme="dark"] .wk-btn-secondary {
-  border-color: transparent;
+  box-shadow: inset 0 1px 0 var(--btn-inner-highlight);
 }
 
 .wk-btn-secondary:hover:not(:disabled) {

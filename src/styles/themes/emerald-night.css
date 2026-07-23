@@ -52,6 +52,9 @@
   --ink-primary: var(--ink);
   /* Un cran de contraste au-dessus de --edge (sert aussi au §1.1) */
   --edge-strong: rgba(207, 225, 207, 0.20);
+  /* Boutons secondaires — recette « présence » (spec phase 2 §1.1) */
+  --btn-secondary-bg: rgba(241, 226, 195, 0.06);
+  --btn-inner-highlight: rgba(241, 226, 195, 0.05);
 
   /* Surface variants */
   --surface-glass: rgba(11, 48, 42, 0.58);
