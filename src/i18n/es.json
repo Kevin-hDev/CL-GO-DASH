@@ -1190,7 +1190,7 @@
     "companion": {
       "mean": "media",
       "insufficientData": "No hay suficientes datos para este gráfico.",
-      "indexBase": "Índice (enero = 100)",
+      "indexBase": "Índice (primer mes = 100)",
       "showAll": "Todo",
       "showNone": "Nada"
     },

@@ -1206,7 +1206,7 @@
     "companion": {
       "mean": "mean",
       "insufficientData": "Not enough data for this chart.",
-      "indexBase": "Index (January = 100)",
+      "indexBase": "Index (first month = 100)",
       "showAll": "All",
       "showNone": "None"
     },

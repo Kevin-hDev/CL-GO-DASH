@@ -1190,7 +1190,7 @@
     "companion": {
       "mean": "平均",
       "insufficientData": "このグラフを表示するにはデータが不足しています。",
-      "indexBase": "指数（1 月 = 100）",
+      "indexBase": "指数（最初の月 = 100）",
       "showAll": "すべて",
       "showNone": "なし"
     },

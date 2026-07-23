@@ -1190,7 +1190,7 @@
     "companion": {
       "mean": "Mittelwert",
       "insufficientData": "Nicht genügend Daten für dieses Diagramm.",
-      "indexBase": "Index (Januar = 100)",
+      "indexBase": "Index (erster Monat = 100)",
       "showAll": "Alle",
       "showNone": "Keine"
     },

@@ -63,7 +63,7 @@ export function ForecastSeasonalityChart({
     const ids = data.input_data.series_ids ?? [];
     const active = seriesId && ids.includes(seriesId) ? seriesId : ids[0] ?? "";
     const filtered = filterForecastSeriesData(data, active, []);
-    return buildSeasonalityModel(filtered.history, i18n.language);
+    return buildSeasonalityModel(filtered.history, i18n.language, data.frequency);
   }, [data, seriesId, i18n.language]);
   const signature = model?.years.map((year) => year.year).join(",") ?? "";
   const visibleYears = useMemo(

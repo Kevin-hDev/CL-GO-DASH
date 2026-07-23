@@ -87,6 +87,59 @@ describe("buildSeasonalityModel", () => {
     );
     expect(model?.years).toHaveLength(1);
   });
+
+  it("aggregates all sub-monthly observations by mean", () => {
+    const daily = [
+      { date: "2024-01-05", value: 100 },
+      { date: "2024-01-20", value: 200 },
+      { date: "2024-02-03", value: 150 },
+      { date: "2024-02-18", value: 210 },
+      { date: "2024-03-07", value: 120 },
+    ];
+    const model = buildSeasonalityModel(daily, "en", "D");
+    expect(model?.years).toHaveLength(1);
+    // January mean (150) is the base; February mean is 180 -> 120.
+    expect(model?.years[0].values[0]).toBe(100);
+    expect(model?.years[0].values[1]).toBeCloseTo((180 / 150) * 100, 5);
+    expect(model?.years[0].values[2]).toBeCloseTo((120 / 150) * 100, 5);
+  });
+
+  it("keeps the first monthly value for monthly-or-longer frequencies", () => {
+    const points = [
+      { date: "2024-01-01", value: 100 },
+      { date: "2024-01-15", value: 200 },
+      { date: "2024-02-01", value: 150 },
+      { date: "2024-03-01", value: 120 },
+    ];
+    const model = buildSeasonalityModel(points, "en", "M");
+    expect(model?.years[0].values[0]).toBe(100);
+    expect(model?.years[0].values[1]).toBeCloseTo(150, 5);
+  });
+
+  it("parses date-only strings without timezone drift", () => {
+    const previous = process.env.TZ;
+    process.env.TZ = "America/New_York";
+    try {
+      const model = buildSeasonalityModel(
+        [
+          { date: "2026-01-01", value: 10 },
+          { date: "2026-02-01", value: 20 },
+          { date: "2026-03-01", value: 30 },
+        ],
+        "en",
+        "M",
+      );
+      // Behind-UTC timezones must not shift Jan 1st into December 2025.
+      expect(model?.years).toHaveLength(1);
+      expect(model?.years[0].year).toBe(2026);
+      expect(model?.years[0].values[0]).toBe(100);
+      expect(model?.years[0].values[1]).toBeCloseTo(200, 5);
+      expect(model?.years[0].values[11]).toBeNull();
+    } finally {
+      if (previous === undefined) delete process.env.TZ;
+      else process.env.TZ = previous;
+    }
+  });
 });
 
 describe("monthNames", () => {

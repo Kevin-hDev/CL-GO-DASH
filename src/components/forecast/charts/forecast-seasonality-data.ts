@@ -21,6 +21,25 @@ export const SEASONALITY_MIN_HISTORY = 24;
 /** Complete years shown by default (plus the current partial year). */
 export const SEASONALITY_DEFAULT_VISIBLE_YEARS = 5;
 const COMPLETE_YEAR_POINTS = 12;
+/** Frequencies at or above one observation per month. */
+const MONTHLY_OR_LONGER = new Set(["M", "Q", "Y"]);
+
+/**
+ * Calendar year/month of an observation. Date-only strings ("YYYY-MM-DD")
+ * and ISO timestamps are parsed from the string itself: `new Date()` would
+ * interpret date-only strings as UTC midnight and shift them into the
+ * previous month/year in timezones behind UTC.
+ */
+function parseYearMonth(date: string): { year: number; month: number } | null {
+  const iso = /^(\d{4})-(\d{2})-\d{2}/.exec(date);
+  if (iso) {
+    const month = Number(iso[2]) - 1;
+    return month >= 0 && month <= 11 ? { year: Number(iso[1]), month } : null;
+  }
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return { year: parsed.getFullYear(), month: parsed.getMonth() };
+}
 
 /**
  * Default visible subset: the last SEASONALITY_DEFAULT_VISIBLE_YEARS
@@ -47,30 +66,42 @@ export function toggleVisibleYear(visible: number[], year: number): number[] {
  * Groups history by calendar year and normalizes each year to its first
  * available month (= 100), so recurring patterns line up on one axis.
  * Years with fewer than SEASONALITY_MIN_YEAR_POINTS points are skipped.
+ * Sub-monthly frequencies (everything but M/Q/Y) aggregate ALL daily-or-
+ * finer observations of a month by mean; monthly inputs keep one value
+ * per month.
  */
 export function buildSeasonalityModel(
   points: SeasonalityPoint[],
   locale: string,
+  frequency?: string,
 ): SeasonalityModel | null {
-  const byYear = new Map<number, Map<number, number>>();
+  const aggregateAll =
+    frequency != null && !MONTHLY_OR_LONGER.has(frequency.toUpperCase());
+  const byYear = new Map<number, Map<number, number[]>>();
   for (const point of points) {
-    const parsed = new Date(point.date);
-    if (Number.isNaN(parsed.getTime()) || !Number.isFinite(point.value)) continue;
-    const year = parsed.getFullYear();
-    const month = parsed.getMonth();
-    const entry = byYear.get(year) ?? new Map<number, number>();
-    if (!entry.has(month)) entry.set(month, point.value);
-    byYear.set(year, entry);
+    if (!Number.isFinite(point.value)) continue;
+    const yearMonth = parseYearMonth(point.date);
+    if (!yearMonth) continue;
+    const entry = byYear.get(yearMonth.year) ?? new Map<number, number[]>();
+    const bucket = entry.get(yearMonth.month) ?? [];
+    bucket.push(point.value);
+    entry.set(yearMonth.month, bucket);
+    byYear.set(yearMonth.year, entry);
   }
 
   const years: SeasonalityYear[] = [];
   for (const [year, months] of [...byYear.entries()].sort((a, b) => a[0] - b[0])) {
     if (months.size < SEASONALITY_MIN_YEAR_POINTS) continue;
-    const base = [...months.entries()].sort((a, b) => a[0] - b[0])[0][1];
+    const resolve = (bucket: number[]) =>
+      aggregateAll
+        ? bucket.reduce((sum, value) => sum + value, 0) / bucket.length
+        : bucket[0];
+    const ordered = [...months.entries()].sort((a, b) => a[0] - b[0]);
+    const base = resolve(ordered[0][1]);
     if (!Number.isFinite(base) || base === 0) continue;
     const values = Array.from({ length: 12 }, (_, month) => {
-      const value = months.get(month);
-      return value == null ? null : (value / base) * 100;
+      const bucket = months.get(month);
+      return bucket == null ? null : (resolve(bucket) / base) * 100;
     });
     years.push({
       year,

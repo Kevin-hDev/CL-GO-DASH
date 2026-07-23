@@ -1254,7 +1254,7 @@
     "companion": {
       "mean": "moyenne",
       "insufficientData": "Pas assez de données pour ce graphique.",
-      "indexBase": "Indice (janvier = 100)",
+      "indexBase": "Indice (premier mois = 100)",
       "showAll": "Tout",
       "showNone": "Rien"
     },

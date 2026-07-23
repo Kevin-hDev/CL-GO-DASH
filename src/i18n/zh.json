@@ -1190,7 +1190,7 @@
     "companion": {
       "mean": "平均值",
       "insufficientData": "数据不足，无法绘制此图表。",
-      "indexBase": "指数（1 月 = 100）",
+      "indexBase": "指数（首月 = 100）",
       "showAll": "全部",
       "showNone": "无"
     },
