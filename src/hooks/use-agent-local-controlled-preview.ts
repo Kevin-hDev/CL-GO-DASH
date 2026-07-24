@@ -15,6 +15,14 @@ interface Args {
 }
 
 export function useAgentLocalControlledPreview({ navState, filePreviewState, onNavChange }: Args) {
+  const publishPreviewTab = useCallback((tabId: string) => {
+    onNavChange?.({
+      previewOpen: true,
+      previewActiveTab: tabId,
+      panelMode: "preview",
+    });
+  }, [onNavChange]);
+
   const setOpen = useCallback((action: SetStateAction<boolean>) => {
     const next = applyAction(navState.previewOpen, action);
     filePreviewState.setOpen(next);
@@ -52,21 +60,27 @@ export function useAgentLocalControlledPreview({ navState, filePreviewState, onN
 
   const openOperation = useCallback((operation: FileOperation) => {
     const tabId = filePreviewState.openOperation(operation);
-    onNavChange?.({ previewOpen: true, previewActiveTab: operation.id });
+    publishPreviewTab(tabId);
     return tabId;
-  }, [filePreviewState, onNavChange]);
+  }, [filePreviewState, publishPreviewTab]);
 
   const openPath = useCallback((path: string) => {
     const tabId = filePreviewState.openPath(path);
-    onNavChange?.({ previewOpen: true, previewActiveTab: tabId });
+    publishPreviewTab(tabId);
     return tabId;
-  }, [filePreviewState, onNavChange]);
+  }, [filePreviewState, publishPreviewTab]);
+
+  const openFullPath = useCallback((path: string) => {
+    const tabId = filePreviewState.openFullPath(path);
+    publishPreviewTab(tabId);
+    return tabId;
+  }, [filePreviewState, publishPreviewTab]);
 
   const openPlan = useCallback((plan: AgentPlanRun) => {
     const tabId = filePreviewState.openPlan(plan);
-    onNavChange?.({ previewOpen: true, previewActiveTab: tabId });
+    publishPreviewTab(tabId);
     return tabId;
-  }, [filePreviewState, onNavChange]);
+  }, [filePreviewState, publishPreviewTab]);
 
   const closeTab = useCallback((id: string) => {
     filePreviewState.closeTab(id);
@@ -85,11 +99,12 @@ export function useAgentLocalControlledPreview({ navState, filePreviewState, onN
     closePanel,
     openOperation,
     openPath,
+    openFullPath,
     openPlan,
     closeTab,
   }), [
     closePanel, closeTab, filePreviewState, navState.previewActiveTab,
     navState.previewFullscreen, navState.previewOpen, openOperation,
-    openPath, openPlan, setActiveTab, setFullscreen, setOpen, toggleOpen,
+    openPath, openFullPath, openPlan, setActiveTab, setFullscreen, setOpen, toggleOpen,
   ]);
 }

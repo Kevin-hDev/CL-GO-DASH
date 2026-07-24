@@ -48,27 +48,30 @@ describe("useAgentLocalControlledPanels", () => {
     });
   });
 
-  it("charge une analyse sans masquer la conversation", () => {
-    const deps = dependencies();
-    const onNavChange = vi.fn();
-    const { result } = renderHook(() => useAgentLocalControlledPanels({
-      ...deps,
-      sessionId: null,
-      navState: { ...DEFAULT_APP_NAV.agentLocal, previewFullscreen: true },
-      onNavChange,
-    }));
+  it.each(["preview", "browser"] as const)(
+    "charge une analyse depuis %s sans masquer la conversation",
+    (panelMode) => {
+      const deps = dependencies();
+      const onNavChange = vi.fn();
+      const { result } = renderHook(() => useAgentLocalControlledPanels({
+        ...deps,
+        sessionId: null,
+        navState: { ...DEFAULT_APP_NAV.agentLocal, panelMode, previewFullscreen: true },
+        onNavChange,
+      }));
 
-    act(() => result.current.forecastNav.loadAnalysis("analysis-id"));
+      act(() => result.current.forecastNav.loadAnalysis("analysis-id"));
 
-    expect(deps.forecast.loadAnalysis).toHaveBeenCalledWith("analysis-id");
-    expect(onNavChange).toHaveBeenCalledWith({
-      previewOpen: true,
-      forecastAnalysisId: "analysis-id",
-      forecastSection: "view",
-      panelMode: "forecast",
-      previewFullscreen: false,
-    });
-  });
+      expect(deps.forecast.loadAnalysis).toHaveBeenCalledWith("analysis-id");
+      expect(onNavChange).toHaveBeenCalledWith({
+        previewOpen: true,
+        forecastAnalysisId: "analysis-id",
+        forecastSection: "view",
+        panelMode: "forecast",
+        previewFullscreen: false,
+      });
+    },
+  );
 
   it("affiche automatiquement une analyse créée par le LLM", () => {
     let analysisCreated: ((event: { payload: unknown }) => void) | null = null;
