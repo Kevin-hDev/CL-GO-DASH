@@ -57,6 +57,14 @@
   transform: rotate(180deg);
 }
 
+.ss-wrap.ss-above .ss-trigger-icon {
+  transform: rotate(180deg);
+}
+
+.ss-wrap.ss-above.open .ss-trigger-icon {
+  transform: rotate(0deg);
+}
+
 .ss-panel {
   position: absolute;
   top: calc(100% + 4px);
@@ -71,6 +79,11 @@
   z-index: var(--z-dropdown);
   backdrop-filter: var(--popover-backdrop-filter, none);
   -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
+}
+
+.ss-wrap.ss-above .ss-panel {
+  top: auto;
+  bottom: calc(100% + var(--space-xs));
 }
 
 [data-theme="dark"] .ss-panel {

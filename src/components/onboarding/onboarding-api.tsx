@@ -10,11 +10,12 @@ import { getProviderDescription, type ProviderSpec } from "@/types/api";
 
 interface OnboardingApiProps {
   onComplete: () => void | Promise<void>;
+  onBack: () => void;
 }
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
-export function OnboardingApi({ onComplete }: OnboardingApiProps) {
+export function OnboardingApi({ onComplete, onBack }: OnboardingApiProps) {
   const { t, i18n } = useTranslation();
   const [providers, setProviders] = useState<ProviderSpec[]>([]);
   const [configuredIds, setConfiguredIds] = useState<string[]>([]);
@@ -76,7 +77,7 @@ export function OnboardingApi({ onComplete }: OnboardingApiProps) {
   }, [apiKey, selected, t]);
 
   return (
-    <div className="ob-page">
+    <div className="ob-page ob-page-api">
       <div className="ob-copy">
         <h1 className="ob-title">{t("onboarding.api.title")}</h1>
         <p className="ob-description">{t("onboarding.api.description")}</p>
@@ -161,6 +162,14 @@ export function OnboardingApi({ onComplete }: OnboardingApiProps) {
       <div className="ob-actions">
         <button
           type="button"
+          className="ob-secondary-btn"
+          onClick={onBack}
+          disabled={saveState === "saving"}
+        >
+          {t("onboarding.common.back")}
+        </button>
+        <button
+          type="button"
           className="ob-primary-btn"
           onClick={() => void handleSave()}
           disabled={!selected || !apiKey.trim() || saveState === "saving"}
@@ -170,7 +179,7 @@ export function OnboardingApi({ onComplete }: OnboardingApiProps) {
             : selectedConfigured
               ? t("apiKeys.dialog.save")
               : t("apiKeys.dialog.addAndTest")}
-          <CaretRight size="var(--icon-md)" weight="bold" />
+          <CaretRight size="var(--icon-sm)" weight="bold" />
         </button>
         <button
           type="button"

@@ -143,13 +143,18 @@ describe("AgentImportWizard", () => {
 
   it("permet de continuer l'onboarding sans configurer de source", async () => {
     const onContinue = vi.fn();
-    render(<AgentImportWizard onContinue={onContinue} />);
+    const onBack = vi.fn();
+    render(<AgentImportWizard onContinue={onContinue} onBack={onBack} />);
 
     await screen.findByText("Claude Code");
+    fireEvent.click(screen.getByRole("button", {
+      name: i18n.t("onboarding.common.back"),
+    }));
     fireEvent.click(screen.getByRole("button", {
       name: i18n.t("onboarding.common.continue"),
     }));
 
+    expect(onBack).toHaveBeenCalledOnce();
     expect(onContinue).toHaveBeenCalledOnce();
     expect(invokeMock).not.toHaveBeenCalledWith(
       "save_external_agent_source_selection",

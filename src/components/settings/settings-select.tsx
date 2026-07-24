@@ -27,6 +27,7 @@ interface SettingsSelectProps {
   searchable?: boolean;
   searchPlaceholder?: string;
   disabled?: boolean;
+  placement?: "above" | "below";
 }
 
 const EMPTY_OPTIONS: SelectOption[] = [];
@@ -40,6 +41,7 @@ export function SettingsSelect({
   searchable,
   searchPlaceholder,
   disabled,
+  placement = "below",
 }: SettingsSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -115,7 +117,11 @@ export function SettingsSelect({
   });
 
   return (
-    <div className={`ss-wrap ${open ? "open" : ""} ${disabled ? "disabled" : ""}`} data-keyboard-scope={open ? "local" : undefined} ref={ref}>
+    <div
+      className={`ss-wrap ss-${placement} ${open ? "open" : ""} ${disabled ? "disabled" : ""}`}
+      data-keyboard-scope={open ? "local" : undefined}
+      ref={ref}
+    >
       <div
         className="ss-trigger"
         role="button"
@@ -123,7 +129,12 @@ export function SettingsSelect({
         onClick={() => !disabled && setOpen(!open)}
         onKeyDown={(event) => {
           if (disabled) return;
-          if (!open && (event.key === "Enter" || event.key === " " || event.key === "ArrowDown")) {
+          const directionKey = placement === "above" ? "ArrowUp" : "ArrowDown";
+          if (!open && (
+            event.key === "Enter"
+            || event.key === " "
+            || event.key === directionKey
+          )) {
             setOpen(true);
             return;
           }

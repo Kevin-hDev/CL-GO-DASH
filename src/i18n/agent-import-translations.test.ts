@@ -12,6 +12,7 @@ describe("agent import translations", () => {
     const locales = [fr, en, es, de, itJson, zh, ja];
     for (const locale of locales) {
       const section = locale.agentImport;
+      expect(locale.onboarding.common.back.trim()).not.toBe("");
       expect(section.title.trim()).not.toBe("");
       expect(section.description.trim()).not.toBe("");
       expect(section.actions.all.trim()).not.toBe("");

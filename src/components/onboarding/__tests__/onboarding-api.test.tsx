@@ -65,7 +65,7 @@ describe("OnboardingApi", () => {
   });
 
   it("affiche uniquement les providers LLM", async () => {
-    render(<OnboardingApi onComplete={vi.fn()} />);
+    render(<OnboardingApi onComplete={vi.fn()} onBack={vi.fn()} />);
 
     await waitFor(() => expect(screen.getAllByText("openai").length).toBeGreaterThan(0));
 
@@ -86,7 +86,7 @@ describe("OnboardingApi", () => {
       return Promise.resolve();
     });
 
-    render(<OnboardingApi onComplete={vi.fn()} />);
+    render(<OnboardingApi onComplete={vi.fn()} onBack={vi.fn()} />);
 
     await waitFor(() => expect(screen.getAllByText("mistral").length).toBeGreaterThan(0));
     expect(screen.getByText("apiKeys.details.connected")).toBeTruthy();
@@ -94,7 +94,7 @@ describe("OnboardingApi", () => {
 
   it("teste puis enregistre la cle sans quitter la page", async () => {
     const onComplete = vi.fn();
-    render(<OnboardingApi onComplete={onComplete} />);
+    render(<OnboardingApi onComplete={onComplete} onBack={vi.fn()} />);
 
     await waitFor(() => expect(screen.getAllByText("openai").length).toBeGreaterThan(0));
     fireEvent.change(screen.getByLabelText("onboarding.api.keyLabel:openai"), {
@@ -116,7 +116,7 @@ describe("OnboardingApi", () => {
   });
 
   it("remasque la cle quand l'utilisateur change de provider", async () => {
-    render(<OnboardingApi onComplete={vi.fn()} />);
+    render(<OnboardingApi onComplete={vi.fn()} onBack={vi.fn()} />);
 
     await waitFor(() => expect(screen.getAllByText("openai").length).toBeGreaterThan(0));
     const openAiInput = screen.getByLabelText("onboarding.api.keyLabel:openai");
@@ -132,7 +132,7 @@ describe("OnboardingApi", () => {
 
   it("continue seulement quand l'utilisateur passe l'etape", async () => {
     const onComplete = vi.fn();
-    render(<OnboardingApi onComplete={onComplete} />);
+    render(<OnboardingApi onComplete={onComplete} onBack={vi.fn()} />);
 
     await waitFor(() => expect(screen.getAllByText("openai").length).toBeGreaterThan(0));
     fireEvent.click(screen.getByText("onboarding.common.skip"));
@@ -142,11 +142,20 @@ describe("OnboardingApi", () => {
 
   it("permet de passer sans enregistrer de cle", async () => {
     const onComplete = vi.fn();
-    render(<OnboardingApi onComplete={onComplete} />);
+    render(<OnboardingApi onComplete={onComplete} onBack={vi.fn()} />);
 
     fireEvent.click(screen.getByText("onboarding.common.skip"));
 
     await waitFor(() => expect(onComplete).toHaveBeenCalled());
     expect(invoke).not.toHaveBeenCalledWith("set_api_key", expect.anything());
+  });
+
+  it("permet de revenir à l'étape précédente", () => {
+    const onBack = vi.fn();
+    render(<OnboardingApi onComplete={vi.fn()} onBack={onBack} />);
+
+    fireEvent.click(screen.getByText("onboarding.common.back"));
+
+    expect(onBack).toHaveBeenCalledOnce();
   });
 });

@@ -1082,6 +1082,7 @@
   },
   "onboarding": {
     "common": {
+      "back": "Atrás",
       "continue": "Continuar",
       "skip": "Omitir"
     },

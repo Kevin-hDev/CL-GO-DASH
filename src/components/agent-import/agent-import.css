@@ -166,6 +166,11 @@
   font-size: var(--text-sm);
 }
 
+.aim-footer-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
 .aim-conflict {
   padding: var(--space-md);
   display: flex;

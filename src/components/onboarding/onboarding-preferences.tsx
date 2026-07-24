@@ -1,22 +1,14 @@
 import { useTranslation } from "react-i18next";
-import type { ReactNode } from "react";
 import type { ThemeChoice } from "@/hooks/use-theme";
-import { Gear, Moon, Sun, Sparkle, CaretRight } from "@/components/ui/icons";
+import { CaretRight } from "@/components/ui/icons";
 import { SettingsSelect } from "@/components/settings/settings-select";
+import { ThemeSelector } from "@/components/settings/theme-selector";
 import { LANGUAGE_OPTIONS } from "@/components/settings/general-settings-options";
-import { THEME_OPTIONS } from "@/lib/app-themes";
 
 interface OnboardingPreferencesProps {
   themeChoice: ThemeChoice;
   onThemeChange: (theme: ThemeChoice) => void;
   onNext: () => void;
-}
-
-function getThemeIcon(theme: ThemeChoice): ReactNode {
-  if (theme === "light") return <Sun size="var(--icon-lg)" />;
-  if (theme === "dark") return <Moon size="var(--icon-lg)" />;
-  if (theme === "system") return <Gear size="var(--icon-lg)" />;
-  return <Sparkle size="var(--icon-lg)" />;
 }
 
 export function OnboardingPreferences({
@@ -41,19 +33,7 @@ export function OnboardingPreferences({
       <div className="ob-settings-panel">
         <div className="ob-field">
           <span className="ob-field-label">{t("settings.general.themeTitle")}</span>
-          <div className="ob-theme-grid">
-            {THEME_OPTIONS.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                className={`ob-theme-choice ${themeChoice === option.id ? "is-active" : ""}`}
-                onClick={() => onThemeChange(option.id)}
-              >
-                {getThemeIcon(option.id)}
-                <span>{t(option.labelKey)}</span>
-              </button>
-            ))}
-          </div>
+          <ThemeSelector value={themeChoice} onChange={onThemeChange} />
         </div>
 
         <div className="ob-field">
@@ -62,13 +42,14 @@ export function OnboardingPreferences({
             options={LANGUAGE_OPTIONS}
             value={i18n.language}
             onChange={changeLang}
+            placement="above"
           />
         </div>
       </div>
 
       <button type="button" className="ob-primary-btn" onClick={onNext}>
         {t("onboarding.common.continue")}
-        <CaretRight size="var(--icon-md)" weight="bold" />
+        <CaretRight size="var(--icon-sm)" weight="bold" />
       </button>
     </div>
   );

@@ -17,7 +17,7 @@ export function OnboardingWelcome({ onNext }: OnboardingWelcomeProps) {
       </div>
       <button type="button" className="ob-primary-btn" onClick={onNext}>
         {t("onboarding.welcome.getStarted")}
-        <CaretRight size="var(--icon-md)" weight="bold" />
+        <CaretRight size="var(--icon-sm)" weight="bold" />
       </button>
     </div>
   );

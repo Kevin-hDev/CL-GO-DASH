@@ -1135,6 +1135,7 @@
   },
   "onboarding": {
     "common": {
+      "back": "Retour",
       "continue": "Continuer",
       "skip": "Passer"
     },

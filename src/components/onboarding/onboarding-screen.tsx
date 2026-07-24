@@ -38,6 +38,10 @@ export function OnboardingScreen({
     setStep((current) => current + 1);
   }, []);
 
+  const goBack = useCallback(() => {
+    setStep((current) => Math.max(0, current - 1));
+  }, []);
+
   const finishApiStep = useCallback(async () => {
     if (showOllamaStep) {
       goNext();
@@ -60,9 +64,12 @@ export function OnboardingScreen({
     },
     {
       id: "agent-import",
-      content: <OnboardingAgentImport onNext={goNext} />,
+      content: <OnboardingAgentImport onNext={goNext} onBack={goBack} />,
     },
-    { id: "api", content: <OnboardingApi onComplete={finishApiStep} /> },
+    {
+      id: "api",
+      content: <OnboardingApi onComplete={finishApiStep} onBack={goBack} />,
+    },
     ...(showOllamaStep
       ? [
           {
@@ -80,6 +87,7 @@ export function OnboardingScreen({
       : []),
   ], [
     finishApiStep,
+    goBack,
     goNext,
     onCompleteOllama,
     onSkipOllama,

@@ -1082,6 +1082,7 @@
   },
   "onboarding": {
     "common": {
+      "back": "返回",
       "continue": "继续",
       "skip": "跳过"
     },

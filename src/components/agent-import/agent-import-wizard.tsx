@@ -10,11 +10,13 @@ import "./agent-import.css";
 
 interface AgentImportWizardProps {
   onContinue?: () => void;
+  onBack?: () => void;
   onClose?: () => void;
 }
 
 export function AgentImportWizard({
   onContinue,
+  onBack,
   onClose,
 }: AgentImportWizardProps) {
   const { t } = useTranslation();
@@ -128,9 +130,16 @@ export function AgentImportWizard({
 
       {onContinue && (
         <div className="aim-footer">
-          <button type="button" className="aim-btn aim-btn-primary" onClick={onContinue}>
-            {t("onboarding.common.continue")}
-          </button>
+          <div className="aim-footer-actions">
+            {onBack && (
+              <button type="button" className="aim-btn aim-btn-secondary" onClick={onBack}>
+                {t("onboarding.common.back")}
+              </button>
+            )}
+            <button type="button" className="aim-btn aim-btn-primary" onClick={onContinue}>
+              {t("onboarding.common.continue")}
+            </button>
+          </div>
           <span>{t("agentImport.onboardingLater")}</span>
         </div>
       )}
