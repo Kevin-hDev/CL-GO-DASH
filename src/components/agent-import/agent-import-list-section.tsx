@@ -9,6 +9,7 @@ interface AgentImportListSectionProps {
   items: AgentImportItem[];
   selectedIds: Set<string>;
   onChange: (ids: Set<string>) => void;
+  lockedIds?: Set<string>;
   searchable?: boolean;
   bulkActions?: boolean;
 }
@@ -18,6 +19,7 @@ export function AgentImportListSection({
   items,
   selectedIds,
   onChange,
+  lockedIds = new Set(),
   searchable = false,
   bulkActions = false,
 }: AgentImportListSectionProps) {
@@ -78,32 +80,40 @@ export function AgentImportListSection({
       )}
 
       <div className="aim-item-list">
-        {visibleItems.map((item) => (
-          <label className="aim-item" key={item.id}>
-            <input
-              type="checkbox"
-              checked={selectedIds.has(item.id)}
-              disabled={!item.available}
-              onChange={() => {
-                const next = new Set(selectedIds);
-                if (next.has(item.id)) next.delete(item.id);
-                else next.add(item.id);
-                onChange(next);
-              }}
-            />
-            <span className="aim-item-copy">
-              <span className="aim-item-name">{item.name}</span>
-              {item.description && (
-                <span className="aim-item-description">{item.description}</span>
-              )}
-              {item.updateAvailable && (
-                <span className="aim-item-update">
-                  {t("agentImport.detail.updateAvailable")}
-                </span>
-              )}
-            </span>
-          </label>
-        ))}
+        {visibleItems.map((item) => {
+          const locked = lockedIds.has(item.id);
+          return (
+            <label className="aim-item" key={item.id}>
+              <input
+                type="checkbox"
+                checked={selectedIds.has(item.id)}
+                disabled={!item.available || locked}
+                onChange={() => {
+                  const next = new Set(selectedIds);
+                  if (next.has(item.id)) next.delete(item.id);
+                  else next.add(item.id);
+                  onChange(next);
+                }}
+              />
+              <span className="aim-item-copy">
+                <span className="aim-item-name">{item.name}</span>
+                {item.description && (
+                  <span className="aim-item-description">{item.description}</span>
+                )}
+                {item.updateAvailable && (
+                  <span className="aim-item-update">
+                    {t("agentImport.detail.updateAvailable")}
+                  </span>
+                )}
+                {locked && (
+                  <span className="aim-item-imported">
+                    {t("agentImport.detail.imported")}
+                  </span>
+                )}
+              </span>
+            </label>
+          );
+        })}
       </div>
     </section>
   );

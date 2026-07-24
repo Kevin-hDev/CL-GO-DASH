@@ -27,7 +27,7 @@ const sourceNames = [
   "Kimi Code",
 ];
 
-function item(id: string, kind: "rule" | "skill"): AgentImportItem {
+function item(id: string, kind: "document" | "rule" | "skill"): AgentImportItem {
   return {
     id,
     name: id,
@@ -55,17 +55,19 @@ function sources(): AgentSourceSummary[] {
   }));
 }
 
-beforeEach(() => {
-  invokeMock.mockReset();
+function mockScan(result: AgentSourceSummary[]) {
   invokeMock.mockImplementation((command) => {
-    if (command === "scan_external_agent_sources") {
-      return Promise.resolve(sources());
-    }
+    if (command === "scan_external_agent_sources") return Promise.resolve(result);
     if (command === "save_external_agent_source_selection") {
       return Promise.resolve({ saved: true, conflicts: [] });
     }
     return Promise.resolve(undefined);
   });
+}
+
+beforeEach(() => {
+  invokeMock.mockReset();
+  mockScan(sources());
 });
 
 describe("AgentImportWizard", () => {

@@ -66,6 +66,8 @@
   --dialog-wide-max-width: 53.75rem;
   --dialog-tall-max-height: 45rem;
   --onboarding-panel-max-height: 43rem;
+  --agent-import-card-logo-size: 2rem;
+  --agent-import-detail-logo-height: 2.25rem;
   --control-height-sm: 1.75rem;
   --summary-commit-row-height: 2rem;
   --summary-icon-column: 1.3333rem;

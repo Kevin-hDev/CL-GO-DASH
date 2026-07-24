@@ -5,12 +5,15 @@ import { InlineToast } from "@/components/ui/toast";
 import {
   buildSourceSelection,
   createImportDraft,
+  draftMatchesSource,
 } from "@/lib/agent-import-selection";
+import { cn } from "@/lib/utils";
 import type {
   AgentSourceSelection,
   AgentSourceSummary,
 } from "@/types/agent-import";
 import { AgentImportListSection } from "./agent-import-list-section";
+import { AgentSourceLogo } from "./agent-source-logo";
 import "./agent-import-detail.css";
 
 interface AgentSourceDetailProps {
@@ -34,6 +37,22 @@ export function AgentSourceDetail({
 }: AgentSourceDetailProps) {
   const { t } = useTranslation();
   const [draft, setDraft] = useState(() => createImportDraft(source));
+  const draftChanged = !draftMatchesSource(source, draft);
+  const importedDocumentIds = source.configured
+    ? createImportDraft(source).documentIds
+    : new Set<string>();
+  const hasDocumentUpdate = source.documents.some(
+    (item) => item.selected && item.updateAvailable,
+  );
+  const showPrimaryAction = !source.configured
+    || !source.enabled
+    || draftChanged
+    || hasDocumentUpdate;
+  const statusLabel = source.configured
+    ? source.enabled
+      ? t("agentImport.card.active")
+      : t("agentImport.card.disabled")
+    : t(`agentImport.status.${source.status}`);
 
   return (
     <div className="aim-detail">
@@ -43,12 +62,21 @@ export function AgentSourceDetail({
       </button>
 
       <div className="aim-detail-heading">
-        <div>
-          <h2>{source.displayName}</h2>
+        <div className="aim-detail-brand">
+          <AgentSourceLogo
+            sourceId={source.id}
+            displayName={source.displayName}
+            variant="detail"
+          />
           <p>{t("agentImport.detail.description")}</p>
         </div>
-        <span className={`aim-status-badge aim-status-${source.status}`}>
-          {t(`agentImport.status.${source.status}`)}
+        <span className={cn(
+          "aim-status-badge",
+          source.configured
+            ? source.enabled ? "is-active" : "is-disabled"
+            : `aim-status-${source.status}`,
+        )}>
+          {statusLabel}
         </span>
       </div>
 
@@ -82,6 +110,7 @@ export function AgentSourceDetail({
           title={t("agentImport.sections.documents")}
           items={source.documents}
           selectedIds={draft.documentIds}
+          lockedIds={importedDocumentIds}
           onChange={(documentIds) => setDraft((current) => ({ ...current, documentIds }))}
         />
         <AgentImportListSection
@@ -115,16 +144,22 @@ export function AgentSourceDetail({
             {t("agentImport.actions.disable")}
           </button>
         )}
-        <button
-          type="button"
-          className="aim-btn aim-btn-primary"
-          onClick={() => onSave(buildSourceSelection(source, draft))}
-          disabled={saving || source.status === "missing"}
-        >
-          {saving
-            ? t("agentImport.actions.saving")
-            : t("agentImport.actions.confirmSource")}
-        </button>
+        {showPrimaryAction && (
+          <button
+            type="button"
+            className="aim-btn aim-btn-primary"
+            onClick={() => onSave(buildSourceSelection(source, draft))}
+            disabled={saving || source.status === "missing"}
+          >
+            {saving
+              ? t("agentImport.actions.saving")
+              : !source.configured
+                ? t("agentImport.actions.confirmSource")
+                : source.enabled
+                  ? t("agentImport.actions.confirmChanges")
+                  : t("agentImport.actions.reactivate")}
+          </button>
+        )}
       </div>
     </div>
   );

@@ -43,6 +43,16 @@ export function buildSourceSelection(
   };
 }
 
+export function draftMatchesSource(
+  source: AgentSourceSummary,
+  draft: AgentImportDraft,
+): boolean {
+  const saved = createImportDraft(source);
+  return sameIds(draft.skillIds, saved.skillIds)
+    && sameIds(draft.ruleIds, saved.ruleIds)
+    && sameIds(draft.documentIds, saved.documentIds);
+}
+
 export function toggleDraftId(current: Set<string>, id: string): Set<string> {
   const next = new Set(current);
   if (next.has(id)) next.delete(id);
@@ -60,4 +70,8 @@ function selectedIds(items: AgentImportItem[]): Set<string> {
       .filter((item) => item.selected && item.available)
       .map((item) => item.id),
   );
+}
+
+function sameIds(left: Set<string>, right: Set<string>): boolean {
+  return left.size === right.size && [...left].every((id) => right.has(id));
 }

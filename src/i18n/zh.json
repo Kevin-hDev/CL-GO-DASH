@@ -1038,6 +1038,8 @@
     },
     "card": {
       "counts": "{{documents}} 个文档 · {{rules}} 条规则 · {{skills}} 个技能",
+      "migrated": "已迁移",
+      "active": "迁移已启用",
       "activeCount": "{{count}} 个项目已启用",
       "disabled": "来源已禁用"
     },
@@ -1052,6 +1054,7 @@
       "searchSkills": "搜索技能",
       "partial": "此配置的一部分已被跳过：文件过大、文件夹无法访问或已达到扫描上限。下方显示的项目仍可正常使用。",
       "updateAvailable": "有更新版本可用。",
+      "imported": "已导入 CL-GO-DASH",
       "empty": "此来源未检测到兼容内容。"
     },
     "actions": {
@@ -1059,6 +1062,8 @@
       "none": "全不选",
       "back": "返回来源",
       "confirmSource": "确认此来源",
+      "confirmChanges": "确认更改",
+      "reactivate": "重新启用此来源",
       "disable": "禁用",
       "saving": "正在保存…",
       "rescan": "重新扫描",

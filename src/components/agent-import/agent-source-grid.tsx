@@ -1,6 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { CaretRight, FolderOpen } from "@/components/ui/icons";
+import { CaretRight, CheckCircle2 } from "@/components/ui/icons";
+import { cn } from "@/lib/utils";
 import type { AgentSourceSummary } from "@/types/agent-import";
+import { AgentSourceLogo } from "./agent-source-logo";
+import "./agent-source-grid.css";
 
 interface AgentSourceGridProps {
   sources: AgentSourceSummary[];
@@ -22,14 +25,28 @@ export function AgentSourceGrid({ sources, onSelect }: AgentSourceGridProps) {
           <button
             key={source.id}
             type="button"
-            className={`aim-source-card aim-status-${source.status}`}
+            className={cn(
+              "aim-source-card",
+              `aim-status-${source.status}`,
+              source.configured && "is-configured",
+            )}
             onClick={() => onSelect(source.id)}
           >
-            <span className="aim-source-icon">
-              <FolderOpen size="var(--icon-lg)" weight="duotone" />
-            </span>
+            <AgentSourceLogo
+              sourceId={source.id}
+              displayName={source.displayName}
+              variant="card"
+            />
             <span className="aim-source-copy">
-              <span className="aim-source-name">{source.displayName}</span>
+              <span className="aim-source-name-row">
+                <span className="aim-source-name">{source.displayName}</span>
+                {source.configured && (
+                  <span className="aim-source-migrated">
+                    <CheckCircle2 size="var(--icon-sm)" weight="fill" />
+                    {t("agentImport.card.migrated")}
+                  </span>
+                )}
+              </span>
               <span className="aim-source-status">
                 {t(`agentImport.status.${source.status}`)}
               </span>

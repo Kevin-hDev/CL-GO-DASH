@@ -82,6 +82,31 @@ async fn disabled_hidden_document_is_not_injected() {
     assert!(load_agent_md_from(data.path(), None).await.is_none());
 }
 
+#[tokio::test]
+async fn imported_document_stays_injected_when_external_source_is_disabled() {
+    let data = TempDir::new().unwrap();
+    tokio::fs::write(data.path().join("CLAUDE.md"), "Native imported rules")
+        .await
+        .unwrap();
+    let mut source = source_json("claude");
+    source["enabled"] = serde_json::Value::Bool(false);
+    let registry = serde_json::json!({
+        "version": 1,
+        "sources": [source],
+        "documents": [document_json("CLAUDE.md", "claude", "0")]
+    });
+    tokio::fs::write(
+        data.path().join("external-agent-sources.json"),
+        serde_json::to_vec(&registry).unwrap(),
+    )
+    .await
+    .unwrap();
+
+    let content = load_agent_md_from(data.path(), None).await.unwrap();
+
+    assert!(content.contains("Native imported rules"));
+}
+
 fn source_json(source_id: &str) -> serde_json::Value {
     serde_json::json!({
         "sourceId": source_id,

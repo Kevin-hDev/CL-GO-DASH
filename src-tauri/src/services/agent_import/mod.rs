@@ -83,12 +83,7 @@ pub fn enabled_hidden_documents(data_dir: &Path) -> Vec<String> {
         .documents
         .into_iter()
         .filter(|document| {
-            document.enabled
-                && matches!(document.name.as_str(), "CLAUDE.md" | "QWEN.md")
-                && registry
-                    .sources
-                    .iter()
-                    .any(|source| source.source_id == document.source_id && source.enabled)
+            document.enabled && matches!(document.name.as_str(), "CLAUDE.md" | "QWEN.md")
         })
         .map(|document| document.name)
         .collect()

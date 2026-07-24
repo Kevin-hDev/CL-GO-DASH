@@ -1043,6 +1043,8 @@
     },
     "card": {
       "counts": "{{documents}} document(s) · {{rules}} rule(s) · {{skills}} skill(s)",
+      "migrated": "Migrated",
+      "active": "Migration active",
       "activeCount": "{{count}} active item(s)",
       "disabled": "Source disabled"
     },
@@ -1057,6 +1059,7 @@
       "searchSkills": "Search skills",
       "partial": "Part of this configuration was skipped: a file is too large, a folder is inaccessible, or the scan limit was reached. The items shown remain ready to use.",
       "updateAvailable": "A newer version is available.",
+      "imported": "Imported into CL-GO-DASH",
       "empty": "No compatible content was detected for this source."
     },
     "actions": {
@@ -1064,6 +1067,8 @@
       "none": "None",
       "back": "Back to sources",
       "confirmSource": "Confirm this source",
+      "confirmChanges": "Confirm changes",
+      "reactivate": "Reactivate this source",
       "disable": "Disable",
       "saving": "Saving…",
       "rescan": "Scan again",

@@ -3,6 +3,7 @@ import {
   allItemIds,
   buildSourceSelection,
   createImportDraft,
+  draftMatchesSource,
   selectionMode,
   toggleDraftId,
 } from "@/lib/agent-import-selection";
@@ -62,6 +63,14 @@ describe("agent-import-selection", () => {
 
     expect(selection.skillMode).toBe("custom");
     expect(selection.selectedSkillIds).toEqual(["one"]);
+  });
+
+  it("détecte uniquement les changements réels de sélection", () => {
+    const draft = createImportDraft(source);
+    expect(draftMatchesSource(source, draft)).toBe(true);
+
+    draft.skillIds = toggleDraftId(draft.skillIds, "two");
+    expect(draftMatchesSource(source, draft)).toBe(false);
   });
 
   it("Tout ignore un élément indisponible", () => {

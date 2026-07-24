@@ -1038,6 +1038,8 @@
     },
     "card": {
       "counts": "{{documents}} Dokument(e) · {{rules}} Regel(n) · {{skills}} Skill(s)",
+      "migrated": "Migriert",
+      "active": "Migration aktiv",
       "activeCount": "{{count}} aktive Elemente",
       "disabled": "Quelle deaktiviert"
     },
@@ -1052,6 +1054,7 @@
       "searchSkills": "Skills suchen",
       "partial": "Ein Teil dieser Konfiguration wurde übersprungen: Eine Datei ist zu groß, ein Ordner ist nicht zugänglich oder das Scan-Limit wurde erreicht. Die angezeigten Elemente bleiben nutzbar.",
       "updateAvailable": "Eine neuere Version ist verfügbar.",
+      "imported": "In CL-GO-DASH importiert",
       "empty": "Für diese Quelle wurden keine kompatiblen Inhalte erkannt."
     },
     "actions": {
@@ -1059,6 +1062,8 @@
       "none": "Keine",
       "back": "Zurück zu den Quellen",
       "confirmSource": "Quelle bestätigen",
+      "confirmChanges": "Änderungen bestätigen",
+      "reactivate": "Diese Quelle reaktivieren",
       "disable": "Deaktivieren",
       "saving": "Speichern…",
       "rescan": "Erneut prüfen",

@@ -18,11 +18,12 @@ pub fn save_source_selection(
 pub(crate) fn save_source_selection_to(
     home: &Path,
     data_dir: &Path,
-    selection: SourceSelection,
+    mut selection: SourceSelection,
     replace_documents: bool,
 ) -> Result<SaveSelectionResult, String> {
     let registry_path = data_dir.join("external-agent-sources.json");
     let mut registry = registry::read_from(&registry_path);
+    preserve_imported_documents(&registry, &mut selection);
     if !selection.enabled {
         disable_source(&mut registry, selection)?;
         registry::write_to(&registry_path, &registry)?;
@@ -42,10 +43,6 @@ pub(crate) fn save_source_selection_to(
         .documents
         .iter()
         .filter(|item| selection.selected_document_ids.contains(&item.public.id))
-        .collect::<Vec<_>>();
-    let selected_names = selected_documents
-        .iter()
-        .map(|item| item.public.name.clone())
         .collect::<Vec<_>>();
     let conflicts = document_conflicts(data_dir, &selected_documents)?;
     if !conflicts.is_empty() && !replace_documents {
@@ -74,12 +71,26 @@ pub(crate) fn save_source_selection_to(
             &bytes,
         );
     }
-    disable_unselected_documents(&mut registry, &selection.source_id, &selected_names);
     registry::write_to(&registry_path, &registry)?;
     Ok(SaveSelectionResult {
         saved: true,
         conflicts: Vec::new(),
     })
+}
+
+fn preserve_imported_documents(registry: &AgentImportRegistry, selection: &mut SourceSelection) {
+    let Some(stored) = registry
+        .sources
+        .iter()
+        .find(|source| source.source_id == selection.source_id)
+    else {
+        return;
+    };
+    for id in &stored.selected_document_ids {
+        if !selection.selected_document_ids.contains(id) {
+            selection.selected_document_ids.push(id.clone());
+        }
+    }
 }
 
 fn disable_source(
@@ -95,11 +106,6 @@ fn disable_source(
         stored.enabled = false;
     } else {
         registry::upsert_source(registry, selection)?;
-    }
-    for document in &mut registry.documents {
-        if document.source_id == source_id {
-            document.enabled = false;
-        }
     }
     Ok(())
 }
@@ -182,18 +188,10 @@ fn upsert_document(
     });
 }
 
-fn disable_unselected_documents(
-    registry: &mut AgentImportRegistry,
-    source_id: &str,
-    selected_names: &[String],
-) {
-    for document in &mut registry.documents {
-        if document.source_id == source_id {
-            document.enabled = selected_names.contains(&document.name);
-        }
-    }
-}
-
 #[cfg(test)]
 #[path = "documents_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "documents_persistence_tests.rs"]
+mod persistence_tests;

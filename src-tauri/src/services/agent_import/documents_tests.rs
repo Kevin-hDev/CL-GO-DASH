@@ -3,7 +3,7 @@ use crate::services::agent_import::discovery::scan_source;
 use crate::services::agent_import::source_specs::source_specs_with;
 use tempfile::TempDir;
 
-fn prepare() -> (TempDir, std::path::PathBuf, SourceSelection) {
+pub(super) fn prepare() -> (TempDir, std::path::PathBuf, SourceSelection) {
     let temp = TempDir::new().unwrap();
     let home = temp.path().join("home");
     let data = temp.path().join("data");
@@ -86,7 +86,7 @@ fn invalid_utf8_document_is_rejected() {
 }
 
 #[test]
-fn disabling_source_preserves_selection_and_disables_hidden_document() {
+fn disabling_source_preserves_selection_and_imported_document() {
     let (temp, data, selection) = prepare();
     let home = temp.path().join("home");
     save_source_selection_to(&home, &data, selection.clone(), false).unwrap();
@@ -99,7 +99,7 @@ fn disabling_source_preserves_selection_and_disables_hidden_document() {
     let registry = registry::read_from(&data.join("external-agent-sources.json"));
     assert!(!registry.sources[0].enabled);
     assert_eq!(registry.sources[0].selected_document_ids.len(), 1);
-    assert!(!registry.documents[0].enabled);
+    assert!(registry.documents[0].enabled);
 }
 
 #[test]

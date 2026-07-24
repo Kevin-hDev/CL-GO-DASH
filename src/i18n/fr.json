@@ -1091,6 +1091,8 @@
     },
     "card": {
       "counts": "{{documents}} document(s) · {{rules}} règle(s) · {{skills}} skill(s)",
+      "migrated": "Migré",
+      "active": "Migration active",
       "activeCount": "{{count}} élément(s) actif(s)",
       "disabled": "Source désactivée"
     },
@@ -1105,6 +1107,7 @@
       "searchSkills": "Rechercher un skill",
       "partial": "Une partie de cette configuration a été ignorée : fichier trop volumineux, dossier inaccessible ou limite d'analyse atteinte. Les éléments affichés restent utilisables.",
       "updateAvailable": "Une version plus récente est disponible.",
+      "imported": "Importé dans CL-GO-DASH",
       "empty": "Aucun contenu compatible détecté pour cette source."
     },
     "actions": {
@@ -1112,6 +1115,8 @@
       "none": "Rien",
       "back": "Retour aux sources",
       "confirmSource": "Confirmer cette source",
+      "confirmChanges": "Confirmer les changements",
+      "reactivate": "Réactiver cette source",
       "disable": "Désactiver",
       "saving": "Enregistrement…",
       "rescan": "Relancer l'analyse",

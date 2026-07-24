@@ -16,12 +16,28 @@
   color: var(--ink-muted);
 }
 
+.aim-detail-brand {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 .aim-status-badge {
   padding: var(--space-2xs) var(--space-sm);
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
   color: var(--ink-muted);
   font-size: var(--text-xs);
+}
+
+.aim-status-badge.is-active {
+  border-color: var(--toast-ok-text);
+  color: var(--toast-ok-text);
+}
+
+.aim-status-badge.is-disabled {
+  color: var(--ink-faint);
 }
 
 .aim-item-section {
@@ -105,5 +121,10 @@
 
 .aim-item-update {
   color: var(--signal-warning);
+  font-size: var(--text-xs);
+}
+
+.aim-item-imported {
+  color: var(--toast-ok-text);
   font-size: var(--text-xs);
 }

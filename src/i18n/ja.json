@@ -1038,6 +1038,8 @@
     },
     "card": {
       "counts": "文書 {{documents}} · ルール {{rules}} · スキル {{skills}}",
+      "migrated": "移行済み",
+      "active": "移行は有効です",
       "activeCount": "{{count}} 件が有効",
       "disabled": "ソースは無効"
     },
@@ -1052,6 +1054,7 @@
       "searchSkills": "スキルを検索",
       "partial": "この設定の一部をスキップしました。ファイルが大きすぎる、フォルダーにアクセスできない、またはスキャン上限に達した可能性があります。表示されている項目は引き続き使用できます。",
       "updateAvailable": "新しいバージョンを利用できます。",
+      "imported": "CL-GO-DASH に移行済み",
       "empty": "このソースに互換コンテンツは見つかりませんでした。"
     },
     "actions": {
@@ -1059,6 +1062,8 @@
       "none": "なし",
       "back": "ソースに戻る",
       "confirmSource": "このソースを確認",
+      "confirmChanges": "変更を確定",
+      "reactivate": "このソースを再有効化",
       "disable": "無効化",
       "saving": "保存中…",
       "rescan": "再スキャン",

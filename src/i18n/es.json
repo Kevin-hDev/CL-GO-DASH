@@ -1038,6 +1038,8 @@
     },
     "card": {
       "counts": "{{documents}} documento(s) · {{rules}} regla(s) · {{skills}} skill(s)",
+      "migrated": "Migrado",
+      "active": "Migración activa",
       "activeCount": "{{count}} elemento(s) activo(s)",
       "disabled": "Fuente desactivada"
     },
@@ -1052,6 +1054,7 @@
       "searchSkills": "Buscar skills",
       "partial": "Se ha ignorado parte de esta configuración: un archivo es demasiado grande, una carpeta es inaccesible o se alcanzó el límite de análisis. Los elementos mostrados siguen disponibles.",
       "updateAvailable": "Hay una versión más reciente disponible.",
+      "imported": "Importado en CL-GO-DASH",
       "empty": "No se detectó contenido compatible para esta fuente."
     },
     "actions": {
@@ -1059,6 +1062,8 @@
       "none": "Nada",
       "back": "Volver a las fuentes",
       "confirmSource": "Confirmar esta fuente",
+      "confirmChanges": "Confirmar los cambios",
+      "reactivate": "Reactivar esta fuente",
       "disable": "Desactivar",
       "saving": "Guardando…",
       "rescan": "Analizar de nuevo",
