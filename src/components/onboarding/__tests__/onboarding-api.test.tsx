@@ -115,6 +115,32 @@ describe("OnboardingApi", () => {
     expect(onComplete).not.toHaveBeenCalled();
   });
 
+  it("affiche l'erreur dans la ligne du libelle sans déplacer les actions", async () => {
+    vi.mocked(invoke).mockImplementation((command) => {
+      if (command === "list_llm_providers_catalog") {
+        return Promise.resolve([provider("openai", "llm")]);
+      }
+      if (command === "list_configured_providers") {
+        return Promise.resolve([]);
+      }
+      if (command === "test_api_key_with_value") {
+        return Promise.reject(new Error("test failure"));
+      }
+      return Promise.resolve();
+    });
+
+    render(<OnboardingApi onComplete={vi.fn()} onBack={vi.fn()} />);
+
+    const input = await screen.findByLabelText("onboarding.api.keyLabel:openai");
+    fireEvent.change(input, { target: { value: "sk-invalid" } });
+    fireEvent.click(screen.getByText("apiKeys.dialog.addAndTest"));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("errors.operationFailed");
+    expect(alert).toHaveClass("toast-error", "toast-inline-compact", "ob-api-error");
+    expect(alert.parentElement).toHaveClass("ob-api-heading");
+  });
+
   it("remasque la cle quand l'utilisateur change de provider", async () => {
     render(<OnboardingApi onComplete={vi.fn()} onBack={vi.fn()} />);
 

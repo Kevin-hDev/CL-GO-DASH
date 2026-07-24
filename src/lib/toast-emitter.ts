@@ -1,4 +1,4 @@
-type ToastType = "success" | "error" | "info" | "check";
+export type ToastType = "success" | "error" | "warning" | "info" | "check";
 type ToastFn = (message: string, type?: ToastType, duration?: number) => void;
 
 let _show: ToastFn = () => {};

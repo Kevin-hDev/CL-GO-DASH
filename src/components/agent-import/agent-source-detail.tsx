@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CaretLeft } from "@/components/ui/icons";
+import { InlineToast } from "@/components/ui/toast";
 import {
   buildSourceSelection,
   createImportDraft,
@@ -52,9 +53,9 @@ export function AgentSourceDetail({
       </div>
 
       {source.partial && (
-        <div className="aim-partial" role="status">
+        <InlineToast type="warning">
           {t("agentImport.detail.partial")}
-        </div>
+        </InlineToast>
       )}
 
       {conflicts.length > 0 && (

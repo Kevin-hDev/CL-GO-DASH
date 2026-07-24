@@ -16,12 +16,12 @@
   background: var(--toast-bg);
   box-shadow: var(--shadow-sm);
   max-width: 300px;
-  animation: toast-in var(--ease-gentle) ease-out;
+  animation: toast-in var(--ease-gentle);
   pointer-events: auto;
 }
 
 .toast-exiting {
-  animation: toast-out var(--ease-gentle) ease-in forwards;
+  animation: toast-out var(--ease-gentle) forwards;
 }
 
 .toast-success {
@@ -29,11 +29,58 @@
 }
 
 .toast-error {
+  position: relative;
+  overflow: hidden;
   color: var(--toast-error-text);
+  border: 1px solid transparent;
+}
+
+.toast-error::before {
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--toast-error-angle),
+    var(--signal-warning),
+    var(--signal-error),
+    var(--signal-warning)
+  );
+  content: "";
+  pointer-events: none;
+  -webkit-mask:
+    linear-gradient(currentColor 0 0) content-box,
+    linear-gradient(currentColor 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(currentColor 0 0) content-box,
+    linear-gradient(currentColor 0 0);
+  mask-composite: exclude;
+  animation: toast-error-border-loop var(--motion-attention-loop) linear infinite;
+}
+
+.toast-warning {
+  border: 1px solid var(--signal-warning);
+  color: var(--ink-muted);
 }
 
 .toast-info {
   color: var(--ink-muted);
+}
+
+.toast-inline {
+  width: 100%;
+  max-width: none;
+  box-shadow: none;
+  animation: none;
+}
+
+.toast-inline-compact {
+  width: auto;
+  padding: var(--space-2xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  line-height: 1.35;
 }
 
 .toast-check {
@@ -45,6 +92,18 @@
   width: 36px;
   height: 36px;
   border-radius: var(--radius-md);
+}
+
+@property --toast-error-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes toast-error-border-loop {
+  to {
+    --toast-error-angle: 360deg;
+  }
 }
 
 @keyframes toast-in {

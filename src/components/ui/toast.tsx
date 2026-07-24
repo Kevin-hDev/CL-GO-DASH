@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback, createContext } from "react";
 import type { ReactNode } from "react";
 import { Check } from "@/components/ui/icons";
-import { registerToast } from "@/lib/toast-emitter";
+import { cn } from "@/lib/utils";
+import { registerToast, type ToastType } from "@/lib/toast-emitter";
 import "./toast.css";
-
-type ToastType = "success" | "error" | "info" | "check";
 
 interface Toast {
   id: number;
@@ -25,6 +24,7 @@ const EXIT_DURATION = 300;
 const DEFAULT_DURATIONS: Record<ToastType, number> = {
   success: 3000,
   error: 3000,
+  warning: 3000,
   info: 3000,
   check: 2000,
 };
@@ -81,4 +81,33 @@ function ToastItem({ toast, onDone }: { toast: Toast; onDone: () => void }) {
   }
 
   return <div className={cls}>{toast.message}</div>;
+}
+
+interface InlineToastProps {
+  children: ReactNode;
+  type: "error" | "warning";
+  compact?: boolean;
+  className?: string;
+}
+
+export function InlineToast({
+  children,
+  type,
+  compact = false,
+  className,
+}: InlineToastProps) {
+  return (
+    <div
+      className={cn(
+        "toast",
+        "toast-inline",
+        `toast-${type}`,
+        compact && "toast-inline-compact",
+        className,
+      )}
+      role={type === "error" ? "alert" : "status"}
+    >
+      {children}
+    </div>
+  );
 }

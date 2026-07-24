@@ -38,6 +38,18 @@
   font-weight: 600;
 }
 
+.ob-api-heading {
+  min-height: var(--control-height-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.ob-api-error {
+  max-width: 65%;
+}
+
 .ob-provider-card {
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
@@ -127,11 +139,6 @@
   background: transparent;
   color: var(--ink-muted);
   cursor: pointer;
-  font-size: var(--text-xs);
-}
-
-.ob-error-text {
-  color: var(--signal-error);
   font-size: var(--text-xs);
 }
 

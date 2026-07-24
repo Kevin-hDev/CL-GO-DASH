@@ -26,6 +26,7 @@
 
   --ease-smooth: 200ms ease-out;
   --ease-gentle: 300ms ease-out;
+  --motion-attention-loop: 2.4s;
 
   /* Z-index scale — any z-index outside this scale is forbidden. */
   --z-base: 0;

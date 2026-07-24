@@ -24,14 +24,6 @@
   font-size: var(--text-xs);
 }
 
-.aim-partial {
-  padding: var(--space-sm) var(--space-md);
-  border: 1px solid var(--signal-warning);
-  border-radius: var(--radius-sm);
-  color: var(--ink-muted);
-  font-size: var(--text-xs);
-}
-
 .aim-item-section {
   padding: var(--space-md) 0;
   border-bottom: 1px solid var(--edge);

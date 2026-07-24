@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-shell";
 import { ArrowSquareOut, CaretRight, Check } from "@/components/ui/icons";
 import { ApiKeySecretInput } from "@/components/api-keys/api-key-secret-input";
+import { InlineToast } from "@/components/ui/toast";
 import { showToast } from "@/lib/toast-emitter";
 import { ProviderIcon } from "@/lib/provider-icons";
 import { getProviderDescription, type ProviderSpec } from "@/types/api";
@@ -120,11 +121,18 @@ export function OnboardingApi({ onComplete, onBack }: OnboardingApiProps) {
       </div>
 
       <div className="ob-api-form">
-        <label className="ob-field-label" htmlFor="ob-api-key">
-          {selected
-            ? t("onboarding.api.keyLabel", { name: selected.display_name })
-            : t("onboarding.api.keyLabelFallback")}
-        </label>
+        <div className="ob-api-heading">
+          <label className="ob-field-label" htmlFor="ob-api-key">
+            {selected
+              ? t("onboarding.api.keyLabel", { name: selected.display_name })
+              : t("onboarding.api.keyLabelFallback")}
+          </label>
+          {saveState === "error" && (
+            <InlineToast type="error" compact className="ob-api-error">
+              {t("errors.operationFailed")}
+            </InlineToast>
+          )}
+        </div>
         <ApiKeySecretInput
           key={selected?.id ?? "empty"}
           id="ob-api-key"
@@ -150,9 +158,6 @@ export function OnboardingApi({ onComplete, onBack }: OnboardingApiProps) {
             {t("onboarding.api.getKey", { name: selected.display_name })}
             <ArrowSquareOut size="var(--icon-13)" />
           </button>
-        )}
-        {saveState === "error" && (
-          <div className="ob-error-text">{t("errors.operationFailed")}</div>
         )}
         {saveState === "saved" && (
           <div className="ob-test-result success">{t("apiKeys.dialog.testOk")}</div>
