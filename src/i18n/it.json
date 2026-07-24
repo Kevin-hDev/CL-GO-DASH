@@ -1025,6 +1025,61 @@
     "loggedOut": "Non connesso",
     "loggingIn": "Connessione in corso…"
   },
+  "agentImport": {
+    "title": "Importa dagli altri assistenti",
+    "description": "Scegli ogni applicazione separatamente. Skill e regole restano in sola lettura nelle cartelle originali.",
+    "loading": "Ricerca delle configurazioni compatibili…",
+    "onboardingLater": "Potrai modificare queste scelte in seguito in Impostazioni > Avanzate.",
+    "status": {
+      "detected": "Rilevato",
+      "empty": "Nessun contenuto compatibile",
+      "missing": "Non rilevato",
+      "unavailable": "Accesso non disponibile"
+    },
+    "card": {
+      "counts": "{{documents}} documento(i) · {{rules}} regola(e) · {{skills}} skill",
+      "activeCount": "{{count}} elemento(i) attivo(i)",
+      "disabled": "Origine disattivata"
+    },
+    "sections": {
+      "documents": "Istruzioni globali",
+      "rules": "Regole",
+      "skills": "Skill"
+    },
+    "detail": {
+      "description": "Seleziona esattamente ciò che CL-GO-DASH può utilizzare.",
+      "selectedCount": "{{selected}} di {{total}} selezionati",
+      "searchSkills": "Cerca skill",
+      "partial": "Una parte di questa configurazione è stata ignorata: un file è troppo grande, una cartella non è accessibile o è stato raggiunto il limite di analisi. Gli elementi mostrati restano utilizzabili.",
+      "updateAvailable": "È disponibile una versione più recente.",
+      "empty": "Nessun contenuto compatibile rilevato per questa origine."
+    },
+    "actions": {
+      "all": "Tutto",
+      "none": "Niente",
+      "back": "Torna alle origini",
+      "confirmSource": "Conferma questa origine",
+      "disable": "Disattiva",
+      "saving": "Salvataggio…",
+      "rescan": "Analizza di nuovo",
+      "retry": "Riprova"
+    },
+    "conflict": {
+      "title": "Esiste già un documento",
+      "description": "{{names}} esiste già in CL-GO-DASH.",
+      "keep": "Annulla",
+      "replace": "Sostituisci con backup"
+    },
+    "messages": {
+      "saved": "Configurazione di importazione salvata",
+      "scanFailed": "Impossibile analizzare le origini in questo momento."
+    },
+    "settings": {
+      "title": "Importa da altri assistenti",
+      "description": "Gestisci regole, istruzioni e skill letti dagli altri strumenti.",
+      "manage": "Gestisci"
+    }
+  },
   "onboarding": {
     "common": {
       "continue": "Continua",

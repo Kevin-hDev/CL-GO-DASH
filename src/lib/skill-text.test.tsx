@@ -4,9 +4,9 @@ import type { SkillInfo } from "@/types/agent";
 import { activeSkillsInText, highlightSkillNodes, replaceSlashToken } from "@/lib/skill-text";
 
 const skills: SkillInfo[] = [
-  { name: "context7-docs", description: "", path: "", source: "user" },
-  { name: "frontend-design", description: "", path: "", source: "user" },
-  { name: "sharp-edges:sharp-edges", description: "", path: "", source: "user" },
+  { id: "local:1", name: "context7-docs", command: "context7-docs", description: "", path: "", source: "local", source_name: "CL-GO-DASH" },
+  { id: "claude:2", name: "frontend-design", command: "claude:frontend-design", description: "", path: "", source: "claude", source_name: "Claude Code" },
+  { id: "agents:3", name: "sharp-edges", command: "agents:sharp-edges:sharp-edges", description: "", path: "", source: "agents", source_name: "Agents" },
 ];
 
 describe("skill-text", () => {
@@ -18,7 +18,7 @@ describe("skill-text", () => {
   });
 
   it("garde les skills actifs uniquement s'ils restent dans le texte", () => {
-    const text = "Charge /context7-docs puis /frontend-design";
+    const text = "Charge /context7-docs puis /claude:frontend-design";
     expect(activeSkillsInText(text, skills).map((s) => s.name)).toEqual([
       "context7-docs",
       "frontend-design",
@@ -30,9 +30,9 @@ describe("skill-text", () => {
   });
 
   it("supporte les noms avec ponctuation sans regex dynamique", () => {
-    const text = "Audit /sharp-edges:sharp-edges.";
+    const text = "Audit /agents:sharp-edges:sharp-edges.";
     expect(activeSkillsInText(text, skills).map((s) => s.name)).toEqual([
-      "sharp-edges:sharp-edges",
+      "sharp-edges",
     ]);
   });
 

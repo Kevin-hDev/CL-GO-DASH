@@ -61,7 +61,7 @@ export function useSlashCommands() {
   const loadSkills = useCallback(() => {
     invoke<SkillInfo[]>("list_skills")
       .then(setSkills)
-      .catch((e: unknown) => console.warn("Erreur chargement skills:", e));
+      .catch(() => console.warn("Erreur chargement skills"));
   }, []);
 
   useEffect(() => { loadSkills(); }, [loadSkills]);
@@ -78,6 +78,7 @@ export function useSlashCommands() {
         ...skills.filter(
           (s) =>
             s.name.toLowerCase().includes(filter.toLowerCase()) ||
+            s.source_name.toLowerCase().includes(filter.toLowerCase()) ||
             s.description.toLowerCase().includes(filter.toLowerCase()),
         ),
       ]
@@ -118,10 +119,10 @@ export function useSlashCommands() {
     setFilter("");
     setActiveIndex(0);
     try {
-      const content = await invoke<string>("load_skill", { name: skill.name });
+      const content = await invoke<string>("load_skill", { skillId: skill.id });
       return { content, skill };
-    } catch (e: unknown) {
-      console.warn("Erreur chargement skill:", e);
+    } catch {
+      console.warn("Erreur chargement skill");
       return null;
     }
   }, []);
@@ -135,10 +136,10 @@ export function useSlashCommands() {
         return { builtIn: item };
       }
       try {
-        const content = await invoke<string>("load_skill", { name: item.name });
+        const content = await invoke<string>("load_skill", { skillId: item.id });
         return { content, skill: item };
-      } catch (e: unknown) {
-        console.warn("Erreur chargement skill:", e);
+      } catch {
+        console.warn("Erreur chargement skill");
         return null;
       }
     },

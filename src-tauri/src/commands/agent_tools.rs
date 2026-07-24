@@ -7,6 +7,6 @@ pub async fn list_skills() -> Result<Vec<SkillInfo>, String> {
 }
 
 #[tauri::command]
-pub async fn load_skill(name: String) -> Result<String, String> {
-    tool_skill_loader::load_skill(&name).await
+pub async fn load_skill(skill_id: String) -> Result<String, String> {
+    tool_skill_loader::load_skill(&skill_id).await
 }

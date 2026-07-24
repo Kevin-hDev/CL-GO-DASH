@@ -8,6 +8,7 @@ type FsEvent =
   | "fs:logs-changed"
   | "fs:connectors-changed"
   | "fs:skills-changed"
+  | "fs:external-agent-sources-changed"
   | "fs:providers-changed";
 
 export function useFsEvent(event: FsEvent, callback: () => void) {

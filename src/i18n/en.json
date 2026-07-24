@@ -1030,6 +1030,61 @@
     "loggedOut": "Not connected",
     "loggingIn": "Connecting…"
   },
+  "agentImport": {
+    "title": "Import from your other assistants",
+    "description": "Choose each application separately. Skills and rules stay read-only in their original folders.",
+    "loading": "Looking for compatible configurations…",
+    "onboardingLater": "You can change these choices later in Settings > Advanced.",
+    "status": {
+      "detected": "Detected",
+      "empty": "No compatible content",
+      "missing": "Not detected",
+      "unavailable": "Access unavailable"
+    },
+    "card": {
+      "counts": "{{documents}} document(s) · {{rules}} rule(s) · {{skills}} skill(s)",
+      "activeCount": "{{count}} active item(s)",
+      "disabled": "Source disabled"
+    },
+    "sections": {
+      "documents": "Global instructions",
+      "rules": "Rules",
+      "skills": "Skills"
+    },
+    "detail": {
+      "description": "Select exactly what CL-GO-DASH may use.",
+      "selectedCount": "{{selected}} of {{total}} selected",
+      "searchSkills": "Search skills",
+      "partial": "Part of this configuration was skipped: a file is too large, a folder is inaccessible, or the scan limit was reached. The items shown remain ready to use.",
+      "updateAvailable": "A newer version is available.",
+      "empty": "No compatible content was detected for this source."
+    },
+    "actions": {
+      "all": "All",
+      "none": "None",
+      "back": "Back to sources",
+      "confirmSource": "Confirm this source",
+      "disable": "Disable",
+      "saving": "Saving…",
+      "rescan": "Scan again",
+      "retry": "Retry"
+    },
+    "conflict": {
+      "title": "A document already exists",
+      "description": "{{names}} already exists in CL-GO-DASH.",
+      "keep": "Cancel",
+      "replace": "Replace with backup"
+    },
+    "messages": {
+      "saved": "Import configuration saved",
+      "scanFailed": "Sources cannot be scanned right now."
+    },
+    "settings": {
+      "title": "Import from other assistants",
+      "description": "Manage rules, instructions, and skills read from your other tools.",
+      "manage": "Manage"
+    }
+  },
   "onboarding": {
     "common": {
       "continue": "Continue",

@@ -85,8 +85,11 @@ pub struct SearchResult {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SkillInfo {
+    pub id: String,
     pub name: String,
+    pub command: String,
     pub description: String,
     pub path: String,
     pub source: String,
+    pub source_name: String,
 }

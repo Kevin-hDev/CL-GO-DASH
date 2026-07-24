@@ -15,12 +15,12 @@ export function activeSkillsInText(
   text: string,
   skills: SkillInfo[],
 ): SkillInfo[] {
-  const activeNames = new Set(
-    splitSkillText(text, skills.map((skill) => skill.name))
+  const activeCommands = new Set(
+    splitSkillText(text, skills.map((skill) => skill.command))
       .filter((part) => part.kind === "skill")
       .map((part) => part.text.slice(1)),
   );
-  return skills.filter((skill) => activeNames.has(skill.name));
+  return skills.filter((skill) => activeCommands.has(skill.command));
 }
 
 export interface ChatChipOptions {

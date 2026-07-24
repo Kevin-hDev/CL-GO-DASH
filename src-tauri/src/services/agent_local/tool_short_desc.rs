@@ -9,7 +9,7 @@
 pub fn tool_short_desc(id: &str) -> Option<&'static str> {
     let desc = match id {
         // workflow (default-on)
-        "load_skill" => "Load a skill by name for specialized workflows",
+        "load_skill" => "Load a skill by its source-qualified ID",
         "ask_user_choice" => "Ask the user to choose between options",
         "delegate_task" => "Spawn a subagent for parallel or isolated work",
         "list_subagents" => "List child subagents for this session",

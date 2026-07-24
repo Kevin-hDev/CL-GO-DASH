@@ -92,6 +92,8 @@ macro_rules! generate {
             crate::commands::cancel_subagent,
             crate::commands::list_skills,
             crate::commands::load_skill,
+            crate::commands::scan_external_agent_sources,
+            crate::commands::save_external_agent_source_selection,
             crate::commands::set_api_key,
             crate::commands::delete_api_key,
             crate::commands::has_api_key,

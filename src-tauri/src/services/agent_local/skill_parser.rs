@@ -1,3 +1,27 @@
+use std::io::Read;
+use std::path::Path;
+
+const MAX_METADATA_BYTES: u64 = 32 * 1024;
+
+pub fn read_skill_metadata(
+    path: &Path,
+    fallback_name: &str,
+    max_file_bytes: u64,
+) -> Option<(String, String)> {
+    let metadata = std::fs::metadata(path).ok()?;
+    if !metadata.is_file() || metadata.len() > max_file_bytes {
+        return None;
+    }
+    let file = std::fs::File::open(path).ok()?;
+    let mut bytes = Vec::with_capacity(MAX_METADATA_BYTES as usize);
+    file.take(MAX_METADATA_BYTES)
+        .read_to_end(&mut bytes)
+        .ok()?;
+    let prefix = String::from_utf8_lossy(&bytes);
+    let (name, description, _) = parse_skill_content(&prefix, fallback_name);
+    Some((name, description))
+}
+
 /// Parsing YAML frontmatter pour les fichiers skill.md / SKILL.md.
 /// Retourne (name, description, body) — body = contenu sans frontmatter.
 pub fn parse_skill_content(content: &str, fallback_name: &str) -> (String, String, String) {
@@ -113,5 +137,20 @@ mod tests {
         assert_eq!(name, "Quoted Name");
         assert_eq!(desc, "Single quoted");
         assert_eq!(body, "Body");
+    }
+
+    #[test]
+    fn metadata_reader_uses_only_bounded_prefix() {
+        let temp = tempfile::TempDir::new().unwrap();
+        let path = temp.path().join("SKILL.md");
+        let mut content = b"---\nname: bounded\ndescription: Prefix only\n---\n".to_vec();
+        content.extend(vec![b'x'; MAX_METADATA_BYTES as usize]);
+        content.push(0xff);
+        std::fs::write(&path, content).unwrap();
+
+        let metadata = read_skill_metadata(&path, "fallback", 256 * 1024).unwrap();
+
+        assert_eq!(metadata.0, "bounded");
+        assert_eq!(metadata.1, "Prefix only");
     }
 }

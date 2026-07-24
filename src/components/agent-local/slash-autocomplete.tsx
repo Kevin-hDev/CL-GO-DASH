@@ -49,7 +49,7 @@ export function SlashAutocomplete({ skills, activeIndex, onSelect }: SlashAutoco
     <div className="slash-dropdown" ref={listRef}>
       {skills.map((item, i) => (
         <div
-          key={item.path}
+          key={isBuiltIn(item) ? item.path : item.id}
           className={`slash-item ${i === activeIndex ? "active" : ""}`}
           role="button"
           tabIndex={0}
@@ -66,7 +66,7 @@ export function SlashAutocomplete({ skills, activeIndex, onSelect }: SlashAutoco
           <span className="slash-item-source">
             {isBuiltIn(item)
               ? t("skills.sourceBuiltIn")
-              : t(`skills.source${item.source === "project" ? "Project" : "User"}`)}
+              : item.source_name}
           </span>
         </div>
       ))}

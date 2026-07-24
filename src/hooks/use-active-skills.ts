@@ -30,19 +30,19 @@ export function useActiveSkills(
     }
 
     const { skill, content } = result;
-    if (!activeSkills.some((s) => s.name === skill.name)) {
+    if (!activeSkills.some((s) => s.id === skill.id)) {
       setActiveSkills((prev) => [...prev, skill]);
     }
-    skillContentsRef.current.set(skill.name, content);
-    setText(replaceSlashToken(text, skill.name));
+    skillContentsRef.current.set(skill.id, content);
+    setText(replaceSlashToken(text, skill.command));
   }, [slash, text, setText, activeSkills]);
 
   const getSkillsPayload = useCallback(() => {
     const visibleSkills = activeSkillsInText(text, activeSkills);
     if (visibleSkills.length === 0) return undefined;
     return visibleSkills.map((s) => ({
-      name: s.name,
-      content: skillContentsRef.current.get(s.name) ?? "",
+      name: s.command,
+      content: skillContentsRef.current.get(s.id) ?? "",
     }));
   }, [activeSkills, text]);
 

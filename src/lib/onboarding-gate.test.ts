@@ -3,6 +3,7 @@ import {
   hasCompletedOnboarding,
   onboardingCompletedPatch,
   ONBOARDING_COMPLETED_KEY,
+  shouldReplayOnboarding,
 } from "./onboarding-gate";
 
 describe("onboarding gate", () => {
@@ -15,5 +16,11 @@ describe("onboarding gate", () => {
   it("genere le patch de completion", () => {
     expect(onboardingCompletedPatch()).toEqual({ [ONBOARDING_COMPLETED_KEY]: true });
     expect(onboardingCompletedPatch(false)).toEqual({ [ONBOARDING_COMPLETED_KEY]: false });
+  });
+
+  it("rejoue l'onboarding uniquement en mode developpement", () => {
+    expect(shouldReplayOnboarding("development")).toBe(true);
+    expect(shouldReplayOnboarding("test")).toBe(false);
+    expect(shouldReplayOnboarding("production")).toBe(false);
   });
 });

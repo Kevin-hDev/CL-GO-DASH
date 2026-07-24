@@ -45,7 +45,7 @@ Default timeout is 120s. For long-running commands, set a higher timeout (up to 
 - **web_search**: Search the web for information.
 - **web_fetch**: Fetch content from a URL.
 - **ask_user_choice**: Ask the user to choose between concrete options when their decision changes the next step.
-- **load_skill**: Load a skill by name for specialized tasks.
+- **load_skill**: Load a skill by its exact source-qualified ID for specialized tasks.
 - **read_spreadsheet**: Read Excel (.xlsx/.xls/.ods) or CSV files. Returns JSON with headers and rows.
 - **write_spreadsheet**: Create or modify Excel (.xlsx) files with operations (set_cell, set_row, set_formula).
 - **read_document**: Extract text from PDF or Word (.docx) files.

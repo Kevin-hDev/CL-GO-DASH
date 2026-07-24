@@ -65,9 +65,12 @@ export interface FileAttachment {
 }
 
 export interface SkillInfo {
+  id: string;
   name: string;
+  command: string;
   description: string;
   path: string;
   source: string;
+  source_name: string;
 }
 import type { GitDiffPreview } from "./file-preview";

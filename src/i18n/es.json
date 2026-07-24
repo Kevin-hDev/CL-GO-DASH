@@ -1025,6 +1025,61 @@
     "loggedOut": "No conectado",
     "loggingIn": "Conectando…"
   },
+  "agentImport": {
+    "title": "Importar desde tus otros asistentes",
+    "description": "Elige cada aplicación por separado. Los skills y las reglas permanecen en modo de solo lectura en sus carpetas originales.",
+    "loading": "Buscando configuraciones compatibles…",
+    "onboardingLater": "Podrás cambiar estas opciones más tarde en Ajustes > Avanzado.",
+    "status": {
+      "detected": "Detectado",
+      "empty": "Sin contenido compatible",
+      "missing": "No detectado",
+      "unavailable": "Acceso no disponible"
+    },
+    "card": {
+      "counts": "{{documents}} documento(s) · {{rules}} regla(s) · {{skills}} skill(s)",
+      "activeCount": "{{count}} elemento(s) activo(s)",
+      "disabled": "Fuente desactivada"
+    },
+    "sections": {
+      "documents": "Instrucciones globales",
+      "rules": "Reglas",
+      "skills": "Skills"
+    },
+    "detail": {
+      "description": "Selecciona exactamente lo que CL-GO-DASH puede usar.",
+      "selectedCount": "{{selected}} de {{total}} seleccionado(s)",
+      "searchSkills": "Buscar skills",
+      "partial": "Se ha ignorado parte de esta configuración: un archivo es demasiado grande, una carpeta es inaccesible o se alcanzó el límite de análisis. Los elementos mostrados siguen disponibles.",
+      "updateAvailable": "Hay una versión más reciente disponible.",
+      "empty": "No se detectó contenido compatible para esta fuente."
+    },
+    "actions": {
+      "all": "Todo",
+      "none": "Nada",
+      "back": "Volver a las fuentes",
+      "confirmSource": "Confirmar esta fuente",
+      "disable": "Desactivar",
+      "saving": "Guardando…",
+      "rescan": "Analizar de nuevo",
+      "retry": "Reintentar"
+    },
+    "conflict": {
+      "title": "Ya existe un documento",
+      "description": "{{names}} ya existe en CL-GO-DASH.",
+      "keep": "Cancelar",
+      "replace": "Reemplazar con copia"
+    },
+    "messages": {
+      "saved": "Configuración de importación guardada",
+      "scanFailed": "No se pueden analizar las fuentes ahora."
+    },
+    "settings": {
+      "title": "Importar desde otros asistentes",
+      "description": "Gestiona reglas, instrucciones y skills leídos desde tus otras herramientas.",
+      "manage": "Gestionar"
+    }
+  },
   "onboarding": {
     "common": {
       "continue": "Continuar",

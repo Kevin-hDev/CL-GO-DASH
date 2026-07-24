@@ -8,6 +8,7 @@ import {
 import {
   hasCompletedOnboarding,
   onboardingCompletedPatch,
+  shouldReplayOnboarding,
 } from "@/lib/onboarding-gate";
 
 type StartupView = "loading" | "onboarding" | "ollama" | "app";
@@ -36,10 +37,12 @@ export function useStartupGate() {
           installed,
           skipped: hasSkippedOllamaSetup(settings),
         });
+        const showOnboarding = shouldReplayOnboarding(import.meta.env.MODE)
+          || !hasCompletedOnboarding(settings);
         setState({
-          view: hasCompletedOnboarding(settings)
-            ? showOllama ? "ollama" : "app"
-            : "onboarding",
+          view: showOnboarding
+            ? "onboarding"
+            : showOllama ? "ollama" : "app",
           showOllamaSetup: showOllama,
         });
       } catch {

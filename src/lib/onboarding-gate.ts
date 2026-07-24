@@ -7,3 +7,7 @@ export function hasCompletedOnboarding(settings: Record<string, unknown> | null 
 export function onboardingCompletedPatch(completed = true): Record<string, boolean> {
   return { [ONBOARDING_COMPLETED_KEY]: completed };
 }
+
+export function shouldReplayOnboarding(mode: string): boolean {
+  return mode === "development";
+}

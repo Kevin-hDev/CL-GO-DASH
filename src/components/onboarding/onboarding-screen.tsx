@@ -5,6 +5,7 @@ import { OllamaSetupScreen } from "@/components/ollama/ollama-setup-screen";
 import { IS_MAC } from "@/lib/platform";
 import { OnboardingWelcome } from "./onboarding-welcome";
 import { OnboardingPreferences } from "./onboarding-preferences";
+import { OnboardingAgentImport } from "./onboarding-agent-import";
 import { OnboardingApi } from "./onboarding-api";
 import "./onboarding.css";
 import "./onboarding-form.css";
@@ -56,6 +57,10 @@ export function OnboardingScreen({
           onNext={goNext}
         />
       ),
+    },
+    {
+      id: "agent-import",
+      content: <OnboardingAgentImport onNext={goNext} />,
     },
     { id: "api", content: <OnboardingApi onComplete={finishApiStep} /> },
     ...(showOllamaStep

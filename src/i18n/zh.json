@@ -1025,6 +1025,61 @@
     "loggedOut": "未连接",
     "loggingIn": "连接中…"
   },
+  "agentImport": {
+    "title": "从其他助手导入",
+    "description": "请分别选择每个应用。技能和规则会以只读方式保留在原始文件夹中。",
+    "loading": "正在查找兼容配置…",
+    "onboardingLater": "之后可在“设置 > 高级”中修改这些选择。",
+    "status": {
+      "detected": "已检测",
+      "empty": "没有兼容内容",
+      "missing": "未检测到",
+      "unavailable": "无法访问"
+    },
+    "card": {
+      "counts": "{{documents}} 个文档 · {{rules}} 条规则 · {{skills}} 个技能",
+      "activeCount": "{{count}} 个项目已启用",
+      "disabled": "来源已禁用"
+    },
+    "sections": {
+      "documents": "全局指令",
+      "rules": "规则",
+      "skills": "技能"
+    },
+    "detail": {
+      "description": "准确选择 CL-GO-DASH 可以使用的内容。",
+      "selectedCount": "已选择 {{selected}} / {{total}}",
+      "searchSkills": "搜索技能",
+      "partial": "此配置的一部分已被跳过：文件过大、文件夹无法访问或已达到扫描上限。下方显示的项目仍可正常使用。",
+      "updateAvailable": "有更新版本可用。",
+      "empty": "此来源未检测到兼容内容。"
+    },
+    "actions": {
+      "all": "全部",
+      "none": "全不选",
+      "back": "返回来源",
+      "confirmSource": "确认此来源",
+      "disable": "禁用",
+      "saving": "正在保存…",
+      "rescan": "重新扫描",
+      "retry": "重试"
+    },
+    "conflict": {
+      "title": "文档已存在",
+      "description": "{{names}} 已存在于 CL-GO-DASH 中。",
+      "keep": "取消",
+      "replace": "备份后替换"
+    },
+    "messages": {
+      "saved": "导入配置已保存",
+      "scanFailed": "目前无法扫描来源。"
+    },
+    "settings": {
+      "title": "从其他助手导入",
+      "description": "管理从其他工具读取的规则、指令和技能。",
+      "manage": "管理"
+    }
+  },
   "onboarding": {
     "common": {
       "continue": "继续",

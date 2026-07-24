@@ -51,7 +51,7 @@ async fn project_only_no_global() {
     let result = load_agent_md_from(data.path(), Some(proj.path())).await;
     let content = result.unwrap();
     assert!(content.contains("Project only"));
-    assert!(!content.contains("global instructions"));
+    assert!(!content.contains("imported global instructions"));
 }
 
 #[tokio::test]

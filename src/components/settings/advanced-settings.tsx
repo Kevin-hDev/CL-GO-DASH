@@ -9,6 +9,7 @@ import { SettingsRow } from "./settings-row";
 import { SettingsSelect, type SelectGroup } from "./settings-select";
 import { PathListEditor } from "./path-list-editor";
 import { OllamaSettingsSection } from "./ollama-settings-section";
+import { AgentImportSettings } from "@/components/agent-import/agent-import-settings";
 import { notifySettingsChanged } from "@/hooks/use-setting-value";
 import { showToast } from "@/lib/toast-emitter";
 import i18n from "@/i18n";
@@ -97,6 +98,8 @@ export function AdvancedSettings() {
     <div style={{ padding: 24, overflowY: "auto", flex: 1 }}>
       <div style={{ maxWidth: 600, width: "100%", margin: "0 auto" }}>
         <h2 style={titleStyle}>{t("settings.tabs.advanced")}</h2>
+
+        <AgentImportSettings />
 
         <SettingsCard>
           <SettingsRow

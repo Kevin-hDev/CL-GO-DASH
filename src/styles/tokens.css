@@ -62,6 +62,10 @@
   --chat-column-width: 720px;
   --dialog-compact-min-width: 18.75rem;
   --dialog-compact-max-width: 27.5rem;
+  --dialog-wide-max-width: 53.75rem;
+  --dialog-tall-max-height: 45rem;
+  --onboarding-panel-max-height: 43rem;
+  --control-height-sm: 1.75rem;
   --summary-commit-row-height: 2rem;
   --summary-icon-column: 1.3333rem;
   --summary-panel-indent: 1.8889rem;

@@ -109,7 +109,15 @@ pub(crate) async fn skills_tuples(load: bool) -> Vec<(String, String)> {
         .await
         .unwrap_or_default()
         .iter()
-        .map(|s| (s.name.clone(), s.description.clone()))
+        .map(|skill| {
+            (
+                skill.id.clone(),
+                format!(
+                    "{} [{}] — {}",
+                    skill.name, skill.source_name, skill.description
+                ),
+            )
+        })
         .collect()
 }
 

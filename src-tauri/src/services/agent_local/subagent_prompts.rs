@@ -16,7 +16,15 @@ pub async fn system(
             .await
             .unwrap_or_default()
             .into_iter()
-            .map(|skill| (skill.name, skill.description))
+            .map(|skill| {
+                (
+                    skill.id,
+                    format!(
+                        "{} [{}] — {}",
+                        skill.name, skill.source_name, skill.description
+                    ),
+                )
+            })
             .collect()
     } else {
         Vec::new()

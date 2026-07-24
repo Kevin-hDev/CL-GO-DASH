@@ -1025,6 +1025,61 @@
     "loggedOut": "Nicht verbunden",
     "loggingIn": "Verbindung wird hergestellt…"
   },
+  "agentImport": {
+    "title": "Aus anderen Assistenten importieren",
+    "description": "Wähle jede Anwendung einzeln. Skills und Regeln bleiben schreibgeschützt in ihren ursprünglichen Ordnern.",
+    "loading": "Kompatible Konfigurationen werden gesucht…",
+    "onboardingLater": "Du kannst diese Auswahl später unter Einstellungen > Erweitert ändern.",
+    "status": {
+      "detected": "Erkannt",
+      "empty": "Keine kompatiblen Inhalte",
+      "missing": "Nicht erkannt",
+      "unavailable": "Zugriff nicht möglich"
+    },
+    "card": {
+      "counts": "{{documents}} Dokument(e) · {{rules}} Regel(n) · {{skills}} Skill(s)",
+      "activeCount": "{{count}} aktive Elemente",
+      "disabled": "Quelle deaktiviert"
+    },
+    "sections": {
+      "documents": "Globale Anweisungen",
+      "rules": "Regeln",
+      "skills": "Skills"
+    },
+    "detail": {
+      "description": "Wähle genau aus, was CL-GO-DASH verwenden darf.",
+      "selectedCount": "{{selected}} von {{total}} ausgewählt",
+      "searchSkills": "Skills suchen",
+      "partial": "Ein Teil dieser Konfiguration wurde übersprungen: Eine Datei ist zu groß, ein Ordner ist nicht zugänglich oder das Scan-Limit wurde erreicht. Die angezeigten Elemente bleiben nutzbar.",
+      "updateAvailable": "Eine neuere Version ist verfügbar.",
+      "empty": "Für diese Quelle wurden keine kompatiblen Inhalte erkannt."
+    },
+    "actions": {
+      "all": "Alle",
+      "none": "Keine",
+      "back": "Zurück zu den Quellen",
+      "confirmSource": "Quelle bestätigen",
+      "disable": "Deaktivieren",
+      "saving": "Speichern…",
+      "rescan": "Erneut prüfen",
+      "retry": "Erneut versuchen"
+    },
+    "conflict": {
+      "title": "Ein Dokument ist bereits vorhanden",
+      "description": "{{names}} ist bereits in CL-GO-DASH vorhanden.",
+      "keep": "Abbrechen",
+      "replace": "Mit Sicherung ersetzen"
+    },
+    "messages": {
+      "saved": "Importkonfiguration gespeichert",
+      "scanFailed": "Die Quellen können derzeit nicht geprüft werden."
+    },
+    "settings": {
+      "title": "Aus anderen Assistenten importieren",
+      "description": "Verwalte Regeln, Anweisungen und Skills aus deinen anderen Werkzeugen.",
+      "manage": "Verwalten"
+    }
+  },
   "onboarding": {
     "common": {
       "continue": "Weiter",

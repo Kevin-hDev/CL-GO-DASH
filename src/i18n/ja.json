@@ -1025,6 +1025,61 @@
     "loggedOut": "未接続",
     "loggingIn": "接続中…"
   },
+  "agentImport": {
+    "title": "他のアシスタントからインポート",
+    "description": "アプリごとに選択します。スキルとルールは元のフォルダーに読み取り専用で残ります。",
+    "loading": "互換性のある設定を検索しています…",
+    "onboardingLater": "この選択は後で「設定 > 詳細」から変更できます。",
+    "status": {
+      "detected": "検出済み",
+      "empty": "互換コンテンツなし",
+      "missing": "未検出",
+      "unavailable": "アクセス不可"
+    },
+    "card": {
+      "counts": "文書 {{documents}} · ルール {{rules}} · スキル {{skills}}",
+      "activeCount": "{{count}} 件が有効",
+      "disabled": "ソースは無効"
+    },
+    "sections": {
+      "documents": "グローバル指示",
+      "rules": "ルール",
+      "skills": "スキル"
+    },
+    "detail": {
+      "description": "CL-GO-DASH が使用できる内容を正確に選択します。",
+      "selectedCount": "{{total}} 件中 {{selected}} 件を選択",
+      "searchSkills": "スキルを検索",
+      "partial": "この設定の一部をスキップしました。ファイルが大きすぎる、フォルダーにアクセスできない、またはスキャン上限に達した可能性があります。表示されている項目は引き続き使用できます。",
+      "updateAvailable": "新しいバージョンを利用できます。",
+      "empty": "このソースに互換コンテンツは見つかりませんでした。"
+    },
+    "actions": {
+      "all": "すべて",
+      "none": "なし",
+      "back": "ソースに戻る",
+      "confirmSource": "このソースを確認",
+      "disable": "無効化",
+      "saving": "保存中…",
+      "rescan": "再スキャン",
+      "retry": "再試行"
+    },
+    "conflict": {
+      "title": "文書がすでに存在します",
+      "description": "{{names}} は CL-GO-DASH にすでに存在します。",
+      "keep": "キャンセル",
+      "replace": "バックアップして置換"
+    },
+    "messages": {
+      "saved": "インポート設定を保存しました",
+      "scanFailed": "現在ソースをスキャンできません。"
+    },
+    "settings": {
+      "title": "他のアシスタントからインポート",
+      "description": "他のツールから読み取るルール、指示、スキルを管理します。",
+      "manage": "管理"
+    }
+  },
   "onboarding": {
     "common": {
       "continue": "続ける",

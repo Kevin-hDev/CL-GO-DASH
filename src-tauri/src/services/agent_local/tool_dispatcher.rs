@@ -132,10 +132,10 @@ pub(super) async fn dispatch_inner(
             }
         }
         "load_skill" => {
-            let name = args["skill_name"].as_str().unwrap_or("");
-            match tool_skill_loader::load_skill(name).await {
+            let skill_id = args["skill_id"].as_str().unwrap_or("");
+            match tool_skill_loader::load_skill(skill_id).await {
                 Ok(content) => ToolResult::ok(format!(
-                    "Skill '{name}' loaded. Follow its instructions:\n\n{content}"
+                    "Skill loaded. Follow its instructions:\n\n{content}"
                 )),
                 Err(e) => ToolResult::err(e),
             }

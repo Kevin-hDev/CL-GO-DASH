@@ -24,7 +24,7 @@ Prefer this over write_file for modifications — it sends only the diff.
 - **web_search**: Search the web for current information, documentation, or solutions.
 - **web_fetch**: Fetch and extract content from a URL.
 - **ask_user_choice**: Ask the user to choose between concrete options when their decision changes the next step.
-- **load_skill**: Load a skill by name for specialized workflows.
+- **load_skill**: Load a skill by its exact source-qualified ID for specialized workflows.
 - **read_spreadsheet**: Read Excel (.xlsx/.xls/.ods) or CSV/TSV files. Returns structured JSON with headers and rows. \
 Supports sheet selection, cell range filtering, and row limits.
 - **write_spreadsheet**: Create or modify Excel (.xlsx) files using operations: \

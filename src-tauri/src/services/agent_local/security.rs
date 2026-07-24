@@ -38,7 +38,7 @@ fn config_allowed_paths() -> Vec<PathBuf> {
 }
 
 pub fn allowed_write_roots() -> Vec<PathBuf> {
-    allowed_read_roots()
+    base_allowed_roots()
 }
 
 pub fn check_destructive_command(cmd: &str) -> Result<(), String> {
@@ -63,11 +63,24 @@ pub fn check_destructive_command(cmd: &str) -> Result<(), String> {
 }
 
 pub fn allowed_read_roots() -> Vec<PathBuf> {
-    let mut raw = config_allowed_paths();
-    raw.push(crate::services::paths::data_dir());
-    raw.push(std::env::temp_dir());
-    raw.into_iter()
-        .map(|p| p.canonicalize().unwrap_or(p))
+    let mut roots = base_allowed_roots();
+    if let Some(home) = dirs::home_dir() {
+        for root in crate::services::agent_import::selected_skill_roots(&home) {
+            if !roots.contains(&root) {
+                roots.push(root);
+            }
+        }
+    }
+    roots
+}
+
+fn base_allowed_roots() -> Vec<PathBuf> {
+    let mut roots = config_allowed_paths();
+    roots.push(crate::services::paths::data_dir());
+    roots.push(std::env::temp_dir());
+    roots
+        .into_iter()
+        .map(|path| path.canonicalize().unwrap_or(path))
         .collect()
 }
 

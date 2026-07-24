@@ -17,9 +17,12 @@ import type { BuiltInCommand } from "@/hooks/use-slash-commands";
 import type { SkillInfo } from "@/types/agent";
 
 const mockSkill: SkillInfo = {
+  id: "local:skill:hk-dev",
   name: "hk-dev",
+  command: "hk-dev",
   description: "Skill de développement",
-  source: "user",
+  source: "local",
+  source_name: "CL-GO-DASH",
   path: "/some/path/hk-dev.md",
 };
 
