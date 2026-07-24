@@ -114,10 +114,11 @@
   border-color: transparent;
   background: var(--pulse);
   color: var(--ink-on-pulse);
+  box-shadow: none;
 }
 
 .ollama-btn-primary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--pulse) 88%, black);
+  background: color-mix(in srgb, var(--pulse) 90%, white);
 }
 
 /* Annulation d'un flux destructif — secondaire neutre au repos,

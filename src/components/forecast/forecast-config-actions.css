@@ -26,7 +26,7 @@
 }
 
 .fcc-launch:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--pulse) 88%, black);
+  background: color-mix(in srgb, var(--pulse) 90%, white);
 }
 
 .fcc-launch:disabled {

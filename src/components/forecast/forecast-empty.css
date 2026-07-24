@@ -82,11 +82,12 @@
   border-color: transparent;
   background: var(--pulse);
   color: var(--ink-on-pulse);
+  box-shadow: none;
 }
 
 .fc-empty-btn-primary:hover:not(:disabled) {
   border-color: transparent;
-  background: color-mix(in srgb, var(--pulse) 88%, black);
+  background: color-mix(in srgb, var(--pulse) 90%, white);
   color: var(--ink-on-pulse);
 }
 

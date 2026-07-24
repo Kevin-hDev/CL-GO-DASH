@@ -41,7 +41,7 @@
 
   /* Aliases — tokens référencés par les composants (spec phase 2 §2) */
   --accent: var(--pulse);
-  --pulse-hover: color-mix(in srgb, var(--pulse) 88%, black);
+  --pulse-hover: color-mix(in srgb, var(--pulse) 90%, white);
   --danger: var(--signal-error);
   --red: var(--signal-error);
   --border-subtle: var(--edge);
