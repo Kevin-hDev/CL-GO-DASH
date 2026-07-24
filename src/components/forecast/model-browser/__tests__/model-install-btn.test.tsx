@@ -42,7 +42,7 @@ describe("ModelInstallBtn", () => {
     invoke.mockResolvedValue(undefined);
   });
 
-  it("desactive le bouton si un autre telechargement tourne", () => {
+  it("permet d'ajouter le modele a la file si une autre operation tourne", () => {
     mockedUseModelDownloads.mockReturnValue({
       activeDownload: { id: "other", kind: "ollama", modelId: "llama3" },
       startDownload,
@@ -59,23 +59,29 @@ describe("ModelInstallBtn", () => {
       />,
     );
 
-    expect(screen.getByRole("button").hasAttribute("disabled")).toBe(true);
-    expect(screen.getByText("modelDownloads.busy")).toBeTruthy();
+    const button = screen.getByRole("button");
+    expect(button.hasAttribute("disabled")).toBe(false);
+    fireEvent.click(button);
+    expect(startDownload).toHaveBeenCalledWith({
+      kind: "forecast",
+      modelId: "chronos-tiny",
+    });
   });
 
   it("garde la progression visible pour son propre modele", () => {
+    const ownDownload = {
+      id: "forecast-1",
+      kind: "forecast" as const,
+      modelId: "chronos-tiny",
+      status: "running" as const,
+      phase: "preparing-runtime" as const,
+      percent: 58,
+    };
     mockedUseModelDownloads.mockReturnValue({
-      activeDownload: {
-        id: "forecast-1",
-        kind: "forecast",
-        modelId: "chronos-tiny",
-        status: "running",
-        phase: "preparing-runtime",
-        percent: 58,
-      },
+      activeDownload: ownDownload,
       startDownload,
       cancelDownload,
-      downloads: [],
+      downloads: [ownDownload],
     });
 
     render(
@@ -91,6 +97,34 @@ describe("ModelInstallBtn", () => {
     expect(screen.getByText("58%")).toBeTruthy();
     fireEvent.click(screen.getByText("forecast.models.cancel"));
     expect(cancelDownload).toHaveBeenCalledWith("forecast-1");
+  });
+
+  it("affiche un modele en attente et permet de l'annuler", () => {
+    mockedUseModelDownloads.mockReturnValue({
+      activeDownload: { id: "other", kind: "ollama", modelId: "llama3" },
+      startDownload,
+      cancelDownload,
+      downloads: [{
+        id: "forecast-queued",
+        kind: "forecast",
+        modelId: "chronos-tiny",
+        status: "queued",
+        phase: "starting",
+      }],
+    });
+
+    render(
+      <ModelInstallBtn
+        modelId="chronos-tiny"
+        installed={false}
+        runtimeReady={false}
+        onDone={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("modelDownloads.queued")).toBeTruthy();
+    fireEvent.click(screen.getByText("forecast.models.cancel"));
+    expect(cancelDownload).toHaveBeenCalledWith("forecast-queued");
   });
 
   it("demarre le telechargement global", () => {
@@ -162,6 +196,29 @@ describe("ModelInstallBtn", () => {
     );
 
     expect(screen.getByRole("alert").textContent).toBe("errors.downloadFailed");
+  });
+
+  it("distingue un refus de mise en file d'un echec de telechargement", async () => {
+    startDownload.mockRejectedValueOnce(new Error("queue full"));
+    mockedUseModelDownloads.mockReturnValue({
+      activeDownload: null,
+      startDownload,
+      cancelDownload,
+      downloads: [],
+    });
+
+    render(
+      <ModelInstallBtn
+        modelId="chronos-tiny"
+        installed={false}
+        runtimeReady={false}
+        onDone={vi.fn()}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button"));
+
+    await waitFor(() => expect(screen.getByRole("alert").textContent)
+      .toBe("modelDownloads.errors.queueUnavailable"));
   });
 
   it.each([true, false])("confirme la desinstallation, moteur pret=%s", async (runtimeReady) => {

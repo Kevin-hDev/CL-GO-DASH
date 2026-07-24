@@ -54,6 +54,30 @@ pub async fn run_ollama_download(
     finish_ollama(app, manager, state, result, saved, digests).await;
 }
 
+pub async fn run_download_queue(
+    app: AppHandle,
+    manager: ModelDownloadManager,
+    mut state: ModelDownloadState,
+    mut cancel: CancellationToken,
+) {
+    loop {
+        match state.kind {
+            ModelDownloadKind::Ollama => {
+                run_ollama_download(app.clone(), manager.clone(), state, cancel).await;
+            }
+            ModelDownloadKind::Forecast => {
+                run_forecast_download(app.clone(), manager.clone(), state, cancel).await;
+            }
+        }
+        let Some((next_state, next_cancel)) = manager.activate_next().await else {
+            break;
+        };
+        state = next_state;
+        cancel = next_cancel;
+        emit_states(&app, manager.list().await);
+    }
+}
+
 async fn finish_ollama(
     app: AppHandle,
     manager: ModelDownloadManager,
@@ -113,15 +137,24 @@ pub async fn run_forecast_download(
     cancel: CancellationToken,
 ) {
     let id = state.id.clone();
-    let result = model_manager::install_with_callback(&state.model_id, &cancel, |progress| {
-        let manager = manager.clone();
-        let app = app.clone();
-        let id = id.clone();
-        tauri::async_runtime::spawn(async move {
-            emit_states(&app, manager.progress(&id, progress).await);
-        });
-    })
-    .await;
+    let resources = crate::storage_migration_files::install_forecast_sidecar(
+        &app,
+        &crate::services::paths::data_dir(),
+    );
+    let result = match resources {
+        Ok(()) => {
+            model_manager::install_with_callback(&state.model_id, &cancel, |progress| {
+                let manager = manager.clone();
+                let app = app.clone();
+                let id = id.clone();
+                tauri::async_runtime::spawn(async move {
+                    emit_states(&app, manager.progress(&id, progress).await);
+                });
+            })
+            .await
+        }
+        Err(error) => Err(error),
+    };
     finish_forecast(app, manager, state, result).await;
 }
 

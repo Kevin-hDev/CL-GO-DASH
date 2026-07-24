@@ -23,11 +23,12 @@ function isEscapeKey(e: KeyboardEvent): boolean {
 export function ModelInstallButton(props: ModelInstallButtonProps) {
   const { fullName, isInstalled, hasUpdate, sizeGb } = props;
   const { t } = useTranslation();
-  const { activeDownload, startDownload, cancelDownload } = useModelDownloads();
-  const ownDownload = activeDownload?.kind === "ollama" && activeDownload.modelId === fullName
-    ? activeDownload
-    : null;
-  const blocked = Boolean(activeDownload && !ownDownload);
+  const { downloads, startDownload, cancelDownload } = useModelDownloads();
+  const ownDownload = downloads.find(
+    (item) => item.kind === "ollama"
+      && item.modelId === fullName
+      && (item.status === "running" || item.status === "queued"),
+  ) ?? null;
 
   const handleInstall = useCallback(async () => {
     if (sizeGb && sizeGb > 0) {
@@ -42,7 +43,7 @@ export function ModelInstallButton(props: ModelInstallButtonProps) {
         isUpdate: isInstalled && hasUpdate,
       });
     } catch {
-      showToast(t("modelDownloads.errors.alreadyActive"), "info", 3000);
+      showToast(t("modelDownloads.errors.queueUnavailable"), "info", 3000);
     }
   }, [fullName, hasUpdate, isInstalled, sizeGb, startDownload, t]);
 
@@ -60,14 +61,17 @@ export function ModelInstallButton(props: ModelInstallButtonProps) {
   }, [handleCancel, ownDownload]);
 
   if (ownDownload) {
+    const queued = ownDownload.status === "queued";
     return (
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
-          <div className="ollama-progress-bar">
-            <div className="ollama-progress-fill" style={{ width: `${ownDownload.percent}%` }} />
-          </div>
+          {!queued && (
+            <div className="ollama-progress-bar">
+              <div className="ollama-progress-fill" style={{ width: `${ownDownload.percent}%` }} />
+            </div>
+          )}
           <span style={{ fontSize: "var(--text-xs)", color: "var(--ink-faint)" }}>
-            {t(`modelDownloads.phases.${ownDownload.phase}`)}
+            {queued ? t("modelDownloads.queued") : t(`modelDownloads.phases.${ownDownload.phase}`)}
           </span>
         </div>
         <button
@@ -91,18 +95,13 @@ export function ModelInstallButton(props: ModelInstallButtonProps) {
     );
   }
 
-  const label = blocked
-    ? t("modelDownloads.busy")
-    : isInstalled && hasUpdate
-      ? t("ollama.update")
-      : t("ollama.install");
+  const label = isInstalled && hasUpdate ? t("ollama.update") : t("ollama.install");
 
   const showUpdateTooltip = isInstalled && hasUpdate;
   const button = (
     <button
       className="ollama-btn ollama-btn-primary"
       style={{ width: BTN_WIDTH }}
-      disabled={blocked}
       onClick={() => void handleInstall()}
     >
       {label}

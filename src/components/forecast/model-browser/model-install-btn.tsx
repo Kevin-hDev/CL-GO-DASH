@@ -27,11 +27,15 @@ export function ModelInstallBtn({
   const { t } = useTranslation();
   const [uninstalling, setUninstalling] = useState(false);
   const [startFailed, setStartFailed] = useState(false);
-  const { activeDownload, startDownload, cancelDownload, downloads } = useModelDownloads();
-  const ownDownload = activeDownload?.kind === "forecast" && activeDownload.modelId === modelId
-    ? activeDownload
-    : null;
-  const blocked = Boolean(activeDownload && !ownDownload);
+  const { startDownload, cancelDownload, downloads } = useModelDownloads();
+  const ownDownload = downloads.find(
+    (item) => item.kind === "forecast"
+      && item.modelId === modelId
+      && (item.status === "running" || item.status === "queued"),
+  ) ?? null;
+  const hasPendingDownloads = downloads.some(
+    (item) => item.status === "running" || item.status === "queued",
+  );
   const finishedOwn = downloads.find(
     (item) => item.kind === "forecast" && item.modelId === modelId && item.status === "completed",
   );
@@ -78,15 +82,20 @@ export function ModelInstallBtn({
   }, [handleCancel, ownDownload]);
 
   if (ownDownload) {
+    const queued = ownDownload.status === "queued";
     return (
       <div className="fmi-progress">
         <span className="fmi-phase">
-          {t(`modelDownloads.phases.${ownDownload.phase}`)}
+          {queued ? t("modelDownloads.queued") : t(`modelDownloads.phases.${ownDownload.phase}`)}
         </span>
-        <div className="fmi-bar">
-          <div className="fmi-fill" style={{ transform: `scaleX(${ownDownload.percent / 100})` }} />
-        </div>
-        <span className="fmi-pct">{ownDownload.percent}%</span>
+        {!queued && (
+          <>
+            <div className="fmi-bar">
+              <div className="fmi-fill" style={{ transform: `scaleX(${ownDownload.percent / 100})` }} />
+            </div>
+            <span className="fmi-pct">{ownDownload.percent}%</span>
+          </>
+        )}
         <button className="ollama-btn fmi-cancel" onClick={() => void handleCancel()}>
           {t("forecast.models.cancel")}
         </button>
@@ -98,17 +107,17 @@ export function ModelInstallBtn({
     <div className="fmi-action">
       <button
         className="ollama-btn fmi-btn"
-        disabled={blocked}
         onClick={() => void handleInstall()}
       >
-        {blocked
-          ? t("modelDownloads.busy")
-          : installed
-            ? t("forecast.models.prepare")
-            : t("forecast.models.install")}
+        {installed ? t("forecast.models.prepare") : t("forecast.models.install")}
       </button>
-      {(failedOwn || startFailed) && (
+      {failedOwn && (
         <span className="fmi-error" role="alert">{t("errors.downloadFailed")}</span>
+      )}
+      {startFailed && (
+        <span className="fmi-error" role="alert">
+          {t("modelDownloads.errors.queueUnavailable")}
+        </span>
       )}
     </div>
   );
@@ -122,7 +131,7 @@ export function ModelInstallBtn({
           label={uninstalling ? t("forecast.models.uninstalling") : t("forecast.models.uninstall")}
           confirmLabel={t("forecast.models.confirmUninstall")}
           onConfirm={() => void handleUninstall()}
-          disabled={uninstalling || blocked}
+          disabled={uninstalling || hasPendingDownloads}
         />
       </div>
     );

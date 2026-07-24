@@ -501,7 +501,7 @@
     }
   },
   "modelDownloads": {
-    "busy": "Belegt",
+    "queued": "In Warteschlange",
     "kinds": {
       "ollama": "Ollama",
       "forecast": "Forecast"
@@ -514,7 +514,7 @@
       "completed": "Abgeschlossen"
     },
     "errors": {
-      "alreadyActive": "Ein Modelldownload läuft bereits."
+      "queueUnavailable": "Dieses Modell konnte nicht zur Warteschlange hinzugefügt werden."
     }
   },
   "ollama": {

@@ -42,7 +42,9 @@
   overflow-y: auto;
   overflow-x: hidden;
   flex: 1;
+  min-height: 0;
   min-width: 0;
+  overscroll-behavior: contain;
 }
 
 .ms-empty {
@@ -186,4 +188,3 @@
   white-space: nowrap;
   flex-shrink: 0;
 }
-

@@ -506,7 +506,7 @@
     }
   },
   "modelDownloads": {
-    "busy": "Occupé",
+    "queued": "En attente",
     "kinds": {
       "ollama": "Ollama",
       "forecast": "Forecast"
@@ -519,7 +519,7 @@
       "completed": "Terminé"
     },
     "errors": {
-      "alreadyActive": "Un téléchargement de modèle est déjà en cours."
+      "queueUnavailable": "Impossible d'ajouter ce modèle à la file d'attente."
     }
   },
   "ollama": {

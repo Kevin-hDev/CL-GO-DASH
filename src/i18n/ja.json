@@ -501,7 +501,7 @@
     }
   },
   "modelDownloads": {
-    "busy": "使用中",
+    "queued": "待機中",
     "kinds": {
       "ollama": "Ollama",
       "forecast": "Forecast"
@@ -514,7 +514,7 @@
       "completed": "完了"
     },
     "errors": {
-      "alreadyActive": "モデルのダウンロードがすでに実行中です。"
+      "queueUnavailable": "このモデルをキューに追加できませんでした。"
     }
   },
   "ollama": {

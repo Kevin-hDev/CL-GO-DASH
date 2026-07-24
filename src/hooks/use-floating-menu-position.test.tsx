@@ -83,4 +83,24 @@ describe("useFloatingMenuPosition", () => {
       visibility: "visible",
     }));
   });
+
+  it("anchors an above menu by its bottom edge so expansion cannot move it", async () => {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockReturnValue({
+        x: 100, y: 300, top: 300, right: 180, bottom: 328, left: 100,
+        width: 80, height: 28, toJSON: () => ({}),
+      });
+    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(160);
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(60);
+    vi.stubGlobal("innerWidth", 600);
+    vi.stubGlobal("innerHeight", 500);
+
+    render(<FloatingFixture />);
+
+    await waitFor(() => expect(screen.getByText("menu")).toHaveStyle({
+      bottom: "206px",
+      top: "auto",
+      maxHeight: "282px",
+    }));
+  });
 });

@@ -121,7 +121,7 @@ export function useUpdateChecker() {
         isUpdate: true,
       });
     } catch {
-      showToast(i18n.t("modelDownloads.errors.alreadyActive"), "error");
+      showToast(i18n.t("modelDownloads.errors.queueUnavailable"), "error");
     }
   }, [startDownload]);
 

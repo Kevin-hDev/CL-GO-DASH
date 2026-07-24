@@ -501,7 +501,7 @@
     }
   },
   "modelDownloads": {
-    "busy": "Occupato",
+    "queued": "In coda",
     "kinds": {
       "ollama": "Ollama",
       "forecast": "Forecast"
@@ -514,7 +514,7 @@
       "completed": "Completato"
     },
     "errors": {
-      "alreadyActive": "È già in corso il download di un modello."
+      "queueUnavailable": "Impossibile aggiungere questo modello alla coda."
     }
   },
   "ollama": {

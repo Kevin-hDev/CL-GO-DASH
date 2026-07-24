@@ -4,7 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 
 type ModelDownloadKind = "ollama" | "forecast";
-type ModelDownloadStatus = "running" | "completed" | "failed" | "cancelled";
+type ModelDownloadStatus = "queued" | "running" | "completed" | "failed" | "cancelled";
 export type ModelDownloadPhase =
   | "starting"
   | "downloading"
@@ -54,7 +54,10 @@ export function useModelDownloads() {
       modelId: args.modelId,
       isUpdate: args.isUpdate ?? false,
     });
-    setDownloads([state]);
+    setDownloads((current) => {
+      const withoutCurrent = current.filter((item) => item.id !== state.id);
+      return [...withoutCurrent, state];
+    });
     return state;
   }, []);
 
@@ -66,6 +69,5 @@ export function useModelDownloads() {
     () => downloads.find((item) => item.status === "running") ?? null,
     [downloads],
   );
-
   return { downloads, activeDownload, startDownload, cancelDownload, refresh };
 }

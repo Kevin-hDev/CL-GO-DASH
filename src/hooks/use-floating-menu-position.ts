@@ -23,6 +23,7 @@ export function useFloatingMenuPosition(
 ) {
   const anchorRef = useRef<HTMLElement | null>(null);
   const floatingRef = useRef<HTMLDivElement | null>(null);
+  const resolvedPlacementRef = useRef<"above" | "below" | null>(null);
   const [style, setStyle] = useState<CSSProperties>(HIDDEN_STYLE);
 
   const update = useCallback(() => {
@@ -46,30 +47,35 @@ export function useFloatingMenuPosition(
       0,
       window.innerHeight - anchorRect.bottom - gap - VIEWPORT_PADDING,
     );
-    const opensBelow = placement === "below"
-      || (placement === "auto" && height > availableAbove && availableBelow > availableAbove);
+    if (!resolvedPlacementRef.current) {
+      resolvedPlacementRef.current = placement === "auto"
+        ? height > availableAbove && availableBelow > availableAbove
+          ? "below"
+          : "above"
+        : placement;
+    }
+    const opensBelow = resolvedPlacementRef.current === "below";
     const maxHeight = opensBelow ? availableBelow : availableAbove;
-    const visibleHeight = Math.min(height, maxHeight);
-    const top = opensBelow
-      ? anchorRect.bottom + gap
-      : Math.max(VIEWPORT_PADDING, anchorRect.top - visibleHeight - gap);
 
     setStyle({
       position: "fixed",
-      top,
+      top: opensBelow ? anchorRect.bottom + gap : "auto",
       left,
       maxWidth,
       maxHeight,
       minWidth: matchAnchorWidth ? anchorRect.width : undefined,
       right: "auto",
-      bottom: "auto",
+      bottom: opensBelow ? "auto" : window.innerHeight - anchorRect.top + gap,
       visibility: "visible",
       zIndex: 1000,
     });
   }, [align, gap, matchAnchorWidth, open, placement]);
 
   useLayoutEffect(() => {
-    if (!open) return;
+    if (!open) {
+      resolvedPlacementRef.current = null;
+      return;
+    }
 
     update();
     window.addEventListener("resize", update);

@@ -30,6 +30,16 @@ const runningDownload: ModelDownloadState = {
   errorKey: null,
 };
 
+const queuedDownload: ModelDownloadState = {
+  ...runningDownload,
+  id: "download-2",
+  kind: "forecast",
+  modelId: "chronos-bolt-small",
+  status: "queued",
+  phase: "starting",
+  percent: 0,
+};
+
 describe("useModelDownloads", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -71,5 +81,31 @@ describe("useModelDownloads", () => {
       isUpdate: false,
     });
     expect(invoke).toHaveBeenCalledWith("cancel_model_download", { id: "download-1" });
+  });
+
+  it("conserve l'operation active quand une seconde est ajoutee a la file", async () => {
+    vi.mocked(invoke).mockImplementation((command) => {
+      if (command === "list_model_downloads") return Promise.resolve([]);
+      if (command === "start_model_download") return Promise.resolve(queuedDownload);
+      return Promise.resolve(undefined);
+    });
+    const { result } = renderHook(() => useModelDownloads());
+
+    await waitFor(() => expect(listen).toHaveBeenCalled());
+    act(() => {
+      modelDownloadsListener?.({ payload: [runningDownload] });
+    });
+    await waitFor(() => expect(result.current.activeDownload?.id).toBe("download-1"));
+    await act(async () => {
+      await result.current.startDownload({
+        kind: "forecast",
+        modelId: "chronos-bolt-small",
+      });
+    });
+
+    expect(result.current.downloads.map((item) => item.id)).toEqual([
+      "download-1",
+      "download-2",
+    ]);
   });
 });

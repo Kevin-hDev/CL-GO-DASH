@@ -1,7 +1,6 @@
 use crate::services::forecast::validation;
 use crate::services::model_downloads::{
-    emit_states, run_forecast_download, run_ollama_download, ModelDownloadKind,
-    ModelDownloadManager, ModelDownloadState,
+    emit_states, run_download_queue, ModelDownloadKind, ModelDownloadManager, ModelDownloadState,
 };
 use tauri::AppHandle;
 
@@ -16,30 +15,14 @@ pub async fn start_model_download(
     downloads: tauri::State<'_, ModelDownloadManager>,
 ) -> Result<ModelDownloadState, String> {
     validate_download_request(kind, &model_id)?;
-    if kind == ModelDownloadKind::Forecast {
-        crate::storage_migration_files::install_forecast_sidecar(
-            &app,
-            &crate::services::paths::data_dir(),
-        )?;
-    }
     let manager = downloads.inner_clone();
-    let (state, cancel) = manager
+    let (state, runner) = manager
         .start(kind, model_id, is_update.unwrap_or(false))
         .await?;
     emit_states(&app, manager.list().await);
-    let app_for_task = app.clone();
-    let manager_for_task = manager.clone();
-    let state_for_task = state.clone();
-    tauri::async_runtime::spawn(async move {
-        match state_for_task.kind {
-            ModelDownloadKind::Ollama => {
-                run_ollama_download(app_for_task, manager_for_task, state_for_task, cancel).await;
-            }
-            ModelDownloadKind::Forecast => {
-                run_forecast_download(app_for_task, manager_for_task, state_for_task, cancel).await;
-            }
-        }
-    });
+    if let Some(cancel) = runner {
+        tauri::async_runtime::spawn(run_download_queue(app, manager, state.clone(), cancel));
+    }
     Ok(state)
 }
 
@@ -52,13 +35,17 @@ pub async fn list_model_downloads(
 
 #[tauri::command]
 pub async fn cancel_model_download(
+    app: AppHandle,
     id: String,
     downloads: tauri::State<'_, ModelDownloadManager>,
 ) -> Result<(), String> {
     if id.len() > 64 || id.contains("..") {
         return Err("model-download-not-found".into());
     }
-    downloads.cancel(&id).await
+    let manager = downloads.inner_clone();
+    let states = manager.cancel(&id).await?;
+    emit_states(&app, states);
+    Ok(())
 }
 
 fn validate_download_request(kind: ModelDownloadKind, model_id: &str) -> Result<(), String> {

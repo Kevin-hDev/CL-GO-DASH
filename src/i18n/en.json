@@ -506,7 +506,7 @@
     }
   },
   "modelDownloads": {
-    "busy": "Busy",
+    "queued": "Queued",
     "kinds": {
       "ollama": "Ollama",
       "forecast": "Forecast"
@@ -519,7 +519,7 @@
       "completed": "Completed"
     },
     "errors": {
-      "alreadyActive": "A model download is already running."
+      "queueUnavailable": "This model could not be added to the queue."
     }
   },
   "ollama": {

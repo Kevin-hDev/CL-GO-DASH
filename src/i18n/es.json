@@ -501,7 +501,7 @@
     }
   },
   "modelDownloads": {
-    "busy": "Ocupado",
+    "queued": "En espera",
     "kinds": {
       "ollama": "Ollama",
       "forecast": "Forecast"
@@ -514,7 +514,7 @@
       "completed": "Completado"
     },
     "errors": {
-      "alreadyActive": "Ya hay una descarga de modelo en curso."
+      "queueUnavailable": "No se pudo añadir este modelo a la cola."
     }
   },
   "ollama": {

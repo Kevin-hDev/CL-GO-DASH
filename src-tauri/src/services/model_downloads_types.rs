@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-pub const MAX_ACTIVE_DOWNLOADS: usize = 1;
+pub const MAX_PENDING_DOWNLOADS: usize = 16;
 pub const EVENT_NAME: &str = "model-downloads-changed";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -13,6 +13,7 @@ pub enum ModelDownloadKind {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ModelDownloadStatus {
+    Queued,
     Running,
     Completed,
     Failed,
@@ -45,13 +46,19 @@ pub struct ModelDownloadState {
 }
 
 impl ModelDownloadState {
-    pub fn new(kind: ModelDownloadKind, model_id: String, is_update: bool, id: String) -> Self {
+    pub fn new(
+        kind: ModelDownloadKind,
+        model_id: String,
+        is_update: bool,
+        id: String,
+        status: ModelDownloadStatus,
+    ) -> Self {
         Self {
             id,
             kind,
             model_id,
             is_update,
-            status: ModelDownloadStatus::Running,
+            status,
             phase: ModelDownloadPhase::Starting,
             percent: 0,
             downloaded: 0,

@@ -501,7 +501,7 @@
     }
   },
   "modelDownloads": {
-    "busy": "忙碌",
+    "queued": "排队中",
     "kinds": {
       "ollama": "Ollama",
       "forecast": "Forecast"
@@ -514,7 +514,7 @@
       "completed": "已完成"
     },
     "errors": {
-      "alreadyActive": "模型下载已在进行中。"
+      "queueUnavailable": "无法将此模型加入队列。"
     }
   },
   "ollama": {
