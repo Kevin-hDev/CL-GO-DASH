@@ -2,13 +2,13 @@
 
 ## [Unreleased]
 
-### Features
-
-- **Assistant configuration migration** — added guided migration from Claude Code, Codex, Agents, Hermes Agent, Qwen Code, ZCode, OpenClaw, OpenCode, and Kimi Code during onboarding or later from Settings. Global instruction files can be imported while external skills and rules remain individually selectable and readable from their original folders.
-
 ---
 
 ## v1.0.2
+
+### Agent configuration migration
+
+- **Guided assistant migration** — added migration from Claude Code, Codex, Agents, Hermes Agent, Qwen Code, ZCode, OpenClaw, OpenCode, and Kimi Code during onboarding or later from Settings. Global instruction files can be imported while external skills and rules remain individually selectable and readable from their original folders.
 
 ### Forecast workspace
 
