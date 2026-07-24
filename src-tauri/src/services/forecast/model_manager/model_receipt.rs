@@ -46,6 +46,10 @@ pub(super) fn is_current(model_dir: &Path, model_id: &str) -> bool {
         && files_have_expected_sizes(model_dir, &expected.model)
 }
 
+pub(super) fn has_expected_sizes(model_dir: &Path, model_id: &str) -> bool {
+    model_artifacts::model(model_id).is_ok_and(|model| files_have_expected_sizes(model_dir, model))
+}
+
 pub(super) async fn write_current(model_dir: &Path, model_id: &str) -> Result<(), String> {
     let metadata = tokio::fs::symlink_metadata(model_dir)
         .await

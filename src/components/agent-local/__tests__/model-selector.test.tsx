@@ -132,4 +132,30 @@ describe("ModelSelector", () => {
 
     expect(onSelect).toHaveBeenCalledWith("kimi-for-coding", "moonshot-oauth");
   });
+
+  it("affiche un modèle indisponible sans permettre sa sélection", () => {
+    const onSelect = vi.fn();
+    groups = new Map([["forecast", [model({
+      id: "chronos",
+      display_name: "Chronos",
+      disabled: true,
+      disabled_hint: "Mise à jour requise",
+    })]]]);
+
+    render(
+      <ModelSelector
+        groups={groups}
+        selectedModel=""
+        selectedProvider=""
+        onSelect={onSelect}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("Select model"));
+    const item = screen.getByText("Chronos").closest(".ms-item");
+    expect(item?.getAttribute("aria-disabled")).toBe("true");
+    expect(screen.getByText("Mise à jour requise")).toBeTruthy();
+    fireEvent.click(screen.getByText("Chronos"));
+    expect(onSelect).not.toHaveBeenCalled();
+  });
 });

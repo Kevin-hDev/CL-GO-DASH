@@ -1,4 +1,5 @@
 use super::{catalog, model_manager, registry};
+use model_manager::ModelReadiness;
 use serde_json::Value;
 
 pub fn list_models() -> Value {
@@ -39,9 +40,10 @@ fn enrich_model_object(
     configured: &[String],
 ) {
     let runtime = registry::find_runtime(model.id);
-    let installed_model = model_manager::is_installed(model.id);
+    let readiness = model_manager::readiness(model.id);
+    let installed_model = readiness != ModelReadiness::NotInstalled;
     let provider_configured = configured.iter().any(|id| id == model.provider_id);
-    let runtime_ready = runtime_ready_state(model, runtime, provider_configured);
+    let runtime_ready = runtime_ready_state(runtime, provider_configured, readiness);
     if let Some(runtime) = runtime {
         object.insert(
             "engine_kind".into(),
@@ -84,6 +86,10 @@ fn enrich_model_object(
         )),
     );
     object.insert("runtime_ready".into(), Value::Bool(runtime_ready));
+    object.insert(
+        "readiness_state".into(),
+        Value::String(readiness_state(model, runtime, provider_configured, readiness).into()),
+    );
     object.insert(
         "size_on_disk".into(),
         Value::Number(model_manager::get_model_size(model.id).into()),
@@ -130,9 +136,9 @@ fn runnable_state(
 }
 
 fn runtime_ready_state(
-    model: &catalog::ForecastModelSpec,
     runtime: Option<&registry::ForecastRuntimeSpec>,
     provider_configured: bool,
+    readiness: ModelReadiness,
 ) -> bool {
     let Some(spec) = runtime else {
         return false;
@@ -140,7 +146,23 @@ fn runtime_ready_state(
     if registry::is_cloud(spec) {
         return registry::has_predict_adapter(spec) && provider_configured;
     }
-    registry::has_predict_adapter(spec) && model_manager::is_ready(model.id)
+    registry::has_predict_adapter(spec) && readiness == ModelReadiness::Ready
+}
+
+fn readiness_state(
+    model: &catalog::ForecastModelSpec,
+    runtime: Option<&registry::ForecastRuntimeSpec>,
+    provider_configured: bool,
+    readiness: ModelReadiness,
+) -> &'static str {
+    if !model.is_cloud {
+        return readiness.as_str();
+    }
+    match runtime {
+        Some(spec) if registry::has_predict_adapter(spec) && provider_configured => "ready",
+        Some(spec) if registry::has_predict_adapter(spec) => "provider_required",
+        _ => "unsupported",
+    }
 }
 
 #[cfg(test)]

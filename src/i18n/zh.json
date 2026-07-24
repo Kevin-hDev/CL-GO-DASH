@@ -1752,6 +1752,7 @@
       "prepare": "准备",
       "installed": "已安装",
       "preparationRequired": "需要准备",
+      "updateRequired": "需要更新",
       "uninstall": "卸载",
       "confirmUninstall": "确认卸载",
       "uninstalling": "正在卸载…",

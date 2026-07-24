@@ -9,16 +9,15 @@ import {
 } from "@/hooks/use-floating-menu-position";
 import { useKeyboard } from "@/hooks/use-keyboard";
 import { focusLocalListItem } from "@/hooks/use-local-list-navigation";
-import type { AvailableModel } from "@/hooks/use-available-models";
 import { ModelSelectorList } from "@/components/agent-local/model-selector-list";
-import {
-  getForecastFamilyId,
-  getForecastFamilyKey,
-  groupForecastModels,
-} from "../forecast-model-meta";
+import { getForecastFamilyId, isForecastModelSelectable } from "../forecast-model-meta";
 import { useAvailableForecastModels } from "../use-available-forecast-models";
 import type { ForecastSelectionMode } from "../model-selection/forecast-selection-types";
 import { ForecastSelectionModeControl } from "./forecast-selection-mode-control";
+import {
+  buildForecastSelectorGroups,
+  firstSelectableModel,
+} from "./forecast-model-selector-options";
 import "@/components/agent-local/model-selector.css";
 import "./export-dropdown.css";
 import "./forecast-model-selector.css";
@@ -74,36 +73,18 @@ export function ForecastModelSelector({
   useEffect(() => {
     if (!selectionReady || selectionMode !== "manual") return;
     if (models.length === 0) return;
-    if (!selectedModelId || !models.some((model) => model.id === selectedModelId)) {
-      onSelectModel(models[0].id);
+    if (!selectedModelId || !models.some(
+      (model) => model.id === selectedModelId && isForecastModelSelectable(model),
+    )) {
+      const fallback = firstSelectableModel(models);
+      if (fallback) onSelectModel(fallback.id);
     }
   }, [models, selectedModelId, selectionMode, selectionReady, onSelectModel]);
 
-  const groups = useMemo(() => {
-    const lowered = query.trim().toLowerCase();
-    const visible = lowered
-      ? models.filter((model) => model.id.toLowerCase().includes(lowered))
-      : models;
-    const mapped = new Map<string, AvailableModel[]>();
-    for (const group of groupForecastModels(visible)) {
-      const familyName = t(group.titleKey);
-      mapped.set(
-        group.id,
-        group.models.map((model) => ({
-          id: model.id,
-          display_name: model.display_name,
-          provider_id: getForecastFamilyId(model),
-          provider_name: familyName === getForecastFamilyKey(group.id) ? group.id : familyName,
-          is_local: !model.is_cloud,
-          supports_tools: false,
-          supports_vision: false,
-          is_free: true,
-          hint: model.params,
-        })),
-      );
-    }
-    return mapped;
-  }, [models, query, t]);
+  const groups = useMemo(
+    () => buildForecastSelectorGroups(models, query, t),
+    [models, query, t],
+  );
   const focusDropdownList = (direction: 1 | -1) => {
     focusLocalListItem(floatingRef.current, direction);
   };

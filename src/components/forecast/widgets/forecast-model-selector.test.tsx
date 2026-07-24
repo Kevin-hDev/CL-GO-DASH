@@ -24,8 +24,10 @@ const MODEL: ForecastModelEntry = {
   runnable: true,
 };
 
+let selectorModels = [MODEL];
+
 vi.mock("../use-available-forecast-models", () => ({
-  useAvailableForecastModels: () => ({ models: [MODEL] }),
+  useAvailableForecastModels: () => ({ models: selectorModels }),
 }));
 
 vi.mock("@/hooks/use-favorite-models", () => ({
@@ -45,11 +47,16 @@ vi.mock("react-i18next", () => ({
       "forecast.selection.allowCloud": "Autoriser les modèles cloud",
       "agentLocal.modelSearch": "Rechercher un modèle…",
       "forecast.models.families.chronos-bolt": "Chronos Bolt",
+      "forecast.models.preparationRequired": "Préparation requise",
+      "forecast.models.updateRequired": "Mise à jour requise",
     })[key] ?? key,
   }),
 }));
 
-afterEach(() => vi.clearAllMocks());
+afterEach(() => {
+  vi.clearAllMocks();
+  selectorModels = [MODEL];
+});
 
 describe("ForecastModelSelector", () => {
   it("blocks changes until the persisted policy is loaded", () => {
@@ -136,5 +143,33 @@ describe("ForecastModelSelector", () => {
     }));
 
     expect(onCloudAllowedChange).toHaveBeenCalledWith(true);
+  });
+
+  it("keeps an installed model visible while its preparation needs updating", () => {
+    const onSelectModel = vi.fn();
+    selectorModels = [{
+      ...MODEL,
+      runtime_ready: false,
+      runnable: false,
+      readiness_state: "update_required",
+    }];
+    render(
+      <ForecastModelSelector
+        selectedModelId={MODEL.id}
+        selectionMode="manual"
+        allowCloudInAuto={false}
+        selectionReady
+        onSelectModel={onSelectModel}
+        onModeChange={vi.fn()}
+        onCloudAllowedChange={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText(MODEL.display_name));
+    const item = screen.getAllByText(MODEL.display_name)[1].closest(".ms-item");
+    expect(item).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByText("Mise à jour requise")).toBeVisible();
+    fireEvent.click(item!);
+    expect(onSelectModel).not.toHaveBeenCalled();
   });
 });

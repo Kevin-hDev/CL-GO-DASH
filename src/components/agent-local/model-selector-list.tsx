@@ -39,7 +39,7 @@ export function ModelSelectorList({
 
   const sortedGroups = useMemo(() => Array.from(groups.entries()), [groups]);
   const navItems = useMemo<LocalListNavItem[]>(() => {
-    const items: LocalListNavItem[] = favModels.map((m) => ({
+    const items: LocalListNavItem[] = favModels.filter((m) => !m.disabled).map((m) => ({
       id: navModelId("fav", m.provider_id, m.id),
       onSelect: () => onSelect(m.id, m.provider_id),
     }));
@@ -53,6 +53,7 @@ export function ModelSelectorList({
       });
       if (isOpen) {
         for (const m of sortedModels(models)) {
+          if (m.disabled) continue;
           items.push({
             id: navModelId("model", m.provider_id, m.id),
             onSelect: () => onSelect(m.id, m.provider_id),
@@ -160,7 +161,7 @@ function favoriteModels(groups: Map<string, AvailableModel[]>, favorites: Favori
   const models: AvailableModel[] = [];
   for (const fav of favorites) {
     const model = groups.get(fav.provider)?.find((item) => item.id === fav.model);
-    if (model) models.push(model);
+    if (model && !model.disabled) models.push(model);
   }
   return models;
 }

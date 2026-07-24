@@ -10,6 +10,7 @@ import { TranslationControls } from "@/components/ollama/translation-controls";
 import { ModelInstallBtn } from "./model-install-btn";
 import type { ForecastModelDetails } from "./model-details-types";
 import {
+  getForecastModelReadiness,
   getForecastEngineKey,
   getModelCapabilities,
   type ForecastModelEntry,
@@ -167,7 +168,9 @@ function modelStatus(
       : t("forecast.models.noKeyConfigured");
   }
   if (!model.installed) return t("forecast.models.uninstalled");
-  return model.runtime_ready === true
-    ? t("forecast.models.installed")
-    : t("forecast.models.preparationRequired");
+  const readiness = getForecastModelReadiness(model);
+  if (readiness === "ready") return t("forecast.models.installed");
+  return t(readiness === "update_required"
+    ? "forecast.models.updateRequired"
+    : "forecast.models.preparationRequired");
 }

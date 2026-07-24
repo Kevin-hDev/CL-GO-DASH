@@ -25,11 +25,12 @@ pub(super) fn install_plan(
 ) -> Result<InstallPlan, String> {
     let spec =
         catalog::find_model(model_id).ok_or_else(|| "Modèle Forecast inconnu".to_string())?;
-    let weights = has_downloaded_weights(models, model_id);
-    let runtime = sidecar_runtime::family_runtime_ready(sidecar, spec.family_id);
     let model_dir = models.join(model_id);
-    let smoke =
-        model_receipt::is_current(&model_dir, model_id) && smoke::is_validated(&model_dir, sidecar);
+    let weights = has_downloaded_weights(models, model_id)
+        && model_receipt::has_expected_sizes(&model_dir, model_id);
+    let runtime = sidecar_runtime::family_runtime_ready(sidecar, spec.family_id);
+    let smoke = model_receipt::is_current(&model_dir, model_id)
+        && smoke::is_validated(&model_dir, sidecar, spec.family_id);
     Ok(plan_for_state(weights, runtime, smoke))
 }
 

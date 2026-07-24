@@ -4,16 +4,26 @@ use std::path::Path;
 use subtle::ConstantTimeEq;
 use tokio::io::{AsyncWriteExt, BufWriter};
 
-const MARKER: &str = ".smoke-v2";
+const MARKER: &str = ".smoke-v3";
 const MAX_SOURCE_FILES: usize = 128;
 const MAX_SOURCE_BYTES: u64 = 1024 * 1024;
+const SHARED_SOURCE_FILES: &[&str] = &[
+    "__init__.py",
+    "adapter_utils.py",
+    "adapters.py",
+    "config_utils.py",
+    "device_utils.py",
+    "limits.py",
+    "quantile_utils.py",
+    "validation.py",
+];
 
-pub(super) async fn write(model_dir: &Path, sidecar: &Path) -> Result<(), String> {
+pub(super) async fn write(model_dir: &Path, sidecar: &Path, family_id: &str) -> Result<(), String> {
     if !fs_safety::is_real_directory(model_dir) {
         return Err(error());
     }
-    let fingerprint = source_fingerprint(sidecar)?;
-    let temporary = model_dir.join(".smoke-v2.tmp");
+    let fingerprint = source_fingerprint(sidecar, family_id)?;
+    let temporary = model_dir.join(".smoke-v3.tmp");
     let destination = model_dir.join(MARKER);
     fs_safety::remove_path(&temporary)
         .await
@@ -44,7 +54,7 @@ pub(super) async fn write(model_dir: &Path, sidecar: &Path) -> Result<(), String
     result
 }
 
-pub(super) fn is_current(model_dir: &Path, sidecar: &Path) -> bool {
+pub(super) fn is_current(model_dir: &Path, sidecar: &Path, family_id: &str) -> bool {
     if !fs_safety::is_real_directory(model_dir) {
         return false;
     }
@@ -58,23 +68,18 @@ pub(super) fn is_current(model_dir: &Path, sidecar: &Path) -> bool {
     let Ok(actual) = std::fs::read(path) else {
         return false;
     };
-    let Ok(expected) = source_fingerprint(sidecar) else {
+    let Ok(expected) = source_fingerprint(sidecar, family_id) else {
         return false;
     };
     actual.ct_eq(&expected).into()
 }
 
-fn source_fingerprint(sidecar: &Path) -> Result<[u8; 32], String> {
+fn source_fingerprint(sidecar: &Path, family_id: &str) -> Result<[u8; 32], String> {
     let runtime = sidecar.join("forecast_runtime");
-    let mut files = Vec::with_capacity(MAX_SOURCE_FILES);
-    for entry in std::fs::read_dir(runtime).map_err(|_| error())? {
-        let path = entry.map_err(|_| error())?.path();
-        if path.extension().and_then(|value| value.to_str()) != Some("py") {
-            continue;
-        }
-        if files.len() >= MAX_SOURCE_FILES {
-            return Err(error());
-        }
+    let files = source_files(family_id)?;
+    let mut digest = Sha256::new();
+    for name in files {
+        let path = runtime.join(name);
         let metadata = std::fs::symlink_metadata(&path).map_err(|_| error())?;
         if !metadata.is_file()
             || metadata.file_type().is_symlink()
@@ -82,18 +87,6 @@ fn source_fingerprint(sidecar: &Path) -> Result<[u8; 32], String> {
         {
             return Err(error());
         }
-        files.push(path);
-    }
-    files.sort();
-    if files.is_empty() {
-        return Err(error());
-    }
-    let mut digest = Sha256::new();
-    for path in files {
-        let name = path
-            .file_name()
-            .and_then(|value| value.to_str())
-            .ok_or_else(error)?;
         let body = std::fs::read(&path).map_err(|_| error())?;
         digest.update((name.len() as u64).to_be_bytes());
         digest.update(name.as_bytes());
@@ -101,6 +94,29 @@ fn source_fingerprint(sidecar: &Path) -> Result<[u8; 32], String> {
         digest.update(body);
     }
     Ok(digest.finalize().into())
+}
+
+fn source_files(family_id: &str) -> Result<Vec<&'static str>, String> {
+    let family_files: &[&str] = match family_id {
+        "chronos-bolt" | "chronos-2" => &["chronos_adapter.py"],
+        "timesfm-2-5" => &["timesfm_adapter.py", "timesfm_output.py"],
+        "toto-2" => &["toto_adapter.py", "toto_multivariate.py"],
+        "moirai-2" => &["moirai_adapter.py"],
+        "flowstate" => &["flowstate_adapter.py"],
+        "tabpfn-ts" => &["tabpfn_adapter.py"],
+        "tirex" => &["tirex_adapter.py"],
+        "kairos" => &["kairos_adapter.py"],
+        "sundial" => &["sundial_adapter.py"],
+        _ => return Err(error()),
+    };
+    let total = SHARED_SOURCE_FILES.len() + family_files.len();
+    if total > MAX_SOURCE_FILES {
+        return Err(error());
+    }
+    let mut files = Vec::with_capacity(total);
+    files.extend_from_slice(SHARED_SOURCE_FILES);
+    files.extend_from_slice(family_files);
+    Ok(files)
 }
 
 fn error() -> String {
@@ -112,16 +128,37 @@ mod tests {
     use super::{is_current, write};
 
     #[tokio::test]
-    async fn proof_changes_with_adapter_source() {
+    async fn proof_only_changes_with_its_family_or_shared_source() {
         let root = tempfile::tempdir().unwrap();
         let runtime = root.path().join("forecast_runtime");
         let model = root.path().join("model");
         std::fs::create_dir_all(&runtime).unwrap();
         std::fs::create_dir_all(&model).unwrap();
-        std::fs::write(runtime.join("adapter.py"), "first").unwrap();
-        write(&model, root.path()).await.unwrap();
-        assert!(is_current(&model, root.path()));
-        std::fs::write(runtime.join("adapter.py"), "second").unwrap();
-        assert!(!is_current(&model, root.path()));
+        for file in super::source_files("chronos-bolt").unwrap() {
+            std::fs::write(runtime.join(file), "first").unwrap();
+        }
+        std::fs::write(runtime.join("timesfm_adapter.py"), "first").unwrap();
+        write(&model, root.path(), "chronos-bolt").await.unwrap();
+        assert!(is_current(&model, root.path(), "chronos-bolt"));
+
+        std::fs::write(runtime.join("timesfm_adapter.py"), "second").unwrap();
+        assert!(is_current(&model, root.path(), "chronos-bolt"));
+
+        std::fs::write(runtime.join("chronos_adapter.py"), "second").unwrap();
+        assert!(!is_current(&model, root.path(), "chronos-bolt"));
+    }
+
+    #[test]
+    fn every_local_catalog_family_has_a_scoped_source_list() {
+        for model in crate::services::forecast::catalog::FORECAST_MODELS
+            .iter()
+            .filter(|model| !model.is_cloud)
+        {
+            assert!(
+                super::source_files(model.family_id).is_ok(),
+                "missing source list for {}",
+                model.family_id
+            );
+        }
     }
 }

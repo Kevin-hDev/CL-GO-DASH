@@ -32,11 +32,11 @@ pub(super) async fn validate_model(
     })
     .await
     .map_err(|_| "Validation du modèle Forecast impossible".to_string())??;
-    super::smoke_proof::write(model_dir, sidecar).await
+    super::smoke_proof::write(model_dir, sidecar, family_id).await
 }
 
-pub(super) fn is_validated(model_dir: &Path, sidecar: &Path) -> bool {
-    super::smoke_proof::is_current(model_dir, sidecar)
+pub(super) fn is_validated(model_dir: &Path, sidecar: &Path, family_id: &str) -> bool {
+    super::smoke_proof::is_current(model_dir, sidecar, family_id)
 }
 
 fn run_smoke(

@@ -4,6 +4,7 @@ import { Check, Star } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
 import type { AvailableModel } from "@/hooks/use-available-models";
 import type { useLocalListNavigation } from "@/hooks/use-local-list-navigation";
+import "./model-selector-disabled.css";
 
 type NavApi = ReturnType<typeof useLocalListNavigation>;
 
@@ -34,29 +35,32 @@ export function ModelSelectorItem({
 }: ModelSelectorItemProps) {
   const { t } = useTranslation();
   const isPaid = !m.is_free && !m.is_local;
+  const disabled = m.disabled === true;
   return (
     <div
-      className={`ms-item ${isSelected ? "active" : ""} ${isPaid ? "ms-item-paid" : ""}`}
+      className={`ms-item ${isSelected ? "active" : ""} ${isPaid ? "ms-item-paid" : ""} ${disabled ? "ms-item-disabled" : ""}`}
       role="button"
+      aria-disabled={disabled || undefined}
       ref={getItemRef(navId)}
-      tabIndex={isNavActive(navId) ? 0 : -1}
-      data-local-nav-item="true"
-      data-local-nav-active={isNavActive(navId) ? "true" : undefined}
-      onFocus={() => activate(navId)}
-      onMouseEnter={() => activate(navId)}
-      onKeyDown={onItemKeyDown}
-      onClick={() => onSelect(m.id, m.provider_id)}
+      tabIndex={!disabled && isNavActive(navId) ? 0 : -1}
+      data-local-nav-item={disabled ? undefined : "true"}
+      data-local-nav-active={!disabled && isNavActive(navId) ? "true" : undefined}
+      onFocus={() => { if (!disabled) activate(navId); }}
+      onMouseEnter={() => { if (!disabled) activate(navId); }}
+      onKeyDown={disabled ? undefined : onItemKeyDown}
+      onClick={() => { if (!disabled) onSelect(m.id, m.provider_id); }}
     >
       <span
         className={`ms-star ${isFav ? "ms-star-on" : ""}`}
-        role="button"
-        tabIndex={0}
+        role={disabled ? undefined : "button"}
+        tabIndex={disabled ? -1 : 0}
+        aria-hidden={disabled || undefined}
         onClick={(event) => {
           event.stopPropagation();
-          onToggleFav(m.provider_id, m.id);
+          if (!disabled) onToggleFav(m.provider_id, m.id);
         }}
         onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
+          if (!disabled && (event.key === "Enter" || event.key === " ")) {
             event.stopPropagation();
             onToggleFav(m.provider_id, m.id);
           }
@@ -76,7 +80,9 @@ export function ModelSelectorItem({
             <span className="ms-badge-tools">T</span>
           </Tooltip>
         )}
-        {m.hint && <span className="ms-hint">{m.hint}</span>}
+        {(m.disabled_hint ?? m.hint) && (
+          <span className="ms-hint">{m.disabled_hint ?? m.hint}</span>
+        )}
         {isSelected && <Check size="var(--icon-xs)" />}
       </span>
     </div>

@@ -1,3 +1,12 @@
+import type { ForecastModelReadiness } from "./forecast-model-readiness";
+
+export {
+  getForecastModelReadiness,
+  isForecastModelSelectable,
+  isForecastModelVisibleInSelector,
+} from "./forecast-model-readiness";
+export type { ForecastModelReadiness } from "./forecast-model-readiness";
+
 export interface ForecastProviderEntry {
   id: string;
   display_name: string;
@@ -22,6 +31,7 @@ export interface ForecastModelEntry {
   is_cloud: boolean;
   installed: boolean;
   runtime_ready: boolean;
+  readiness_state?: ForecastModelReadiness;
   installable?: boolean;
   runnable?: boolean;
   size_on_disk?: number;
@@ -124,13 +134,6 @@ export function listForecastFamilies(models: ForecastModelEntry[]): ForecastMode
       models: familyModels,
     }));
   return [...ordered, ...extras];
-}
-
-export function isForecastModelSelectable(model: ForecastModelEntry): boolean {
-  if (!model.runnable) return false;
-  return model.is_cloud
-    ? Boolean(model.provider_configured)
-    : model.installed && model.runtime_ready === true;
 }
 
 export function isForecastModelConfigurable(model: ForecastModelEntry): boolean {

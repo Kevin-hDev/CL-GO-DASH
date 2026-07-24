@@ -1834,6 +1834,7 @@
       "prepare": "Préparer",
       "installed": "Installé",
       "preparationRequired": "Préparation requise",
+      "updateRequired": "Mise à jour requise",
       "uninstall": "Désinstaller",
       "confirmUninstall": "Confirmer la désinstallation",
       "uninstalling": "Désinstallation…",

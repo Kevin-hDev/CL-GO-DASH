@@ -1752,6 +1752,7 @@
       "prepare": "準備",
       "installed": "インストール済み",
       "preparationRequired": "準備が必要",
+      "updateRequired": "更新が必要",
       "uninstall": "アンインストール",
       "confirmUninstall": "アンインストールを確認",
       "uninstalling": "アンインストール中…",

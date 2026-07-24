@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import {
-  isForecastModelSelectable,
+  isForecastModelVisibleInSelector,
   type ForecastModelEntry,
   type ForecastModelsResponse,
 } from "./forecast-model-meta";
@@ -12,7 +12,7 @@ let cachedForecastModels: ForecastModelEntry[] = [];
 
 async function fetchForecastModels(): Promise<ForecastModelEntry[]> {
   const response = await invoke<ForecastModelsResponse>("list_forecast_models");
-  cachedForecastModels = response.models.filter(isForecastModelSelectable);
+  cachedForecastModels = response.models.filter(isForecastModelVisibleInSelector);
   return cachedForecastModels;
 }
 

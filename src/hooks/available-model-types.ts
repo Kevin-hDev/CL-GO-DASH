@@ -14,5 +14,7 @@ export interface AvailableModel {
   default_reasoning_mode?: ReasoningMode;
   is_free?: boolean;
   hint?: string;
+  disabled?: boolean;
+  disabled_hint?: string;
   interactive_only?: boolean;
 }

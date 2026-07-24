@@ -1786,6 +1786,7 @@
       "prepare": "Prepare",
       "installed": "Installed",
       "preparationRequired": "Preparation required",
+      "updateRequired": "Update required",
       "uninstall": "Uninstall",
       "confirmUninstall": "Confirm uninstall",
       "uninstalling": "Uninstalling…",

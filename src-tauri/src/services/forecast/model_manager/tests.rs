@@ -3,6 +3,7 @@ use super::install_plan::{
 };
 use super::is_installed_in;
 use super::uninstall::uninstall_from_roots;
+use super::{resolve_readiness, ModelReadiness};
 use std::fs;
 
 fn mark_installed(models: &std::path::Path, model_id: &str) {
@@ -12,11 +13,44 @@ fn mark_installed(models: &std::path::Path, model_id: &str) {
     fs::write(model.join(".smoke-v1"), "ok").unwrap();
 }
 
+fn mark_downloaded_artifacts(models: &std::path::Path, model_id: &str) {
+    mark_installed(models, model_id);
+    let model_dir = models.join(model_id);
+    for artifact in super::model_artifacts::model(model_id)
+        .unwrap()
+        .artifacts
+        .iter()
+    {
+        let path = model_dir.join(&artifact.path);
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        fs::File::create(path)
+            .unwrap()
+            .set_len(artifact.size)
+            .unwrap();
+    }
+}
+
 #[test]
 fn ready_plan_requires_a_model_smoke_proof() {
     assert_eq!(plan_for_state(true, true, false), InstallPlan::Validate);
     assert_eq!(plan_for_state(true, true, true), InstallPlan::Ready);
     assert_eq!(plan_for_state(true, false, true), InstallPlan::RuntimeOnly);
+}
+
+#[test]
+fn readiness_keeps_legacy_models_visible_as_update_required() {
+    assert_eq!(
+        resolve_readiness(true, true, false, false, false),
+        ModelReadiness::UpdateRequired
+    );
+    assert_eq!(
+        resolve_readiness(true, false, false, false, false),
+        ModelReadiness::Invalid
+    );
+    assert_eq!(
+        resolve_readiness(true, true, true, true, true),
+        ModelReadiness::Ready
+    );
 }
 
 #[test]
@@ -36,11 +70,24 @@ fn installed_weights_only_require_the_missing_runtime() {
     let sidecar = temp.path().join("sidecar");
     fs::create_dir_all(&sidecar).unwrap();
     fs::write(sidecar.join("requirements.txt"), "numpy\n").unwrap();
-    mark_installed(&models, "chronos-bolt-tiny");
+    mark_downloaded_artifacts(&models, "chronos-bolt-tiny");
 
     assert_eq!(
         install_plan(&models, &sidecar, "chronos-bolt-tiny").unwrap(),
         InstallPlan::RuntimeOnly
+    );
+}
+
+#[test]
+fn incomplete_weights_require_a_full_reinstall() {
+    let temp = tempfile::tempdir().unwrap();
+    let models = temp.path().join("models");
+    let sidecar = temp.path().join("sidecar");
+    mark_installed(&models, "chronos-bolt-tiny");
+
+    assert_eq!(
+        install_plan(&models, &sidecar, "chronos-bolt-tiny").unwrap(),
+        InstallPlan::Full
     );
 }
 
