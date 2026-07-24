@@ -5,18 +5,17 @@ mod documents;
 mod limits;
 mod models;
 mod registry;
+mod rule_content;
 mod rule_walker;
 mod source_paths;
 mod source_specs;
 mod walker;
 
 pub use documents::save_source_selection;
-pub(crate) use models::DiscoveredItem;
-use models::DiscoveredSource;
+use models::{DiscoveredItem, DiscoveredSource};
+pub(crate) use rule_content::{selected_rule_contents, ExternalRuleContent};
 
 pub use models::{AgentSourceSummary, SaveSelectionResult, SourceSelection};
-#[cfg(test)]
-pub(crate) use models::{ImportItem, ImportItemKind};
 
 use std::path::Path;
 
@@ -40,7 +39,7 @@ pub fn selected_skills(home: &Path) -> Vec<DiscoveredItem> {
         .collect()
 }
 
-pub fn selected_rules(home: &Path) -> Vec<DiscoveredItem> {
+fn selected_rules(home: &Path) -> Vec<DiscoveredItem> {
     selected_sources(home)
         .into_iter()
         .flat_map(|source| source.rules)

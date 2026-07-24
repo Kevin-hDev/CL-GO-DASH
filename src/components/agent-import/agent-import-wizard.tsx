@@ -48,12 +48,15 @@ export function AgentImportWizard({
     if (!pending) return;
     try {
       const result = await save(pending, true);
-      if (result.saved) {
-        setPending(null);
-        setConflicts([]);
-        setSelectedId(null);
-        showToast(t("agentImport.messages.saved"), "success");
+      if (!result.saved) {
+        setConflicts(result.conflicts);
+        showToast(t("errors.saveFailed"), "error");
+        return;
       }
+      setPending(null);
+      setConflicts([]);
+      setSelectedId(null);
+      showToast(t("agentImport.messages.saved"), "success");
     } catch {
       showToast(t("errors.saveFailed"), "error");
     }

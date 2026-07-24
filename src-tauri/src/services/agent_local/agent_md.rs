@@ -8,7 +8,7 @@ pub async fn load_agent_md(project_dir: Option<&Path>) -> Option<String> {
     let data_dir = crate::services::paths::data_dir();
     let external_rules = match dirs::home_dir() {
         Some(home) => tokio::task::spawn_blocking(move || {
-            crate::services::agent_import::selected_rules(&home)
+            crate::services::agent_import::selected_rule_contents(&home)
         })
         .await
         .unwrap_or_default(),
@@ -25,15 +25,16 @@ pub async fn load_agent_md_from(data_dir: &Path, project_dir: Option<&Path>) -> 
 async fn load_agent_md_with_rules(
     data_dir: &Path,
     project_dir: Option<&Path>,
-    mut external_rules: Vec<crate::services::agent_import::DiscoveredItem>,
+    mut external_rules: Vec<crate::services::agent_import::ExternalRuleContent>,
 ) -> Option<String> {
     let mut sections: Vec<String> = Vec::new();
     let mut total_bytes: usize = 0;
 
     let global_path = data_dir.join("AGENTS.md");
     if let Ok(content) = tokio::fs::read_to_string(&global_path).await {
+        let source = global_path.display().to_string();
         push_content(
-            &global_path,
+            &source,
             "global instructions",
             &content,
             &mut sections,
@@ -50,14 +51,17 @@ async fn load_agent_md_with_rules(
         .await;
     }
     external_rules.sort_by(|left, right| {
-        left.public
-            .source_id
-            .cmp(&right.public.source_id)
-            .then(left.path.cmp(&right.path))
+        left.source_id.cmp(&right.source_id)
     });
     for rule in external_rules {
-        let label = format!("external rule · {}", rule.public.source_name);
-        push_file(&rule.path, &label, &mut sections, &mut total_bytes).await;
+        let label = format!("external rule · {}", rule.source_name);
+        push_content(
+            "selected external rule",
+            &label,
+            &rule.content,
+            &mut sections,
+            &mut total_bytes,
+        );
     }
 
     if let Some(dir) = project_dir {
@@ -112,12 +116,13 @@ async fn push_file(path: &Path, label: &str, sections: &mut Vec<String>, total_b
         return;
     }
     if let Ok(content) = tokio::fs::read_to_string(path).await {
-        push_content(path, label, &content, sections, total_bytes);
+        let source = path.display().to_string();
+        push_content(&source, label, &content, sections, total_bytes);
     }
 }
 
 fn push_content(
-    path: &Path,
+    source: &str,
     label: &str,
     content: &str,
     sections: &mut Vec<String>,
@@ -127,7 +132,7 @@ fn push_content(
     if trimmed.is_empty() || *total_bytes >= MAX_TOTAL_BYTES {
         return;
     }
-    let entry = format!("Contents of {} ({}):\n\n{}", path.display(), label, trimmed);
+    let entry = format!("Contents of {source} ({label}):\n\n{trimmed}");
     if entry.len() > MAX_TOTAL_BYTES.saturating_sub(*total_bytes) {
         if LIMIT_NOTICE.len() <= MAX_TOTAL_BYTES.saturating_sub(*total_bytes) {
             sections.push(LIMIT_NOTICE.to_string());

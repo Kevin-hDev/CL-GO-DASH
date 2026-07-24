@@ -2,10 +2,14 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { invoke } from "@tauri-apps/api/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "@/i18n";
+import { showToast } from "@/lib/toast-emitter";
 import type { AgentImportItem, AgentSourceSummary } from "@/types/agent-import";
 import { AgentImportWizard } from "../agent-import-wizard";
 
+vi.mock("@/lib/toast-emitter", () => ({ showToast: vi.fn() }));
+
 const invokeMock = vi.mocked(invoke);
+const showToastMock = vi.mocked(showToast);
 
 function item(id: string, kind: AgentImportItem["kind"]): AgentImportItem {
   return {
@@ -37,6 +41,7 @@ function configuredSource(enabled: boolean): AgentSourceSummary {
 
 beforeEach(() => {
   invokeMock.mockReset();
+  showToastMock.mockReset();
   invokeMock.mockImplementation((command) => {
     if (command === "scan_external_agent_sources") {
       return Promise.resolve([configuredSource(true)]);
@@ -100,6 +105,42 @@ describe("gestion d'une migration existante", () => {
       expect(saveCall?.[1]).toMatchObject({
         selection: { enabled: true },
       });
+    });
+  });
+
+  it("signale un remplacement refusé au lieu de rester silencieux", async () => {
+    const source = configuredSource(true);
+    source.configured = false;
+    source.enabled = false;
+    let saveAttempt = 0;
+    invokeMock.mockImplementation((command) => {
+      if (command === "scan_external_agent_sources") {
+        return Promise.resolve([source]);
+      }
+      if (command === "save_external_agent_source_selection") {
+        saveAttempt += 1;
+        return Promise.resolve({
+          saved: false,
+          conflicts: saveAttempt === 1 ? ["CLAUDE.md"] : [],
+        });
+      }
+      return Promise.resolve(undefined);
+    });
+    render(<AgentImportWizard />);
+
+    fireEvent.click(await screen.findByText("Claude Code"));
+    fireEvent.click(screen.getByRole("button", {
+      name: i18n.t("agentImport.actions.confirmSource"),
+    }));
+    fireEvent.click(await screen.findByRole("button", {
+      name: i18n.t("agentImport.conflict.replace"),
+    }));
+
+    await waitFor(() => {
+      expect(showToastMock).toHaveBeenCalledWith(
+        i18n.t("errors.saveFailed"),
+        "error",
+      );
     });
   });
 });

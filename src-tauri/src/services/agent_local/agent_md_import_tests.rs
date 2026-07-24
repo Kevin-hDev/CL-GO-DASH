@@ -4,22 +4,12 @@ use tempfile::TempDir;
 fn rule_item(
     source_id: &str,
     source_name: &str,
-    path: PathBuf,
-) -> crate::services::agent_import::DiscoveredItem {
-    crate::services::agent_import::DiscoveredItem {
-        public: crate::services::agent_import::ImportItem {
-            id: format!("{source_id}:rule:test"),
-            name: "rule.md".into(),
-            description: String::new(),
-            source_id: source_id.into(),
-            source_name: source_name.into(),
-            kind: crate::services::agent_import::ImportItemKind::Rule,
-            selected: true,
-            available: true,
-            update_available: false,
-        },
-        path,
-        bundle_root: None,
+    content: &str,
+) -> crate::services::agent_import::ExternalRuleContent {
+    crate::services::agent_import::ExternalRuleContent {
+        source_id: source_id.into(),
+        source_name: source_name.into(),
+        content: content.into(),
     }
 }
 
@@ -131,18 +121,13 @@ fn document_json(name: &str, source_id: &str, hash: &str) -> serde_json::Value {
 #[tokio::test]
 async fn external_rules_are_injected_in_stable_source_order() {
     let data = TempDir::new().unwrap();
-    let rules = TempDir::new().unwrap();
-    let claude = rules.path().join("claude.md");
-    let qwen = rules.path().join("qwen.md");
-    tokio::fs::write(&claude, "Claude external rule").await.unwrap();
-    tokio::fs::write(&qwen, "Qwen external rule").await.unwrap();
 
     let content = load_agent_md_with_rules(
         data.path(),
         None,
         vec![
-            rule_item("qwen", "Qwen Code", qwen),
-            rule_item("claude", "Claude Code", claude),
+            rule_item("qwen", "Qwen Code", "Qwen external rule"),
+            rule_item("claude", "Claude Code", "Claude external rule"),
         ],
     )
     .await
@@ -152,6 +137,8 @@ async fn external_rules_are_injected_in_stable_source_order() {
         content.find("Claude external rule").unwrap()
             < content.find("Qwen external rule").unwrap()
     );
+    assert!(!content.contains("/Users/"));
+    assert!(!content.contains("\\Users\\"));
 }
 
 #[tokio::test]
